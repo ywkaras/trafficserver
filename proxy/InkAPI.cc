@@ -216,6 +216,7 @@ tsapi const char *TS_MIME_FIELD_WARNING;
 tsapi const char *TS_MIME_FIELD_WWW_AUTHENTICATE;
 tsapi const char *TS_MIME_FIELD_XREF;
 tsapi const char *TS_MIME_FIELD_X_FORWARDED_FOR;
+tsapi const char *TS_MIME_FIELD_FORWARDED;
 
 /* MIME fields string lengths */
 tsapi int TS_MIME_LEN_ACCEPT;
@@ -290,6 +291,7 @@ tsapi int TS_MIME_LEN_WARNING;
 tsapi int TS_MIME_LEN_WWW_AUTHENTICATE;
 tsapi int TS_MIME_LEN_XREF;
 tsapi int TS_MIME_LEN_X_FORWARDED_FOR;
+tsapi int TS_MIME_LEN_FORWARDED;
 
 /* HTTP miscellaneous values */
 tsapi const char *TS_HTTP_VALUE_BYTES;
@@ -1500,6 +1502,7 @@ api_init()
     TS_MIME_FIELD_WWW_AUTHENTICATE          = MIME_FIELD_WWW_AUTHENTICATE;
     TS_MIME_FIELD_XREF                      = MIME_FIELD_XREF;
     TS_MIME_FIELD_X_FORWARDED_FOR           = MIME_FIELD_X_FORWARDED_FOR;
+    TS_MIME_FIELD_FORWARDED                 = MIME_FIELD_FORWARDED;
 
     TS_MIME_LEN_ACCEPT                    = MIME_LEN_ACCEPT;
     TS_MIME_LEN_ACCEPT_CHARSET            = MIME_LEN_ACCEPT_CHARSET;
@@ -1573,6 +1576,7 @@ api_init()
     TS_MIME_LEN_WWW_AUTHENTICATE          = MIME_LEN_WWW_AUTHENTICATE;
     TS_MIME_LEN_XREF                      = MIME_LEN_XREF;
     TS_MIME_LEN_X_FORWARDED_FOR           = MIME_LEN_X_FORWARDED_FOR;
+    TS_MIME_LEN_FORWARDED                 = MIME_LEN_FORWARDED;
 
     /* HTTP methods */
     TS_HTTP_METHOD_CONNECT = HTTP_METHOD_CONNECT;
@@ -7828,6 +7832,9 @@ _conf_to_memberp(TSOverridableConfigKey conf, OverridableHttpConfigParams *overr
   case TS_CONFIG_HTTP_INSERT_SQUID_X_FORWARDED_FOR:
     ret = _memberp_to_generic(&overridableHttpConfig->insert_squid_x_forwarded_for, typep);
     break;
+  case TS_CONFIG_HTTP_ENABLE_FORWARDED:
+    ret = &overridableHttpConfig->enable_forwarded;
+    break;
   case TS_CONFIG_HTTP_SERVER_TCP_INIT_CWND:
     ret = _memberp_to_generic(&overridableHttpConfig->server_tcp_init_cwnd, typep);
     break;
@@ -8342,6 +8349,8 @@ TSHttpTxnConfigFind(const char *name, int length, TSOverridableConfigKey *conf, 
       cnf = TS_CONFIG_HTTP_CACHE_GENERATION;
     } else if (!strncmp(name, "proxy.config.http.insert_client_ip", length)) {
       cnf = TS_CONFIG_HTTP_ANONYMIZE_INSERT_CLIENT_IP;
+    } else if (!strncmp(name, "proxy.config.http.enable_forwarded", length)) {
+      cnf = TS_CONFIG_HTTP_ENABLE_FORWARDED;
     }
     break;
 

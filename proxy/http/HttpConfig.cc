@@ -1001,6 +1001,8 @@ HttpConfig::startup()
 
   HttpEstablishStaticConfigByte(c.oride.insert_squid_x_forwarded_for, "proxy.config.http.insert_squid_x_forwarded_for");
 
+  HttpEstablishStaticConfigByte(c.oride.enable_forwarded, "proxy.config.http.enable_forwarded");
+
   HttpEstablishStaticConfigByte(c.oride.insert_age_in_response, "proxy.config.http.insert_age_in_response");
   HttpEstablishStaticConfigByte(c.enable_http_stats, "proxy.config.http.enable_http_stats");
   HttpEstablishStaticConfigByte(c.oride.normalize_ae_gzip, "proxy.config.http.normalize_ae_gzip");
@@ -1278,6 +1280,7 @@ HttpConfig::reconfigure()
   params->oride.proxy_response_server_enabled = m_master.oride.proxy_response_server_enabled;
 
   params->oride.insert_squid_x_forwarded_for = INT_TO_BOOL(m_master.oride.insert_squid_x_forwarded_for);
+  params->oride.enable_forwarded             = m_master.oride.enable_forwarded;
   params->oride.insert_age_in_response       = INT_TO_BOOL(m_master.oride.insert_age_in_response);
   params->enable_http_stats                  = INT_TO_BOOL(m_master.enable_http_stats);
   params->oride.normalize_ae_gzip            = INT_TO_BOOL(m_master.oride.normalize_ae_gzip);

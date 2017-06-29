@@ -686,50 +686,56 @@ HttpTransactHeaders::insert_server_header_in_response(const char *server_tag, in
 
 /// write the protocol stack to the @a via_string.
 /// If @a detailed then do the full stack, otherwise just the "top level" protocol.
-size_t
-write_via_protocol_stack(char *via_string, size_t len, bool detailed, ts::StringView *proto_buf, int n_proto)
+/// Returns the number of characters appended to hdr_string (no nul appended).
+int
+HttpTransactHeaders::write_hdr_protocol_stack(char *hdr_string, size_t len, ProtocolStackDetail pSDetail,
+                                              ts::StringView *proto_buf, int n_proto, char separator)
 {
-  char *via   = via_string; // keep original pointer for size computation later.
-  char *limit = via_string + len;
+  char *hdr   = hdr_string; // keep original pointer for size computation later.
+  char *limit = hdr_string + len;
   static constexpr ts::StringView tls_prefix{"tls/", ts::StringView::literal};
 
-  if (n_proto <= 0 || via == nullptr || len <= 0) {
+  if (n_proto <= 0 || hdr == nullptr || len <= 0) {
     // nothing
-  } else if (detailed) {
-    for (ts::StringView *v = proto_buf, *v_limit = proto_buf + n_proto; v < v_limit && (via + v->size() + 1) < limit; ++v) {
+  } else if (ProtocolStackDetail::Full == pSDetail) {
+    for (ts::StringView *v = proto_buf, *v_limit = proto_buf + n_proto; v < v_limit && (hdr + v->size() + 1) < limit; ++v) {
       if (v != proto_buf) {
-        *via++ = ' ';
+        *hdr++ = separator;
       }
-      memcpy(via, v->ptr(), v->size());
-      via += v->size();
+      memcpy(hdr, v->ptr(), v->size());
+      hdr += v->size();
     }
   } else {
     ts::StringView *proto_end = proto_buf + n_proto;
     bool http_1_0_p           = std::find(proto_buf, proto_end, IP_PROTO_TAG_HTTP_1_0) != proto_end;
     bool http_1_1_p           = std::find(proto_buf, proto_end, IP_PROTO_TAG_HTTP_1_1) != proto_end;
 
-    if ((http_1_0_p || http_1_1_p) && via + 10 < limit) {
+    if ((http_1_0_p || http_1_1_p) && hdr + 10 < limit) {
       bool tls_p = std::find_if(proto_buf, proto_end, [](ts::StringView tag) { return tls_prefix.isPrefixOf(tag); }) != proto_end;
-      bool http_2_p = std::find(proto_buf, proto_end, IP_PROTO_TAG_HTTP_2_0) != proto_end;
 
-      memcpy(via, "http", 4);
-      via += 4;
+      memcpy(hdr, "http", 4);
+      hdr += 4;
       if (tls_p)
-        *via++ = 's';
-      *via++   = '/';
-      if (http_2_p) {
-        *via++ = '2';
-      } else if (http_1_0_p) {
-        memcpy(via, "1.0", 3);
-        via += 3;
-      } else if (http_1_1_p) {
-        memcpy(via, "1.1", 3);
-        via += 3;
+        *hdr++ = 's';
+
+      // If detail level is compact (RFC 7239 compliant "proto" value for Forwarded field), stop here.
+
+      if (ProtocolStackDetail::Standard == pSDetail) {
+        *hdr++   = '/';
+        bool http_2_p = std::find(proto_buf, proto_end, IP_PROTO_TAG_HTTP_2_0) != proto_end;
+        if (http_2_p) {
+          *hdr++ = '2';
+        } else if (http_1_0_p) {
+          memcpy(hdr, "1.0", 3);
+          hdr += 3;
+        } else if (http_1_1_p) {
+          memcpy(hdr, "1.1", 3);
+          hdr += 3;
+        }
       }
-      *via++ = ' ';
     }
   }
-  return via - via_string;
+  return hdr - hdr_string;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -792,7 +798,10 @@ HttpTransactHeaders::insert_via_header_in_request(HttpTransact::State *s, HTTPHd
   std::array<ts::StringView, 10> proto_buf; // 10 seems like a reasonable number of protos to print
   int n_proto = s->state_machine->populate_client_protocol(proto_buf.data(), proto_buf.size());
 
-  via_string += write_via_protocol_stack(via_string, via_limit - via_string, false, proto_buf.data(), n_proto);
+  via_string += write_hdr_protocol_stack(via_string, via_limit - via_string, ProtocolStackDetail::Standard, proto_buf.data(),
+                                         n_proto);
+  *via_string++ = ' ';
+
   via_string += nstrcpy(via_string, s->http_config_param->proxy_hostname);
 
   *via_string++ = '[';
@@ -822,7 +831,8 @@ HttpTransactHeaders::insert_via_header_in_request(HttpTransact::State *s, HTTPHd
     if (via_limit - via_string > 4 && s->txn_conf->insert_request_via_string > 3) { // Ultra highest verbosity
       *via_string++ = ' ';
       *via_string++ = '[';
-      via_string += write_via_protocol_stack(via_string, via_limit - via_string - 3, true, proto_buf.data(), n_proto);
+      via_string += write_hdr_protocol_stack(via_string, via_limit - via_string - 3, ProtocolStackDetail::Full, proto_buf.data(),
+                                             n_proto);
       *via_string++ = ']';
     }
   }
@@ -877,7 +887,9 @@ HttpTransactHeaders::insert_via_header_in_response(HttpTransact::State *s, HTTPH
   if (ss) {
     n_proto += ss->populate_protocol(proto_buf.data() + n_proto, proto_buf.size() - n_proto);
   }
-  via_string += write_via_protocol_stack(via_string, via_limit - via_string, false, proto_buf.data(), n_proto);
+  via_string += write_hdr_protocol_stack(via_string, via_limit - via_string, ProtocolStackDetail::Standard, proto_buf.data(),
+                                         n_proto);
+  *via_string++ = ' ';
 
   via_string += nstrcpy(via_string, s->http_config_param->proxy_hostname);
   *via_string++ = ' ';
@@ -902,7 +914,8 @@ HttpTransactHeaders::insert_via_header_in_response(HttpTransact::State *s, HTTPH
     if (via_limit - via_string > 4 && s->txn_conf->insert_response_via_string > 3) { // Ultra highest verbosity
       *via_string++ = ' ';
       *via_string++ = '[';
-      via_string += write_via_protocol_stack(via_string, via_limit - via_string - 3, true, proto_buf.data(), n_proto);
+      via_string += write_hdr_protocol_stack(via_string, via_limit - via_string - 3, ProtocolStackDetail::Full, proto_buf.data(),
+                                             n_proto);
       *via_string++ = ']';
     }
   }

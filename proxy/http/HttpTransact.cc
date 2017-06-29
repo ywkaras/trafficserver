@@ -25,6 +25,7 @@
 
 #include <strings.h>
 #include <cmath>
+#include <bitset>
 
 #include "HttpTransact.h"
 #include "HttpTransactHeaders.h"
@@ -5127,6 +5128,147 @@ HttpTransact::add_client_ip_to_outgoing_request(State *s, HTTPHdr *request)
   }
 }
 
+void
+HttpTransact::add_forwarded_field_to_outgoing_request(State *s, HTTPHdr *request)
+{
+  int ef = s->txn_conf->enable_forwarded;
+
+  if ((ef > 0) and (ef <= 4)) {
+
+    namespace HFO = HttpForwardedOption;
+
+    using BS = std::bitset<HFO::Num>;
+
+    const BS OptSetCmn = BS().set(HFO::For).set(HFO::Proto).set(HFO::Host);
+
+    static const BS OptSetForEnableForwardValue[4] =
+    {
+      BS(OptSetCmn).set(HFO::ByUuid),
+      BS(OptSetCmn).set(HFO::ByUuid).set(HFO::Connection),
+      BS(OptSetCmn).set(HFO::ByIp),
+      BS(OptSetCmn).set(HFO::ByIp).set(HFO::Connection)
+    };
+
+    BS optSet = OptSetForEnableForwardValue[ef - 1];
+
+    util::AppendStr<1024> as;
+
+    if (optSet[HFO::For] and ats_is_ip(&s->client_info.src_addr.sa)) {
+
+      as.add("for=");
+
+      bool ipv6 = ats_is_ip6(&s->client_info.src_addr.sa);
+
+      if (ipv6) {
+        as.add("\"[");
+      }
+
+      if (ats_ip_ntop(&s->client_info.src_addr.sa, as.end(), as.left()) == nullptr) {
+        DebugTxn("http_trans", "[add_forwarded_field_to_outgoing_request] ats_ip_ntop() call failed");
+        return;
+      }
+
+      as.newEnd();
+
+      if (ipv6) {
+        as.add("]\"");
+      }
+    }
+
+    const Machine &m = * Machine::instance();
+
+    if (optSet[HFO::ByUuid] and (m.ip_hex_string_len > 0)) {
+
+      if (as.strLen() > 0) {
+        as.add(';');
+      }
+
+      // In 5.3.x use IP hex string instead of UUID.
+
+      as.add("by=_", ts::StringView(m.ip_hex_string, m.ip_hex_string_len));
+
+    } else if (optSet[HFO::ByIp] and (m.ip_string_len > 0)) {
+
+      if (as.strLen() > 0) {
+        as.add(';');
+      }
+
+      as.add("by=");
+
+      if (ats_is_ip6(m.ip)) {
+        as.add("\"[", m.ip_string, "]\"");
+      } else {
+        as.add(m.ip_string);
+      }
+    }
+
+    std::array<ts::StringView, 10> protoBuf; // 10 seems like a reasonable number of protos to print
+    int nProto;
+
+    if (optSet[HFO::Proto] or optSet[HFO::Connection]) {
+
+      nProto = s->state_machine->populate_client_protocol(protoBuf.data(), protoBuf.size());
+    }
+
+    if (optSet[HFO::Proto] and (nProto > 0)) {
+
+      int revertPoint = as.strLen();
+
+      if (as.strLen() > 0) {
+        as.add(';');
+      }
+
+      as.add("proto=");
+
+      int nC = HttpTransactHeaders::write_hdr_protocol_stack(as.end(), as.left(),
+                                                             HttpTransactHeaders::ProtocolStackDetail::Compact,
+                                                             protoBuf.data(), nProto, '-');
+      if (nC > 0) {
+        as.newEnd(nC);
+      } else {
+        as.revert(revertPoint);
+      }
+    }
+
+    if (optSet[HFO::Host] and (s->request_data.hostname_str != nullptr) and (*(s->request_data.hostname_str) != '\0')) {
+
+      if (as.strLen() > 0) {
+        as.add(';');
+      }
+
+      as.add("host=", s->request_data.hostname_str);
+    }
+
+    if (optSet[HFO::Connection] and (nProto > 0)) {
+
+      int revertPoint = as.strLen();
+
+      if (as.strLen() > 0) {
+        as.add(';');
+      }
+
+      as.add("connection=");
+
+      int nC = HttpTransactHeaders::write_hdr_protocol_stack(as.end(), as.left(), HttpTransactHeaders::ProtocolStackDetail::Full,
+                                                             protoBuf.data(), nProto, '-');
+      if (nC > 0) {
+        as.newEnd(nC);
+      } else {
+        as.revert(revertPoint);
+      }
+    }
+
+    // Add or append to the Forwarded header
+    if (as.strLen() > 0) {
+      request->value_append(MIME_FIELD_FORWARDED, MIME_LEN_FORWARDED, as, as.strLen(), true, ','); // true => separator must be
+                                                                                                   // inserted
+
+      DebugTxn("http_trans", "[add_forwarded_field_to_outgoing_request] Forwarded header (%s) added", as.str());
+    }
+  }
+
+} // end HttpTransact::add_forwarded_field_to_outgoing_request()
+
 ///////////////////////////////////////////////////////////////////////////////
 // Name       : check_request_validity()
 // Description: checks to see if incoming request has necessary fields
@@ -7607,6 +7749,7 @@ HttpTransact::build_request(State *s, HTTPHdr *base_request, HTTPHdr *outgoing_r
 
   HttpTransactHeaders::copy_header_fields(base_request, outgoing_request, s->txn_conf->fwd_proxy_auth_to_parent);
   add_client_ip_to_outgoing_request(s, outgoing_request);
+  add_forwarded_field_to_outgoing_request(s, outgoing_request);
   HttpTransactHeaders::remove_privacy_headers_from_request(s->http_config_param, s->txn_conf, outgoing_request);
   HttpTransactHeaders::add_global_user_agent_header_to_request(s->txn_conf, outgoing_request);
   handle_request_keep_alive_headers(s, outgoing_version, outgoing_request);

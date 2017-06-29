@@ -122,6 +122,7 @@ buildHdrMap()
   hdrMap["server"]                    = "Server";
   hdrMap["set-cookie"]                = "Set-Cookie";
   hdrMap["strict-transport-security"] = "Strict-Transport-Security";
+<<<<<<< HEAD
   hdrMap["subject"]                   = "Subject";
   hdrMap["summary"]                   = "Summary";
   hdrMap["te"]                        = "Te";
@@ -137,6 +138,7 @@ buildHdrMap()
   hdrMap["x-forwarded-for"]           = "X-Forwarded-For";
   hdrMap["sec-websocket-key"]         = "Sec-WebSocket-Key";
   hdrMap["sec-websocket-version"]     = "Sec-WebSocket-Version";
+  hdrMap["forwarded"]                 = "Forwarded";
 }
 
 ///////////////////////////////////////////////////////////////////////////////

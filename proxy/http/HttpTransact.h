@@ -1069,6 +1069,7 @@ public:
   static bool service_transaction_in_proxy_only_mode(State *s);
   static void setup_plugin_request_intercept(State *s);
   static void add_client_ip_to_outgoing_request(State *s, HTTPHdr *request);
+  static void add_forwarded_field_to_outgoing_request(State *s, HTTPHdr *request);
   static RequestError_t check_request_validity(State *s, HTTPHdr *incoming_hdr);
   static ResponseError_t check_response_validity(State *s, HTTPHdr *incoming_hdr);
   static bool delete_all_document_alternates_and_return(State *s, bool cache_hit);

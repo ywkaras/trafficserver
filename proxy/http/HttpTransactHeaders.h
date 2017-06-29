@@ -62,6 +62,11 @@ public:
 
   static void generate_and_set_squid_codes(HTTPHdr *header, char *via_string, HttpTransact::SquidLogInfo *squid_codes);
 
+  enum class ProtocolStackDetail { Compact, Standard, Full };
+
+  static int write_hdr_protocol_stack(char *hdr_string, size_t len, ProtocolStackDetail pSDetail,
+                                      ts::StringView *proto_buf, int n_proto, char separator = ' ');
+
   // Removing handle_conditional_headers.  Functionality appears to be elsewhere (issue_revalidate)
   // and the only condition when it does anything causes an assert to go
   // off

@@ -78,6 +78,15 @@ CONFIG proxy.config.http.negative_caching_lifetime INT 1800
 ##############################################################################
 CONFIG proxy.config.http.insert_client_ip INT 1
 CONFIG proxy.config.http.insert_squid_x_forwarded_for INT 1
+CONFIG proxy.config.http.enable_forwarded INT 0
+    # Valid values for proxy.config.http.enable_forwarded
+    #   0 - Do not insert Forwarded: field in headers of origin-bound messages.
+    #   1 - Insert forwarded field with by=_<UUID>, no connection variable.
+    #   2 - Insert forwarded field with by=_<UUID>, connection=full protocol stack (like in Via:).
+    #   3 - Insert forwarded field with by=<numeric ip addr>, no connection variable.
+    #   4 - Insert forwarded field with by=<numeric ip addr>, connection=full protocol stack (like in Via:).
+    #
+    #   Note: connection variable in Forwarded: is a TS extension.
 
 ##############################################################################
 # Security. Docs:
