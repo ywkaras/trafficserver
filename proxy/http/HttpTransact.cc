@@ -45,6 +45,7 @@
 #include "StatPages.h"
 #include "../IPAllow.h"
 #include "I_Machine.h"
+#include "ts/AppendStr.h"
 
 static char range_type[] = "multipart/byteranges; boundary=RANGE_SEPARATOR";
 #define RANGE_NUMBERS_LENGTH 60
