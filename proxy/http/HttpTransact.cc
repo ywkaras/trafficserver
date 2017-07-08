@@ -5132,7 +5132,7 @@ HttpTransact::add_client_ip_to_outgoing_request(State *s, HTTPHdr *request)
 void
 HttpTransact::add_forwarded_field_to_outgoing_request(State *s, HTTPHdr *request)
 {
-  int ef = s->txn_conf->enable_forwarded;
+  int ef = s->txn_conf->insert_forwarded; +++
 
   if ((ef > 0) and (ef <= 4)) {
 

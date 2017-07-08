@@ -388,7 +388,6 @@ struct OverridableHttpConfigParams {
       proxy_response_server_enabled(1),
       proxy_response_hsts_include_subdomains(0),
       insert_squid_x_forwarded_for(1),
-      enable_forwarded(0),
       send_http11_requests(1),
       cache_http(1),
       cache_ignore_client_no_cache(1),
@@ -528,8 +527,6 @@ struct OverridableHttpConfigParams {
   // X-Forwarded-For //
   /////////////////////
   MgmtByte insert_squid_x_forwarded_for;
-
-  MgmtByte enable_forwarded;
 
   //////////////////////
   //  Version Hell    //

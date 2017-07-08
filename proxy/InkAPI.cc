@@ -7832,8 +7832,8 @@ _conf_to_memberp(TSOverridableConfigKey conf, OverridableHttpConfigParams *overr
   case TS_CONFIG_HTTP_INSERT_SQUID_X_FORWARDED_FOR:
     ret = _memberp_to_generic(&overridableHttpConfig->insert_squid_x_forwarded_for, typep);
     break;
-  case TS_CONFIG_HTTP_ENABLE_FORWARDED:
-    ret = &overridableHttpConfig->enable_forwarded;
+  case TS_CONFIG_HTTP_INSERT_FORWARDED:
+    ret = &overridableHttpConfig->insert_forwarded;
     break;
   case TS_CONFIG_HTTP_SERVER_TCP_INIT_CWND:
     ret = _memberp_to_generic(&overridableHttpConfig->server_tcp_init_cwnd, typep);
@@ -8349,8 +8349,8 @@ TSHttpTxnConfigFind(const char *name, int length, TSOverridableConfigKey *conf, 
       cnf = TS_CONFIG_HTTP_CACHE_GENERATION;
     } else if (!strncmp(name, "proxy.config.http.insert_client_ip", length)) {
       cnf = TS_CONFIG_HTTP_ANONYMIZE_INSERT_CLIENT_IP;
-    } else if (!strncmp(name, "proxy.config.http.enable_forwarded", length)) {
-      cnf = TS_CONFIG_HTTP_ENABLE_FORWARDED;
+    } else if (!strncmp(name, "proxy.config.http.insert_forwarded", length)) {
+      cnf = TS_CONFIG_HTTP_INSERT_FORWARDED;
     }
     break;
 

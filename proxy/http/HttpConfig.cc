@@ -149,13 +149,25 @@ http_config_cb(const char * /* name ATS_UNUSED */, RecDataT /* data_type ATS_UNU
   return 0;
 }
 
+template <int (*Custom_handling_func)(const char *, RecDataT, RecData, void *)>
+int http_custom_config_cb(const char *name, RecDataT dtype, RecData data, void *cookie)
+{
+  int custom_result = Custom_handling_func(name, dtype, data, cookie);
+
+  return(REC_ERR_OKAY == custom_result ? http_config_cb(name, dtype, data, cookie) : custom_result);
+}
+    
+
 // [amc] Not sure which is uglier, this switch or having a micro-function for each var.
 // Oh, how I long for when we can use C++eleventy lambdas without compiler problems!
 // I think for 5.0 when the BC stuff is yanked, we should probably revert this to independent callbacks.
+//
+// [wwk] This is not amc's original code, hope it's better.
+//
 static int
-http_server_session_sharing_cb(const char *name, RecDataT dtype, RecData data, void *cookie)
+http_server_session_sharing_custom_handling(const char *name, RecDataT dtype, RecData data, void *cookie)
 {
-  bool valid_p        = true;
+  int result        = REC_ERR_OKAY;
   HttpConfigParams *c = static_cast<HttpConfigParams *>(cookie);
 
   if (0 == strcasecmp("proxy.config.http.server_session_sharing.match", name)) {
@@ -165,18 +177,21 @@ http_server_session_sharing_cb(const char *name, RecDataT dtype, RecData data, v
     } else if (RECD_STRING == dtype && http_config_enum_search(data.rec_string, SessionSharingMatchStrings, match)) {
       // empty
     } else {
-      valid_p = false;
+      result = REC_ERR_FAIL;
     }
   } else {
-    valid_p = false;
+    result = REC_ERR_FAIL;
   }
 
-  // Signal an update if valid value arrived.
-  if (valid_p) {
-    http_config_cb(name, dtype, data, cookie);
-  }
+  return result;
+}
 
-  return REC_ERR_OKAY;
+static int
+http_insert_forwarded_custom_handling(const char *name, RecDataT dtype, RecData data, void *)
+{
+  int result        = REC_ERR_OKAY;
+
+  return result;
 }
 
 void
@@ -933,7 +948,8 @@ HttpConfig::startup()
   HttpEstablishStaticConfigByte(c.strict_uri_parsing, "proxy.config.http.strict_uri_parsing");
 
   // [amc] This is a bit of a mess, need to figure out to make this cleaner.
-  RecRegisterConfigUpdateCb("proxy.config.http.server_session_sharing.match", &http_server_session_sharing_cb, &c);
+  RecRegisterConfigUpdateCb("proxy.config.http.server_session_sharing.match",
+                            &http_custom_config_cb<http_server_session_sharing_custom_handling>, &c);
   http_config_enum_read("proxy.config.http.server_session_sharing.match", SessionSharingMatchStrings,
                         c.oride.server_session_sharing_match);
   http_config_enum_read("proxy.config.http.server_session_sharing.pool", SessionSharingPoolStrings, c.server_session_sharing_pool);
@@ -1001,7 +1017,8 @@ HttpConfig::startup()
 
   HttpEstablishStaticConfigByte(c.oride.insert_squid_x_forwarded_for, "proxy.config.http.insert_squid_x_forwarded_for");
 
-  HttpEstablishStaticConfigByte(c.oride.enable_forwarded, "proxy.config.http.enable_forwarded");
+  RecRegisterConfigUpdateCb("proxy.config.http.insert_forwarded", &http_custom_config_cb<http_insert_forwarded_custom_handling>,
+                            nullptr);
 
   HttpEstablishStaticConfigByte(c.oride.insert_age_in_response, "proxy.config.http.insert_age_in_response");
   HttpEstablishStaticConfigByte(c.enable_http_stats, "proxy.config.http.enable_http_stats");
@@ -1280,7 +1297,6 @@ HttpConfig::reconfigure()
   params->oride.proxy_response_server_enabled = m_master.oride.proxy_response_server_enabled;
 
   params->oride.insert_squid_x_forwarded_for = INT_TO_BOOL(m_master.oride.insert_squid_x_forwarded_for);
-  params->oride.enable_forwarded             = m_master.oride.enable_forwarded;
   params->oride.insert_age_in_response       = INT_TO_BOOL(m_master.oride.insert_age_in_response);
   params->enable_http_stats                  = INT_TO_BOOL(m_master.enable_http_stats);
   params->oride.normalize_ae_gzip            = INT_TO_BOOL(m_master.oride.normalize_ae_gzip);
