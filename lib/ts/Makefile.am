@@ -23,7 +23,7 @@ library_includedir=$(includedir)/ts
 library_include_HEADERS = apidefs.h
 
 noinst_PROGRAMS = mkdfa CompileParseRules
-check_PROGRAMS = test_tsutil test_arena test_atomic test_freelist test_geometry test_List test_Map test_Vec test_X509HostnameValidator test_MemView test_Scalar test_tslib test_Printer
+check_PROGRAMS = test_tsutil test_arena test_atomic test_freelist test_geometry test_List test_Map test_Vec test_X509HostnameValidator test_MemView test_Scalar test_tslib
 
 TESTS_ENVIRONMENT = LSAN_OPTIONS=suppressions=suppression.txt
 
@@ -183,6 +183,7 @@ libtsutil_la_SOURCES = \
   SourceLocation.cc \
   SourceLocation.h \
   string_view.h \
+  BufferWriter.h \
   TestBox.h \
   TextBuffer.cc \
   TextBuffer.h \
@@ -243,8 +244,6 @@ test_tsutil_SOURCES = \
 test_MemView_SOURCES = test_MemView.cc
 test_MemView_LDADD = libtsutil.la
 
-test_Printer_SOURCES = test_Printer.cc
-
 test_Scalar_SOURCES = test_Scalar.cc Scalar.h
 
 test_tslib_CPPFLAGS = $(AM_CPPFLAGS)\
@@ -254,7 +253,8 @@ test_tslib_CPPFLAGS = $(AM_CPPFLAGS)\
 test_tslib_LDADD = libtsutil.la
 test_tslib_SOURCES = \
 	unit-tests/main.cpp \
-	unit-tests/string_view.cpp
+	unit-tests/string_view.cpp \
+	unit-tests/BufferWriter.cpp
 
 CompileParseRules_SOURCES = CompileParseRules.cc
 
