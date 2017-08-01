@@ -29,13 +29,6 @@
 
 #include <cstring>
 
-#define BEGIN_TEST(NAME, TAG) \
-TEST_CASE(NAME, TAG) { \
-auto theTest = [&] () -> bool
-
-#define END_TEST \
-; REQUIRE(theTest()); }
-
 namespace
 {
 
@@ -43,7 +36,7 @@ ts::string_view three[] = {"a", "", "bcd"};
 
 }
 
-BEGIN_TEST("BufferWriter::_pushBack(StringView)", "[BWPB]")
+TEST_CASE("BufferWriter::_pushBack(StringView)", "[BWPB]")
 {
   class X : public ts::BufferWriter
   {
@@ -80,52 +73,36 @@ BEGIN_TEST("BufferWriter::_pushBack(StringView)", "[BWPB]")
 
   x.sV(three[0]).sV(three[1]).sV(three[2]);
 
-  return (x.good);
+  REQUIRE(x.good);
 }
-END_TEST
 
 namespace
 {
 template <size_t N> using BW = ts::LocalBufferWriter<N>;
 }
 
-BEGIN_TEST("Concrete Buffer Writer", "[BWC]")
+TEST_CASE("Concrete Buffer Writer", "[BWC]")
 {
   BW<1> bw;
 
-  if ((bw.capacity() != 1) or (bw.size() != 0) or bw.error() or (bw.auxCapacity() != 1)) {
-    return false;
-  }
+  REQUIRE(!((bw.capacity() != 1) or (bw.size() != 0) or bw.error() or (bw.auxCapacity() != 1)));
 
   bw.c('#');
 
-  if ((bw.capacity() != 1) or (bw.size() != 1) or bw.error() or (bw.auxCapacity() != 0)) {
-    return false;
-  }
+  REQUIRE(!((bw.capacity() != 1) or (bw.size() != 1) or bw.error() or (bw.auxCapacity() != 0)));
 
-  if (bw.view() != "#") {
-    return false;
-  }
+  REQUIRE(bw.view() == "#");
 
   bw.c('#');
 
-  if (!bw.error()) {
-    return (false);
-  }
+  REQUIRE(bw.error());
 
   bw.resize(1);
 
-  if ((bw.capacity() != 1) or (bw.size() != 1) or bw.error() or (bw.auxCapacity() != 0)) {
-    return false;
-  }
+  REQUIRE(!((bw.capacity() != 1) or (bw.size() != 1) or bw.error() or (bw.auxCapacity() != 0)));
 
-  if (bw.view() != "#") {
-    return false;
-  }
-
-  return true;
+  REQUIRE(bw.view() == "#");
 }
-END_TEST
 
 namespace
 {
@@ -147,7 +124,7 @@ bool twice(BWType &bw)
     return false;
   }
 
-  bw.l("he").c(' ').nT("quick").c(' ').l("brown");
+  bw.l("he").c(' ').cstr("quick").c(' ').l("brown");
 
   if ((bw.capacity() != 20) or bw.error() or (bw.auxCapacity() != (21 - sizeof("The quick brown")))) {
     return false;
@@ -213,11 +190,11 @@ bool twice(BWType &bw)
 
 } // end anonymous namespace
 
-BEGIN_TEST("Concrete Buffer Writer 2", "[BWC2]")
+TEST_CASE("Concrete Buffer Writer 2", "[BWC2]")
 {
   BW<20> bw;
 
-  twice(bw);
+  REQUIRE(twice(bw));
 
   char space[21];
 
@@ -225,24 +202,95 @@ BEGIN_TEST("Concrete Buffer Writer 2", "[BWC2]")
 
   ts::FixedBufferWriter fbw(space, 20);
 
-  twice(fbw);
+  REQUIRE(twice(fbw));
 
-  if (space[20] != '!') {
-    return false;
-  }
+  REQUIRE(space[20] == '!');
 
   ts::LocalBufferWriter<20> bw2(bw), bw3;
 
-  if (bw2.view() != "The quick brown fox") {
-    return false;
-  }
+  REQUIRE(bw2.view() == "The quick brown fox");
 
   bw3 = bw2;
 
-  if (bw3.view() != "The quick brown fox") {
+  REQUIRE(bw3.view() == "The quick brown fox");
+}
+
+namespace
+{
+
+template <class BW>
+bool
+testDiscard(BW &bw)
+{
+  if (bw.size() != 0) {
+    return false;
+  }
+
+  bw.c('T');
+
+  if (bw.size() != 1) {
+    return false;
+  }
+
+  bw.l("he").c(' ').cstr("quick").c(' ').l("brown");
+
+  if (bw.size() != (sizeof("The quick brown") - 1)) {
+    return false;
+  }
+
+  bw.resize(0);
+
+  bw.sV("The", 3).c(' ').sV("quick", 5).c(' ').sV(ts::string_view("brown", 5));
+
+  if  (bw.size() != (sizeof("The quick brown") - 1)) {
+    return false;
+  }
+
+  bw.auxWrite(sizeof(" fox") - 1);
+
+  if (bw.size() != (sizeof("The quick brown fox") - 1)) {
+    return false;
+  }
+
+  bw.resize(sizeof("The quick brown fox") - 1);
+
+  if (bw.size() != (sizeof("The quick brown fox") - 1)) {
     return false;
   }
 
   return true;
 }
-END_TEST
+
+} // end anonymous namespace
+
+TEST_CASE("Discard Buffer Writer", "[BWD]")
+{
+  char scratch[1] = { '!' };
+  ts::FixedBufferWriter fbw(scratch, 0);
+
+  REQUIRE(testDiscard(fbw));
+
+  // Make sure no actual writing.
+  //
+  REQUIRE(scratch[0] == '!');
+
+  ts::LocalBufferWriter<0> lbw;
+
+  char *cheat = lbw.auxBuffer();
+
+  *cheat = '!';
+
+  REQUIRE(testDiscard(lbw));
+
+  // Make sure no actual writing.
+  //
+  REQUIRE(*cheat == '!');
+
+  ts::LocalBufferWriter<0> bw2(lbw), bw3;
+
+  REQUIRE(bw2.size() == (sizeof("The quick brown fox") - 1));
+
+  bw3 = bw2;
+
+  REQUIRE(bw3.size() == (sizeof("The quick brown fox") - 1));
+}

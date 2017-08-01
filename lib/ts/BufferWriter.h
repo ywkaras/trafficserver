@@ -81,7 +81,7 @@ public:
   //
   BufferWriter &sV() = delete;
 
-  // Force the use of nT() or l() for nul-terminated strings.
+  // Force the use of cstr() or l() for nul-terminated strings.
   //
   BufferWriter &sV(const char *) = delete;
 
@@ -100,7 +100,7 @@ public:
   // point to a nul-terminated string, that will be converted to a string view.
   //
   BufferWriter &
-  nT(const char *s)
+  cstr(const char *s)
   {
     _pushBack(string_view(s));
 
@@ -189,7 +189,7 @@ public:
   void
   auxWrite(size_t n) override
   {
-    ink_assert(n <= this->capacity());
+    ink_assert((n <= this->capacity()) or !this->capacity());
     _size += n;
   }
 
@@ -203,28 +203,21 @@ protected:
   void
   _pushBack(char c) override
   {
-    if (_size >= this->capacity()) {
-      // Overflow error.
-      //
-      _size = this->capacity() + 1;
-
-    } else {
-      this->_buf[_size++] = c;
+    if (_size < this->capacity()) {
+      this->_buf[_size] = c;
     }
+    ++_size;
   }
 
   void
   _pushBack(string_view sV) override
   {
-    if ((_size + sV.size()) > this->capacity()) {
-      // Overflow error.
-      //
-      _size = this->capacity() + 1;
+    size_t newSize = _size + sV.size();
 
-    } else {
+    if (newSize <= this->capacity()) {
       std::memcpy(this->_buf + _size, sV.data(), sV.size());
-      _size += sV.size();
     }
+    _size = newSize;
   }
 
   size_t _size;
@@ -262,7 +255,7 @@ namespace _private_
     }
 
   protected:
-    char _buf[N];
+    char _buf[N ? N : 1];
   };
 
 } // end namespace _private_
@@ -274,11 +267,17 @@ class FixedBufferWriter : public ConcreteBufferWriter<_private_::FixedBufferWrit
 public:
   // 'buf' is a pointer to the external array of char to write to.  'capacity' is the number of bytes in the array.
   //
+  // If you create a instance of this class with capacity == 0 (and a nullptr buffer), you can use it to measure the number of
+  // characters a series of writes would result it (from the size() value) without actually writing.
+  //
   FixedBufferWriter(char *buf, size_t capacity) : ConcreteBufferWriter<_private_::FixedBufferWriterBase>(0, buf, capacity) {}
 };
 
 // A buffer writer that writes to an array of char (of fixed dimension N) that is internal to the writer instance.
 // It's called 'local' because instances are typically declared as stack-allocated, local function variables.
+//
+// If you create a instance of this class with N == 0, you can use it to measure the number of characters a series of
+// writes would result it (from the size() value) without actually writing.
 //
 template <size_t N> class LocalBufferWriter : public ConcreteBufferWriter<_private_::LocalBufferWriterBase<N>>
 {
