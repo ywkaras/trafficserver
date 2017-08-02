@@ -294,3 +294,61 @@ TEST_CASE("Discard Buffer Writer", "[BWD]")
 
   REQUIRE(bw3.size() == (sizeof("The quick brown fox") - 1));
 }
+
+TEST_CASE("Buffer Writer << operator", "[BW<<]")
+{
+  ts::LocalBufferWriter<50> bw;
+
+  bw << "The" << ' ' << "quick" << ' ' << "brown fox";
+
+  REQUIRE(bw.view() == "The quick brown fox");
+}
+
+namespace
+{
+
+void w12(ts::BufferWriter &bw, const char *s1, const char *s2)
+{
+  bw.cstr(s1).c(' ').cstr(s2);
+}
+
+class W34
+{
+private:
+  const char *s3;
+
+public:
+  W34(const char *s3_) : s3(s3_) { }
+
+  void
+  operator () (ts::BufferWriter &bw, const char *s4)
+  {
+    bw.c(' ').cstr(s3).c(' ').cstr(s4);
+  }
+};
+
+template <class BW>
+void
+testWriteMbr(BW &bw)
+{
+  size_t sz;
+
+  bw.write(w12, "one", "two").saveSize(sz).write(W34("three"), "four").resizeIfError(sz);
+}
+
+} // end anonymous namespace
+
+TEST_CASE("Buffer Writer write() / resizeIfError()", "[BWWRIE]")
+{
+  ts::LocalBufferWriter<50> bw;
+
+  testWriteMbr(bw);
+
+  REQUIRE(bw.view() == "one two three four");
+
+  ts::LocalBufferWriter<15> bw2;
+
+  testWriteMbr(bw2);
+
+  REQUIRE(bw2.view() == "one two");
+}

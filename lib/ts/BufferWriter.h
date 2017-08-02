@@ -132,6 +132,30 @@ public:
   {
   }
 
+  // If 'funcish" is function/functor, with a BufferWriter as the first parameter, this function calls it with this
+  // BufferWriter as the first parameter.  'args' are forwarded as additional parameters to 'funcish'.
+  //
+  template <typename Callable, typename... Args>
+  BufferWriter &
+  write(Callable &&funcish, Args &&... args)
+  {
+    std::forward<Callable>(funcish)(*this, std::forward<Args>(args)...);
+
+    return (*this);
+  }
+
+  virtual BufferWriter &
+  saveSize(size_t &sz)
+  {
+    return (*this);
+  }
+
+  virtual BufferWriter &
+  resizeIfError(size_t smallerSize)
+  {
+    return (*this);
+  }
+
   // Make destructor virtual.
   //
   virtual ~BufferWriter() {}
@@ -154,6 +178,8 @@ public:
   string_view
   view() const
   {
+    ink_assert(!error());
+
     return string_view(this->_buf, _size);
   }
 
@@ -168,10 +194,10 @@ public:
   // Discard characters currently at the end of the buffer.
   //
   void
-  resize(size_t smaller_size)
+  resize(size_t smallerSize)
   {
-    ink_assert(smaller_size <= _size);
-    _size = smaller_size;
+    ink_assert(smallerSize <= _size);
+    _size = smallerSize;
   }
 
   char *
@@ -197,6 +223,24 @@ public:
   error() const override
   {
     return _size > this->capacity();
+  }
+
+  BufferWriter &
+  saveSize(size_t &sz) override
+  {
+    sz = _size;
+
+    return (*this);
+  }
+
+  BufferWriter &
+  resizeIfError(size_t smallerSize) override
+  {
+    if (error()) {
+      resize(smallerSize);
+    }
+
+    return (*this);
   }
 
 protected:
@@ -303,6 +347,18 @@ public:
 
   // Move construction/assignment intentionally defaulted to copying.
 };
+
+BufferWriter &
+operator<<(BufferWriter &b, char c)
+{
+  return b.c(c);
+}
+
+BufferWriter &
+operator<<(BufferWriter &b, const char *cstr)
+{
+  return b.cstr(cstr);
+}
 
 } // end namespace ts
 
