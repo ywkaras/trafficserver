@@ -21,6 +21,9 @@
     limitations under the License.
 */
 
+#include <cstdio>
+#include <cstdlib>
+
 #include "ts/ink_config.h"
 #include "ts/Diags.h"
 #include "ts/ink_cap.h"
@@ -445,9 +448,49 @@ ElevateAccess::~ElevateAccess()
   }
 }
 
+namespace
+{
+unsigned
+accessMaskFromEnv()
+{
+  // Enable all access by default;
+  static unsigned mask = ~unsigned(0);
+
+  static bool checkedFor = false;
+
+  if (checkedFor) {
+    return mask;
+  }
+
+  checkedFor = true;
+
+  static const char VarName[] = "APACHE_TS_ELEVATE_ACCESS_MASK";
+
+  const char *maskStr = std::getenv(VarName);
+
+  if (maskStr) {
+    unsigned m;
+
+    if (std::sscanf(maskStr, "%u", &m) != 1) {
+      Error("Bad value for %s: %s", VarName, maskStr);
+
+    } else {
+      mask = m;
+
+      Note("ElevateAccess mask set to %s from environment variable %s", maskStr, VarName);
+    }
+  }
+
+  return mask;
+}
+
+} // end anonymous namespace
+
 void
 ElevateAccess::elevate(unsigned priv_mask)
 {
+  priv_mask = priv_mask bitand accessMaskFromEnv();
+
 #if TS_USE_POSIX_CAP
   acquirePrivilege(priv_mask);
 #else

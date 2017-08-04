@@ -244,6 +244,22 @@ public:
 
   operator string_view() const { return view(); }
 
+  // When possible, provide access to buffer contents as a nul-terminated string.  The next non-const member function call
+  // on the instance invalidates the return value.  Useful for passing the contents of the buffer to printf() and printf()
+  // wannabes.
+  //
+  const char *
+  cStr()
+  {
+    if (_attempted >= _capacity) {
+      return ("");
+    }
+
+    _buf[_attempted] = '\0';
+
+    return (_buf);
+  }
+
   // No copying
   //
   FixedBufferWriter(const FixedBufferWriter &) = delete;
