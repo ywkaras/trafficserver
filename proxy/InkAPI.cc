@@ -7966,6 +7966,9 @@ _conf_to_memberp(TSOverridableConfigKey conf, OverridableHttpConfigParams *overr
   case TS_CONFIG_HTTP_CACHE_RANGE_LOOKUP:
     ret = _memberp_to_generic(&overridableHttpConfig->cache_range_lookup, typep);
     break;
+  case TS_CONFIG_HTTP_NORMALIZE_AE:
+    ret = _memberp_to_generic(&overridableHttpConfig->normalize_ae, typep);
+    break;
   case TS_CONFIG_HTTP_NORMALIZE_AE_GZIP:
     ret = _memberp_to_generic(&overridableHttpConfig->normalize_ae_gzip, typep);
     break;
@@ -8325,6 +8328,12 @@ TSHttpTxnConfigFind(const char *name, int length, TSOverridableConfigKey *conf, 
   case 29:
     if (!strncmp(name, "proxy.config.ssl.hsts_max_age", length)) {
       cnf = TS_CONFIG_SSL_HSTS_MAX_AGE;
+    }
+    break;
+
+  case 30:
+    if (!strncmp(name, "proxy.config.http.normalize_ae", length)) {
+      cnf = TS_CONFIG_HTTP_NORMALIZE_AE;
     }
     break;
 

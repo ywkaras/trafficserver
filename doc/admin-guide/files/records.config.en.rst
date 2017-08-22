@@ -1666,17 +1666,36 @@ Proxy User Variables
 
    When enabled (``1``), Traffic Server adds the client IP address to the ``X-Forwarded-For`` header.
 
+.. ts:cv:: CONFIG proxy.config.http.normalize_ae INT 1
+   :reloadable:
+   :overridable:
+
+   Specifies normalization, if any, of ``Accept-Encoding:`` headers.
+
+   ===== ======================================================================
+   Value Description
+   ===== ======================================================================
+   ``0`` No normalization.
+   ``1`` ``Accept-Encoding: gzip`` (if the header has ``gzip`` or ``x-gzip`` with any ``q``) **OR**
+         *blank* (for any header that does not include ``gzip``)
+   ``2`` ``Accept-Encoding: br`` if the header has ``br`` (with any ``q``) **ELSE**
+         normalize as for value ``1``
+   ===== ======================================================================
+
+   This is useful for minimizing cached alternates of documents (e.g. ``gzip, deflate`` vs. ``deflate, gzip``). Enabling this option is
+   recommended if your origin servers use no encodings other than ``gzip`` or ``br`` (Brotli).
+
 .. ts:cv:: CONFIG proxy.config.http.normalize_ae_gzip INT 1
    :reloadable:
    :overridable:
+   :deprecated:
 
    Enable (``1``) to normalize all ``Accept-Encoding:`` headers to one of the following:
 
    -  ``Accept-Encoding: gzip`` (if the header has ``gzip`` or ``x-gzip`` with any ``q``) **OR**
    -  *blank* (for any header that does not include ``gzip``)
 
-   This is useful for minimizing cached alternates of documents (e.g. ``gzip, deflate`` vs. ``deflate, gzip``). Enabling this option is
-   recommended if your origin servers use no encodings other than ``gzip``.
+   This is deprecated.  Use `proxy.config.http.normalize_ae`_ instead.
 
 Security
 ========

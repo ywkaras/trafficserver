@@ -171,6 +171,7 @@ c:member:`TS_CONFIG_HTTP_PARENT_PROXY_FAIL_THRESHOLD`               :ts:cv:`prox
 c:member:`TS_CONFIG_HTTP_PARENT_PROXY_RETRY_TIME`                   :ts:cv:`proxy.config.http.parent_proxy.retry_time`
 c:member:`TS_CONFIG_HTTP_PER_PARENT_CONNECT_ATTEMPTS`               :ts:cv:`proxy.config.http.parent_proxy.per_parent_connect_attempts`
 c:member:`TS_CONFIG_HTTP_PARENT_CONNECT_ATTEMPT_TIMEOUT`            :ts:cv:`proxy.config.http.parent_proxy.connect_attempts_timeout`
+c:member:`TS_CONFIG_HTTP_NORMALIZE_AE`                              :ts:cv:`proxy.config.http.normalize_ae`
 ==================================================================  ====================================================================
 
 Examples

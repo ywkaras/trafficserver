@@ -410,6 +410,7 @@ struct OverridableHttpConfigParams {
       doc_in_cache_skip_dns(1),
       flow_control_enabled(0),
       normalize_ae_gzip(0),
+      normalize_ae(0),
       srv_enabled(0),
       parent_failures_update_hostdb(0),
       cache_open_write_fail_action(0),
@@ -568,6 +569,7 @@ struct OverridableHttpConfigParams {
   // Optimize gzip alternates   //
   ////////////////////////////////
   MgmtByte normalize_ae_gzip;
+  MgmtByte normalize_ae;
 
   //////////////////////////
   // hostdb/dns variables //
