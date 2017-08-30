@@ -89,7 +89,6 @@ optStrToBitset(ts::string_view optConfigStr, std::string &error)
         error = "\"Forwarded\" configuration: \"by\" option invalid";
         return OBS();
       }
-
     } else { // No equal sign in option.
 
       optStr.rtrim(isSp);

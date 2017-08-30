@@ -1679,7 +1679,7 @@ Proxy User Variables
    =============  =====================================================
    for            Client IP address
    by=ip          Proxy IP address
-   by=uknown      The literal string ``unknown``
+   by=unknown     The literal string ``unknown``
    by=servername  Proxy server name
    by=uuid        Server UUID prefixed with ``_``
    proto          Protocol of incoming request

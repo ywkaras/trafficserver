@@ -189,7 +189,7 @@ http_insert_forwarded_cb(const char *name, RecDataT dtype, RecData data, void *c
     if (RECD_STRING == dtype) {
       std::string error;
       HttpForwarded::OptionBitSet bs = HttpForwarded::optStrToBitset(ts::string_view(data.rec_string), error);
-      if ("" == error) {
+      if (error.empty()) {
         c->oride.insert_forwarded = bs;
         valid_p                   = true;
       } else {
@@ -972,7 +972,7 @@ HttpConfig::startup()
     if (REC_ERR_OKAY == RecGetRecordString("proxy.config.http.insert_forwarded", str, sizeof(str))) {
       std::string error;
       HttpForwarded::OptionBitSet bs = HttpForwarded::optStrToBitset(ts::string_view(str), error);
-      if ("" == error) {
+      if (error.empty()) {
         c.oride.insert_forwarded = bs;
       } else {
         Error("HTTP %s", error.c_str());

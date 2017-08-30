@@ -8265,7 +8265,7 @@ TSHttpTxnConfigStringSet(TSHttpTxn txnp, TSOverridableConfigKey conf, const char
     if (value && length > 0) {
       std::string error;
       HttpForwarded::OptionBitSet bs = HttpForwarded::optStrToBitset(ts::string_view(value, length), error);
-      if ("" == error) {
+      if (error.empty()) {
         s->t_state.txn_conf->insert_forwarded = bs;
       } else {
         Error("HTTP %s", error.c_str());
