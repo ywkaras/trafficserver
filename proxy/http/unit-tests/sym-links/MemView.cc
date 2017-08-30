@@ -1,1 +1,1 @@
-top_srcdir/lib/ts/MemView.cc
+../../../../lib/ts/MemView.cc

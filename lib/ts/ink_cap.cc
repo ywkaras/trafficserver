@@ -464,7 +464,7 @@ accessMaskFromEnv()
 
   checkedFor = true;
 
-  static const char VarName[] = "APACHE_TS_ELEVATE_ACCESS_MASK";
+  static const char VarName[] = "TS_ELEVATE_ACCESS_MASK";
 
   const char *maskStr = std::getenv(VarName);
 

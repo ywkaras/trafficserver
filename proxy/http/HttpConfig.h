@@ -37,7 +37,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <bitset>
-#include <string>
 
 #ifdef HAVE_CTYPE_H
 #include <ctype.h>
@@ -47,6 +46,7 @@
 #include "ts/ink_inet.h"
 #include "ts/Regex.h"
 #include "ts/string_view.h"
+#include "ts/BufferWriter.h"
 #include "HttpProxyAPIEnums.h"
 #include "ProxyConfig.h"
 #include "P_RecProcess.h"
@@ -363,32 +363,29 @@ struct HttpConfigPortRange {
 
 namespace HttpForwarded
 {
-// Options for what will be included in "Forwarded" field header.  Not mutually exclusive, except that there should be only one
-// "by" option enabled.  (I did not use enum class because the enum values would not implicitly convert to integral
-// types).
+// Options for what parameters will be included in "Forwarded" field header.
 //
-namespace Option
-{
-  enum E {
-    For,
-    ByIp,         // by=<numeric IP address>.
-    ByUnknown,    // by=unknown.
-    ByServerName, // by=<configured server name>.
-    ByUuid,       // Obfuscated value for by, by=_<UUID>.
-    Proto,        // Basic protocol (http, https) of incominng message.
-    Host,         // Host from URL before any remapping.
-    Connection,   // Verbose protocol from Via: field, with dashes instead of spaces.
+enum Option {
+  FOR,
+  BY_IP,              // by=<numeric IP address>.
+  BY_UNKNOWN,         // by=unknown.
+  BY_SERVER_NAME,     // by=<configured server name>.
+  BY_UUID,            // Obfuscated value for by, by=_<UUID>.
+  PROTO,              // Basic protocol (http, https) of incoming message.
+  HOST,               // Host from URL before any remapping.
+  CONNECTION_COMPACT, // Same value as 'proto' parameter.
+  CONNECTION_STD,     // Verbose protocol from Via: field, with dashes instead of spaces.
+  CONNECTION_FULL,    // Ultra-verbose protocol from Via: field, with dashes instead of spaces.
 
-    Num // Number of options.
-  };
-}
+  NUM_OPTIONS // Number of options.
+};
 
-using OptionBitSet = std::bitset<Option::Num>;
+using OptionBitSet = std::bitset<NUM_OPTIONS>;
 
-// Converts string specifier for Forwarded options to bitset of options, and return the result.  If there are errors in the
-// specifier, the function puts an error message into 'error'.
+// Converts string specifier for Forwarded options to bitset of options, and return the result.  If there are errors, an error
+// message will be inserted into 'error'.
 //
-OptionBitSet optStrToBitset(ts::string_view optConfigStr, std::string &error);
+OptionBitSet optStrToBitset(ts::string_view optConfigStr, ts::FixedBufferWriter &error);
 
 } // end HttpForwarded namespace
 

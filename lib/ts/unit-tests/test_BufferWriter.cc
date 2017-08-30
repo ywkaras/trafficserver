@@ -315,3 +315,26 @@ TEST_CASE("Buffer Writer << operator", "[BW<<]")
 
   REQUIRE(bw.view() == "The quick brown fox");
 }
+
+TEST_CASE("Buffer Writer cStr", "[BWCS]")
+{
+  ts::LocalBufferWriter<10> bw;
+
+  bw << "123456";
+
+  bw.reduce(5);
+
+  REQUIRE(strcmp(bw.cStr(), "12345") == 0);
+
+  bw << "67";
+
+  REQUIRE(strcmp(bw.cStr(), "1234567") == 0);
+
+  bw << "89xx";
+
+  REQUIRE(strcmp(bw.cStrTrunc(), "123456789") == 0);
+
+  bw << "xxx";
+
+  REQUIRE(strcmp(bw.cStrTrunc(), "123456789") == 0);
+}

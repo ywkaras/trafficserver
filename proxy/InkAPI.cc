@@ -8267,12 +8267,12 @@ TSHttpTxnConfigStringSet(TSHttpTxn txnp, TSOverridableConfigKey conf, const char
     break;
   case TS_CONFIG_HTTP_INSERT_FORWARDED:
     if (value && length > 0) {
-      std::string error;
+      ts::LocalBufferWriter<1024> error;
       HttpForwarded::OptionBitSet bs = HttpForwarded::optStrToBitset(ts::string_view(value, length), error);
-      if ("" == error) {
+      if (!error.size()) {
         s->t_state.txn_conf->insert_forwarded = bs;
       } else {
-        Error("HTTP %s", error.c_str());
+        Error("HTTP %s", error.cStrTrunc());
       }
     }
     break;

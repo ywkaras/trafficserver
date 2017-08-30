@@ -74,3 +74,13 @@ inkcoreapi ClassAllocator<IOBufferData> ioDataAllocator("ARGH");
 IOBufferBlock::IOBufferBlock()
 {
 }
+
+void
+IOBufferBlock::free()
+{
+}
+
+void
+IOBufferData::free()
+{
+}

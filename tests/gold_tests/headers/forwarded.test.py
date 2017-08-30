@@ -64,7 +64,13 @@ request_header = {
     "headers": "GET / HTTP/1.1\r\nHost: www.forwarded-host.com\r\n\r\n", "timestamp": "1469733493.993", "body": ""}
 server.addResponse("sessionlog.json", request_header, response_header)
 request_header = {
-    "headers": "GET / HTTP/1.1\r\nHost: www.forwarded-connection.com\r\n\r\n", "timestamp": "1469733493.993", "body": ""}
+    "headers": "GET / HTTP/1.1\r\nHost: www.forwarded-connection-compact.com\r\n\r\n", "timestamp": "1469733493.993", "body": ""}
+server.addResponse("sessionlog.json", request_header, response_header)
+request_header = {
+    "headers": "GET / HTTP/1.1\r\nHost: www.forwarded-connection-std.com\r\n\r\n", "timestamp": "1469733493.993", "body": ""}
+server.addResponse("sessionlog.json", request_header, response_header)
+request_header = {
+    "headers": "GET / HTTP/1.1\r\nHost: www.forwarded-connection-full.com\r\n\r\n", "timestamp": "1469733493.993", "body": ""}
 server.addResponse("sessionlog.json", request_header, response_header)
 
 # Set up to check the output after the tests have run.
@@ -80,6 +86,7 @@ def baselineTsSetup(ts, sslPort):
     ts.Variables.ssl_port = sslPort
 
     ts.Disk.records_config.update({
+        # 'proxy.config.diags.debug.enabled': 1,
         'proxy.config.url_remap.pristine_host_hdr': 1, # Retain Host header in original incoming client request.
         'proxy.config.http.cache.http': 0, # Make sure each request is forwarded to the origin server.
         'proxy.config.proxy_name': 'Poxy_Proxy', # This will be the server name.
@@ -135,8 +142,16 @@ ts.Disk.remap_config.AddLine(
     ' @plugin=conf_remap.so @pparam=proxy.config.http.insert_forwarded=host'
 )
 ts.Disk.remap_config.AddLine(
-    'map http://www.forwarded-connection.com http://127.0.0.1:{0}'.format(server.Variables.Port) +
-    ' @plugin=conf_remap.so @pparam=proxy.config.http.insert_forwarded=connection'
+    'map http://www.forwarded-connection-compact.com http://127.0.0.1:{0}'.format(server.Variables.Port) +
+    ' @plugin=conf_remap.so @pparam=proxy.config.http.insert_forwarded=connection=compact'
+)
+ts.Disk.remap_config.AddLine(
+    'map http://www.forwarded-connection-std.com http://127.0.0.1:{0}'.format(server.Variables.Port) +
+    ' @plugin=conf_remap.so @pparam=proxy.config.http.insert_forwarded=connection=std'
+)
+ts.Disk.remap_config.AddLine(
+    'map http://www.forwarded-connection-full.com http://127.0.0.1:{0}'.format(server.Variables.Port) +
+    ' @plugin=conf_remap.so @pparam=proxy.config.http.insert_forwarded=connection=full'
 )
 
 # Ask the OS if the port is ready for connect()
@@ -181,7 +196,9 @@ TestHttp1_1('www.forwarded-by-uuid.com')
 
 TestHttp1_1('www.forwarded-proto.com')
 TestHttp1_1('www.forwarded-host.com')
-TestHttp1_1('www.forwarded-connection.com')
+TestHttp1_1('www.forwarded-connection-compact.com')
+TestHttp1_1('www.forwarded-connection-std.com')
+TestHttp1_1('www.forwarded-connection-full.com')
 
 ts2 = Test.MakeATSProcess("ts2", command="traffic_manager", select_ports=False)
 
@@ -190,7 +207,7 @@ ts2.Variables.port += 1
 # This Unix environment varible is used by traffic_manager.  It blocks traffic_manager from trying to obtain OS privileges.
 # This is necessary so that this test can be run by a non-root user.
 #
-ts2.Env["APACHE_TS_ELEVATE_ACCESS_MASK"] = "0"
+ts2.Env["TS_ELEVATE_ACCESS_MASK"] = "0"
 
 baselineTsSetup(ts2, 4444)
 
@@ -216,7 +233,7 @@ tr.Processes.Default.ReturnCode = 0
 tr = Test.AddTestRun()
 tr.Processes.Default.Command = (
     'traffic_ctl --debug config set proxy.config.http.insert_forwarded' +
-    ' "for|by=ip|by=unknown|by=servername|by=uuid|proto|host|connection"'
+    ' "for|by=ip|by=unknown|by=servername|by=uuid|proto|host|connection=compact|connection=std|connection=full"'
 )
 tr.Processes.Default.ForceUseShell = False
 tr.Processes.Default.ReturnCode = 0
