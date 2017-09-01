@@ -80,6 +80,7 @@ def baselineTsSetup(ts, sslPort):
     ts.Variables.ssl_port = sslPort
 
     ts.Disk.records_config.update({
+        # 'proxy.config.diags.debug.enabled': 1,
         'proxy.config.url_remap.pristine_host_hdr': 1, # Retain Host header in original incoming client request.
         'proxy.config.http.cache.http': 0, # Make sure each request is forwarded to the origin server.
         'proxy.config.proxy_name': 'Poxy_Proxy', # This will be the server name.
