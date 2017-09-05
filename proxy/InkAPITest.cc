@@ -7592,9 +7592,6 @@ const char *SDK_Overridable_Configs[TS_CONFIG_LAST_ENTRY] = {
   "proxy.config.http.parent_proxy.connect_attempts_timeout",
 };
 
-// Note:  Setting proxy.config.http.insert_forwarded cannot be tested here because the value validated when set.  That is,
-// it cannot contain an arbitrary test value.
-
 REGRESSION_TEST(SDK_API_OVERRIDABLE_CONFIGS)(RegressionTest *test, int /* atype ATS_UNUSED */, int *pstatus)
 {
   const char *conf;
