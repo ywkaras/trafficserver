@@ -50,7 +50,7 @@ optStrToBitset(ts::string_view optConfigStr, std::string &error)
   SV oCS(optConfigStr.data(), optConfigStr.size());
 
   if (strcasecmp(oCS.trim(isSp), SV("none")) == 0) {
-    error = "";
+    error.clear();
 
     return OBS();
   }
@@ -116,7 +116,7 @@ optStrToBitset(ts::string_view optConfigStr, std::string &error)
     }
   } while (oCS);
 
-  error = "";
+  error.clear();
 
   return optBS;
 
