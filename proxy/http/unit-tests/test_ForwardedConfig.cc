@@ -36,17 +36,12 @@ using OptionBitSetListInit = ts::BitSetListInit<Option::Num>;
 
 namespace
 {
-
-const char *wsTbl[] = {
-  "",
-  " ",
-  "  ",
-  nullptr
-};
+const char *wsTbl[] = {"", " ", "  ", nullptr};
 
 int wsIdx{0};
 
-const char *nextWs()
+const char *
+nextWs()
 {
   ++wsIdx;
 
@@ -143,8 +138,9 @@ TEST_CASE("Forwarded", "[FWD]")
        OptionBitSet());
 
 #undef X
-#define X(S) "by=ip" S "by=unknown" S "by=servername" S "by=uuid" S "for" S "proto" S "host" S "connection=compact" S \
-             "connection=std" S "connection=full"
+#define X(S)                                                                                                                  \
+  "by=ip" S "by=unknown" S "by=servername" S "by=uuid" S "for" S "proto" S "host" S "connection=compact" S "connection=std" S \
+  "connection=full"
 
   test(X(":"), "", OptionBitSet().set());
 

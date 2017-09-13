@@ -30,25 +30,26 @@
 
 #include <HttpConfig.h>
 
-namespace {
-
+namespace
+{
 class BadOptionsErrMsg
 {
 public:
   // Construct with referece to string that will contain error message.
   //
-  BadOptionsErrMsg(std::string &err) : _err(err), _count(0) { }
+  BadOptionsErrMsg(std::string &err) : _err(err), _count(0) {}
 
   // Add a bad option.
   //
-  void add(ts::StringView badOpt)
+  void
+  add(ts::StringView badOpt)
   {
     if (_count == 0) {
-      _err = _quote(badOpt);
+      _err   = _quote(badOpt);
       _count = 1;
     } else if (_count == 1) {
       _saveLast = badOpt;
-      _count = 2;
+      _count    = 2;
     } else {
       _err += ", " + _quote(_saveLast);
       _saveLast = badOpt;
@@ -56,9 +57,14 @@ public:
     }
   }
 
-  bool empty() const { return _count == 0; }
+  bool
+  empty() const
+  {
+    return _count == 0;
+  }
 
-  void done()
+  void
+  done()
   {
     if (_count == 0) {
       _err.clear();
@@ -70,8 +76,8 @@ public:
   }
 
 private:
-
-  std::string _quote(ts::StringView sv)
+  std::string
+  _quote(ts::StringView sv)
   {
     return std::string("\"") + std::string(sv.begin(), sv.size()) + "\"";
   }
@@ -85,12 +91,13 @@ private:
 
 // Compare a StringView to a nul-termimated string, converting the StringView to lower case and ignoring whitespace in it.
 //
-bool eqIgnoreCaseWs(ts::StringView sv, const char *target)
+bool
+eqIgnoreCaseWs(ts::StringView sv, const char *target)
 {
   const char *s = sv.begin();
 
   std::size_t skip = 0;
-  std::size_t i = 0;
+  std::size_t i    = 0;
 
   while ((i + skip) < sv.size()) {
     if (std::isspace(s[i + skip])) {
@@ -123,7 +130,6 @@ optStrToBitset(ts::string_view optConfigStr, std::string &error)
   error.clear();
 
   if (eqIgnoreCaseWs(oCS, "none")) {
-
     return OptionBitSet();
   }
 
@@ -132,25 +138,30 @@ optStrToBitset(ts::string_view optConfigStr, std::string &error)
   do {
     ts::StringView optStr = oCS.extractPrefix(Delimiters);
 
-    #undef X
-    #define X(OPT_NAME, OPT_C_STRING) \
-    if (eqIgnoreCaseWs(optStr, OPT_C_STRING)) { optBS.set(Option::OPT_NAME); }
+#undef X
+#define X(OPT_NAME, OPT_C_STRING)             \
+  if (eqIgnoreCaseWs(optStr, OPT_C_STRING)) { \
+    optBS.set(Option::OPT_NAME);              \
+  }
 
-    X(For, "for")
-    else X(ByIp, "by=ip")
-    else X(ByUnknown, "by=unknown")
-    else X(ByServerName, "by=servername")
-    else X(ByUuid, "by=uuid")
-    else X(Proto, "proto")
-    else X(Host, "host")
-    else X(ConnectionCompact, "connection=compact")
-    else X(ConnectionStd, "connection=standard")
-    else X(ConnectionStd, "connection=std")
-    else X(ConnectionFull, "connection=full")
-
-    else {
+    // clang-format off
+    //
+    X(For, "for") else 
+    X(ByIp, "by=ip") else 
+    X(ByUnknown, "by=unknown") else 
+    X(ByServerName, "by=servername") else 
+    X(ByUuid, "by=uuid") else 
+    X(Proto, "proto") else 
+    X(Host, "host") else 
+    X(ConnectionCompact, "connection=compact") else 
+    X(ConnectionStd, "connection=standard") else 
+    X(ConnectionStd, "connection=std") else 
+    X(ConnectionFull, "connection=full") else
+    {
       em.add(optStr);
     }
+    // clang-format on
+
   } while (oCS);
 
   em.done();
