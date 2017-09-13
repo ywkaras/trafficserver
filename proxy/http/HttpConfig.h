@@ -363,21 +363,22 @@ struct HttpConfigPortRange {
 
 namespace HttpForwarded
 {
-// Options for what will be included in "Forwarded" field header.  Not mutually exclusive, except that there should be only one
-// "by" option enabled.  (I did not use enum class because the enum values would not implicitly convert to integral
-// types).
+// Options for what parameters will be included in "Forwarded" field header.  Not mutually exclusive, except that there should be
+// only one "by" option enabled.  (I did not use enum class because the enum values would not implicitly convert to integral types).
 //
 namespace Option
 {
   enum E {
     For,
-    ByIp,         // by=<numeric IP address>.
-    ByUnknown,    // by=unknown.
-    ByServerName, // by=<configured server name>.
-    ByUuid,       // Obfuscated value for by, by=_<UUID>.
-    Proto,        // Basic protocol (http, https) of incominng message.
-    Host,         // Host from URL before any remapping.
-    Connection,   // Verbose protocol from Via: field, with dashes instead of spaces.
+    ByIp,              // by=<numeric IP address>.
+    ByUnknown,         // by=unknown.
+    ByServerName,      // by=<configured server name>.
+    ByUuid,            // Obfuscated value for by, by=_<UUID>.
+    Proto,             // Basic protocol (http, https) of incoming message.
+    Host,              // Host from URL before any remapping.
+    ConnectionCompact, // Same value as 'proto' parameter.
+    ConnectionStd,     // Verbose protocol from Via: field, with dashes instead of spaces.
+    ConnectionFull,    // Ultra-verbose protocol from Via: field, with dashes instead of spaces.
 
     Num // Number of options.
   };

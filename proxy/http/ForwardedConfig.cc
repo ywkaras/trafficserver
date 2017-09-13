@@ -30,93 +30,136 @@
 
 #include <HttpConfig.h>
 
+namespace {
+
+class BadOptionsErrMsg
+{
+public:
+  // Construct with referece to string that will contain error message.
+  //
+  BadOptionsErrMsg(std::string &err) : _err(err), _count(0) { }
+
+  // Add a bad option.
+  //
+  void add(ts::StringView badOpt)
+  {
+    if (_count == 0) {
+      _err = _quote(badOpt);
+      _count = 1;
+    } else if (_count == 1) {
+      _saveLast = badOpt;
+      _count = 2;
+    } else {
+      _err += ", " + _quote(_saveLast);
+      _saveLast = badOpt;
+      ++_count;
+    }
+  }
+
+  bool empty() const { return _count == 0; }
+
+  void done()
+  {
+    if (_count == 0) {
+      _err.clear();
+    } else if (_count == 1) {
+      _err += " is a bad option.";
+    } else {
+      _err += " and " + _quote(_saveLast) + " are bad options.";
+    }
+  }
+
+private:
+
+  std::string _quote(ts::StringView sv)
+  {
+    return std::string("\"") + std::string(sv.begin(), sv.size()) + "\"";
+  }
+
+  std::string &_err;
+
+  ts::StringView _saveLast;
+
+  int _count;
+};
+
+// Compare a StringView to a nul-termimated string, converting the StringView to lower case and ignoring whitespace in it.
+//
+bool eqIgnoreCaseWs(ts::StringView sv, const char *target)
+{
+  const char *s = sv.begin();
+
+  std::size_t skip = 0;
+  std::size_t i = 0;
+
+  while ((i + skip) < sv.size()) {
+    if (std::isspace(s[i + skip])) {
+      ++skip;
+    } else if (std::tolower(s[i + skip]) != target[i]) {
+      return false;
+    } else {
+      ++i;
+    }
+  }
+
+  return target[i] == '\0';
+}
+
+} // end anonymous namespace
+
 namespace HttpForwarded
 {
 OptionBitSet
 optStrToBitset(ts::string_view optConfigStr, std::string &error)
 {
-  using SV = ts::StringView;
+  const ts::StringView Delimiters(":|");
 
-  const SV Delimiters(":|");
-
-  using OBS = OptionBitSet;
-
-  auto isSp = [](char c) -> bool { return std::isspace(c); };
-
-  OBS optBS;
+  OptionBitSet optBS;
 
   // Convert to TS StringView to be able to use parsing members.
   //
-  SV oCS(optConfigStr.data(), optConfigStr.size());
+  ts::StringView oCS(optConfigStr.data(), optConfigStr.size());
 
-  if (strcasecmp(oCS.trim(isSp), SV("none")) == 0) {
-    error.clear();
+  error.clear();
 
-    return OBS();
+  if (eqIgnoreCaseWs(oCS, "none")) {
+
+    return OptionBitSet();
   }
 
+  BadOptionsErrMsg em(error);
+
   do {
-    SV optStr = oCS.extractPrefix(Delimiters);
-    optStr.ltrim(isSp);
+    ts::StringView optStr = oCS.extractPrefix(Delimiters);
 
-    SV eqRHS = optStr;
+    #undef X
+    #define X(OPT_NAME, OPT_C_STRING) \
+    if (eqIgnoreCaseWs(optStr, OPT_C_STRING)) { optBS.set(Option::OPT_NAME); }
 
-    SV eqLHS = eqRHS.extractPrefix('=');
+    X(For, "for")
+    else X(ByIp, "by=ip")
+    else X(ByUnknown, "by=unknown")
+    else X(ByServerName, "by=servername")
+    else X(ByUuid, "by=uuid")
+    else X(Proto, "proto")
+    else X(Host, "host")
+    else X(ConnectionCompact, "connection=compact")
+    else X(ConnectionStd, "connection=standard")
+    else X(ConnectionStd, "connection=std")
+    else X(ConnectionFull, "connection=full")
 
-    if (eqLHS != optStr) {
-      // There's an equal sign in the option.
-
-      if (strcasecmp(eqLHS.rtrim(isSp), SV("by")) != 0) {
-        error = "\"Forwarded\" configuration: use of = in an option that is not \"by\"";
-        return OBS();
-      }
-
-      eqRHS.trim(isSp);
-
-      if (strcasecmp(eqRHS, SV("ip")) == 0) {
-        optBS.set(Option::ByIp);
-
-      } else if (strcasecmp(eqRHS, SV("unknown")) == 0) {
-        optBS.set(Option::ByUnknown);
-
-      } else if (strcasecmp(eqRHS, SV("servername")) == 0) {
-        optBS.set(Option::ByServerName);
-
-      } else if (strcasecmp(eqRHS, SV("uuid")) == 0) {
-        optBS.set(Option::ByUuid);
-
-      } else {
-        error = "\"Forwarded\" configuration: \"by\" option invalid";
-        return OBS();
-      }
-    } else { // No equal sign in option.
-
-      optStr.rtrim(isSp);
-
-      if (strcasecmp(optStr, SV("for")) == 0) {
-        optBS.set(Option::For);
-
-      } else if (strcasecmp(optStr, SV("proto")) == 0) {
-        optBS.set(Option::Proto);
-
-      } else if (strcasecmp(optStr, SV("host")) == 0) {
-        optBS.set(Option::Host);
-
-      } else if (strcasecmp(optStr, SV("connection")) == 0) {
-        optBS.set(Option::Connection);
-
-      } else if (strcasecmp(optStr, SV("by")) == 0) {
-        error = "\"Forwarded\" configuration: \"by\" option must be followed by =";
-        return OBS();
-
-      } else {
-        error = "\"Forwarded\" configuration: option invalid";
-        return OBS();
-      }
+    else {
+      em.add(optStr);
     }
   } while (oCS);
 
-  error.clear();
+  em.done();
+
+  if (!error.empty()) {
+    error = std::string("\"Forwarded\" configuration: ") + error;
+
+    return OptionBitSet();
+  }
 
   return optBS;
 

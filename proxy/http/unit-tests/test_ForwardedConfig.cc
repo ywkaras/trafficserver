@@ -1,6 +1,6 @@
 /** @file
 
-  This file used for catch based tests. It is the main() stub.
+  Catch-based tests for ForwardedConfig.cc.
 
   @section license License
 
@@ -30,23 +30,40 @@
 #include "HttpConfig.h"
 #include <ts/BitSetListInit.h>
 
-namespace HF  = HttpForwarded;
-namespace HFO = HF::Option;
+using namespace HttpForwarded;
 
-using OBS = std::bitset<HFO::Num>;
-
-using OBSIL = ts::BitSetListInit<HFO::Num>;
+using OptionBitSetListInit = ts::BitSetListInit<Option::Num>;
 
 namespace
 {
-// Alternate upper/lower case and pad front and back with a space.
+
+const char *wsTbl[] = {
+  "",
+  " ",
+  "  ",
+  nullptr
+};
+
+int wsIdx{0};
+
+const char *nextWs()
+{
+  ++wsIdx;
+
+  if (!wsTbl[wsIdx]) {
+    wsIdx = 0;
+  }
+
+  return wsTbl[wsIdx];
+}
+// Alternate upper/lower case and add blanks.
 class XS
 {
 private:
   std::string s;
 
 public:
-  XS(const char *in)
+  XS(const char *in) : s{nextWs()}
   {
     bool upper{true};
     for (; *in; ++in) {
@@ -61,18 +78,20 @@ public:
       } else {
         s += *in;
       }
+      s += nextWs();
     }
+    s += nextWs();
   }
 
   operator ts::string_view() const { return ts::string_view(s.c_str()); }
 };
 
 void
-test(const char *spec, const char *reqErr, OBS bS)
+test(const char *spec, const char *reqErr, OptionBitSet bS)
 {
   std::string error{"cheese"};
 
-  REQUIRE(bS == HF::optStrToBitset(XS(spec), error));
+  REQUIRE(bS == optStrToBitset(XS(spec), error));
   REQUIRE(error == reqErr);
 }
 
@@ -82,46 +101,60 @@ TEST_CASE("Forwarded", "[FWD]")
 {
   std::string error;
 
-  test(" none ", "", OBS());
+  test("none", "", OptionBitSet());
 
-  test("  ", "\"Forwarded\" configuration: option invalid", OBS());
+  test("", "\"Forwarded\" configuration: \"   \" is a bad option.", OptionBitSet());
 
-  test(" : ", "\"Forwarded\" configuration: option invalid", OBS());
+  test("\t", "\"Forwarded\" configuration: \"\t   \" is a bad option.", OptionBitSet());
 
-  test(" | ", "\"Forwarded\" configuration: option invalid", OBS());
+  test(":", "\"Forwarded\" configuration: \"   \" is a bad option.", OptionBitSet());
 
-  test(" by = ip ", "", OBSIL{HFO::ByIp});
+  test("|", "\"Forwarded\" configuration: \"   \" is a bad option.", OptionBitSet());
 
-  test(" by = unknown ", "", OBSIL{HFO::ByUnknown});
+  test("by=ip", "", OptionBitSetListInit{Option::ByIp});
 
-  test(" by = servername ", "", OBSIL{HFO::ByServerName});
+  test("by=unknown", "", OptionBitSetListInit{Option::ByUnknown});
 
-  test(" by = uuid ", "", OBSIL{HFO::ByUuid});
+  test("by=servername", "", OptionBitSetListInit{Option::ByServerName});
 
-  test(" for ", "", OBSIL{HFO::For});
+  test("by=uuid", "", OptionBitSetListInit{Option::ByUuid});
 
-  test(" proto ", "", OBSIL{HFO::Proto});
+  test("for", "", OptionBitSetListInit{Option::For});
 
-  test(" host ", "", OBSIL{HFO::Host});
+  test("proto", "", OptionBitSetListInit{Option::Proto});
 
-  test(" connection ", "", OBSIL{HFO::Connection});
+  test("host", "", OptionBitSetListInit{Option::Host});
 
-  test(" proto : by = uuid | for ", "", OBSIL{HFO::Proto, HFO::ByUuid, HFO::For});
+  test("connection=compact", "", OptionBitSetListInit{Option::ConnectionCompact});
+
+  test("connection=standard", "", OptionBitSetListInit{Option::ConnectionStd});
+
+  test("connection=std", "", OptionBitSetListInit{Option::ConnectionStd});
+
+  test("connection=full", "", OptionBitSetListInit{Option::ConnectionFull});
+
+  test("proto:by=uuid|for", "", OptionBitSetListInit{Option::Proto, Option::ByUuid, Option::For});
+
+  test("proto:by=cheese|fur", "\"Forwarded\" configuration: \" b  Y= c  He E  sE \" and \"  fU r  \" are bad options.",
+       OptionBitSet());
+
+  test("proto:by=cheese|fur|compact=",
+       "\"Forwarded\" configuration: \" b  Y= c  He E  sE \", \"  fU r  \" and \"C o  Mp A  cT =  \" are bad options.",
+       OptionBitSet());
 
 #undef X
-#define X(S) " by = ip " S " by = unknown " S " by = servername " S " by = uuid " S " for " S " proto " S " host " S " connection "
+#define X(S) "by=ip" S "by=unknown" S "by=servername" S "by=uuid" S "for" S "proto" S "host" S "connection=compact" S \
+             "connection=std" S "connection=full"
 
-  test(X(":"), "", OBS().set());
+  test(X(":"), "", OptionBitSet().set());
 
-  test(X("|"), "", OBS().set());
+  test(X("|"), "", OptionBitSet().set());
 
-  test(X("|") "|" X(":"), "", OBS().set());
+  test(X("|") "|" X(":"), "", OptionBitSet().set());
 
-  test(X("|") " : abcd", "\"Forwarded\" configuration: option invalid", OBS());
+  test(X("|") ":abcd", "\"Forwarded\" configuration: \"  aB c  D \" is a bad option.", OptionBitSet());
 
-  test(X("|") " : for = abcd", "\"Forwarded\" configuration: use of = in an option that is not \"by\"", OBS());
+  test(X("|") ":for=abcd", "\"Forwarded\" configuration: \" f  Or =  Ab C  d \" is a bad option.", OptionBitSet());
 
-  test(X("|") " : by = abcd", "\"Forwarded\" configuration: \"by\" option invalid", OBS());
-
-  test(X("|") " : by ", "\"Forwarded\" configuration: \"by\" option must be followed by =", OBS());
+  test(X("|") ":by", "\"Forwarded\" configuration: \" b  Y \" is a bad option.", OptionBitSet());
 }
