@@ -1152,7 +1152,7 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
     }
 
     if (nProto > 0) {
-      auto Conn = [&] (HttpForwarded::Option::E opt, HttpTransactHeaders::ProtocolStackDetail detail) -> void {
+      auto Conn = [&](HttpForwarded::Option::E opt, HttpTransactHeaders::ProtocolStackDetail detail) -> void {
         if (optSet[opt]) {
           int revert = hdr.size();
 
@@ -1162,8 +1162,8 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
 
           hdr << "connection=";
 
-          int numChars = HttpTransactHeaders::write_hdr_protocol_stack(
-            hdr.auxBuffer(), hdr.remaining(), detail,  protoBuf.data(), nProto, '-');
+          int numChars =
+            HttpTransactHeaders::write_hdr_protocol_stack(hdr.auxBuffer(), hdr.remaining(), detail, protoBuf.data(), nProto, '-');
           if (numChars > 0) {
             hdr.write(size_t(numChars));
           }
@@ -1176,9 +1176,9 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
         }
       };
 
-      Conn(HttpForwarded::Option::ConnectionCompact, HttpTransactHeaders::ProtocolStackDetail::Compact); 
-      Conn(HttpForwarded::Option::ConnectionStd, HttpTransactHeaders::ProtocolStackDetail::Standard); 
-      Conn(HttpForwarded::Option::ConnectionFull, HttpTransactHeaders::ProtocolStackDetail::Full); 
+      Conn(HttpForwarded::Option::ConnectionCompact, HttpTransactHeaders::ProtocolStackDetail::Compact);
+      Conn(HttpForwarded::Option::ConnectionStd, HttpTransactHeaders::ProtocolStackDetail::Standard);
+      Conn(HttpForwarded::Option::ConnectionFull, HttpTransactHeaders::ProtocolStackDetail::Full);
     }
 
     // Add or append to the Forwarded header.  As a fail-safe against corrupting the MIME header, don't add Forwarded if
