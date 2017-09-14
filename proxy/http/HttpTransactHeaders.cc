@@ -1017,15 +1017,13 @@ HttpTransactHeaders::add_global_user_agent_header_to_request(OverridableHttpConf
 void
 HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTPHdr *request)
 {
-  namespace HF = HttpForwarded;
-
-  HF::OptionBitSet optSet = s->txn_conf->insert_forwarded;
+  HttpForwarded::OptionBitSet optSet = s->txn_conf->insert_forwarded;
 
   if (optSet.any()) { // One or more Forwarded parameters enabled, so insert/append to Forwarded header.
 
     ts::LocalBufferWriter<1024> hdr;
 
-    if (optSet[HF::Option::For] and ats_is_ip(&s->client_info.src_addr.sa)) {
+    if (optSet[HttpForwarded::Option::For] and ats_is_ip(&s->client_info.src_addr.sa)) {
       // NOTE:  The logic within this if statement assumes that hdr is empty at this point.
 
       hdr << "for=";
@@ -1051,7 +1049,7 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
       }
     }
 
-    if (optSet[HF::Option::ByUnknown]) {
+    if (optSet[HttpForwarded::Option::ByUnknown]) {
       if (hdr.size()) {
         hdr << ';';
       }
@@ -1059,7 +1057,7 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
       hdr << "by=unknown";
     }
 
-    if (optSet[HF::Option::ByServerName]) {
+    if (optSet[HttpForwarded::Option::ByServerName]) {
       if (hdr.size()) {
         hdr << ';';
       }
@@ -1069,7 +1067,7 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
 
     const Machine &m = *Machine::instance();
 
-    if (optSet[HF::Option::ByUuid] and m.uuid.valid()) {
+    if (optSet[HttpForwarded::Option::ByUuid] and m.uuid.valid()) {
       if (hdr.size()) {
         hdr << ';';
       }
@@ -1077,7 +1075,7 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
       hdr << "by=_" << m.uuid.getString();
     }
 
-    if (optSet[HF::Option::ByIp] and (m.ip_string_len > 0)) {
+    if (optSet[HttpForwarded::Option::ByIp] and (m.ip_string_len > 0)) {
       if (hdr.size()) {
         hdr << ';';
       }
@@ -1108,11 +1106,15 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
     std::array<ts::StringView, 10> protoBuf; // 10 seems like a reasonable number of protos to print
     int nProto;
 
-    if ((optSet bitand ts::BitSetListInit<HF::Option::Num>{{HF::Option::Proto, HF::Option::Connection}}).any()) {
+    if ((optSet bitand
+         ts::BitSetListInit<HttpForwarded::Option::Num>{{HttpForwarded::Option::Proto, HttpForwarded::Option::ConnectionCompact,
+                                                         HttpForwarded::Option::ConnectionStd,
+                                                         HttpForwarded::Option::ConnectionFull}})
+          .any()) {
       nProto = s->state_machine->populate_client_protocol(protoBuf.data(), protoBuf.size());
     }
 
-    if (optSet[HF::Option::Proto] and (nProto > 0)) {
+    if (optSet[HttpForwarded::Option::Proto] and (nProto > 0)) {
       if (hdr.size()) {
         hdr << ';';
       }
@@ -1126,7 +1128,7 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
       }
     }
 
-    if (optSet[HF::Option::Host]) {
+    if (optSet[HttpForwarded::Option::Host]) {
       const MIMEField *hostField = s->hdr_info.client_request.field_find(MIME_FIELD_HOST, MIME_LEN_HOST);
 
       if (hostField and hostField->m_len_value) {
@@ -1149,33 +1151,41 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
       }
     }
 
-    if (optSet[HF::Option::Connection] and (nProto > 0)) {
-      int revert = hdr.size();
+    if (nProto > 0) {
+      auto Conn = [&] (HttpForwarded::Option::E opt, HttpTransactHeaders::ProtocolStackDetail detail) -> void {
+        if (optSet[opt]) {
+          int revert = hdr.size();
 
-      if (hdr.size()) {
-        hdr << ';';
-      }
+          if (hdr.size()) {
+            hdr << ';';
+          }
 
-      hdr << "connection=";
+          hdr << "connection=";
 
-      int numChars = HttpTransactHeaders::write_hdr_protocol_stack(
-        hdr.auxBuffer(), hdr.remaining(), HttpTransactHeaders::ProtocolStackDetail::Full, protoBuf.data(), nProto, '-');
-      if (numChars > 0) {
-        hdr.write(size_t(numChars));
-      }
+          int numChars = HttpTransactHeaders::write_hdr_protocol_stack(
+            hdr.auxBuffer(), hdr.remaining(), detail,  protoBuf.data(), nProto, '-');
+          if (numChars > 0) {
+            hdr.write(size_t(numChars));
+          }
 
-      if ((numChars <= 0) or (hdr.size() >= hdr.capacity())) {
-        // Remove parameter with potentially incomplete value.
-        //
-        hdr.reduce(revert);
-      }
+          if ((numChars <= 0) or (hdr.size() >= hdr.capacity())) {
+            // Remove parameter with potentially incomplete value.
+            //
+            hdr.reduce(revert);
+          }
+        }
+      };
+
+      Conn(HttpForwarded::Option::ConnectionCompact, HttpTransactHeaders::ProtocolStackDetail::Compact); 
+      Conn(HttpForwarded::Option::ConnectionStd, HttpTransactHeaders::ProtocolStackDetail::Standard); 
+      Conn(HttpForwarded::Option::ConnectionFull, HttpTransactHeaders::ProtocolStackDetail::Full); 
     }
 
     // Add or append to the Forwarded header.  As a fail-safe against corrupting the MIME header, don't add Forwarded if
     // it's size is exactly the capacity of the buffer.
     //
     if (hdr.size() and !hdr.error() and (hdr.size() < hdr.capacity())) {
-      ts::string_view sV = hdr;
+      ts::string_view sV = hdr.view();
 
       request->value_append(MIME_FIELD_FORWARDED, MIME_LEN_FORWARDED, sV.data(), sV.size(), true, ','); // true => separator must
                                                                                                         // be inserted
