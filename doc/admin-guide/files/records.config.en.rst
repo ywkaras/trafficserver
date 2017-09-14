@@ -1674,18 +1674,20 @@ Proxy User Variables
    ``Forwarded`` header in the request, the value of this variable must be a list of the ``Forwarded``
    parameters to be inserted.
 
-   =============  =====================================================
-   Parameter      Value of parameter place in outgoing Forwarded header
-   =============  =====================================================
-   for            Client IP address
-   by=ip          Proxy IP address
-   by=unknown     The literal string ``unknown``
-   by=servername  Proxy server name
-   by=uuid        Server UUID prefixed with ``_``
-   proto          Protocol of incoming request
-   host           The host specified in the incoming request
-   connection     Full user agent connection :ref:`protocol tags <protocol_tags>`
-   =============  =====================================================
+   ==================  ===============================================================
+   Parameter           Value of parameter place in outgoing Forwarded header
+   ==================  ===============================================================
+   for                 Client IP address
+   by=ip               Proxy IP address
+   by=unknown          The literal string ``unknown``
+   by=servername       Proxy server name
+   by=uuid             Server UUID prefixed with ``_``
+   proto               Protocol of incoming request
+   host                The host specified in the incoming request
+   connection=compact  Connection with basic transaction codes.
+   connection=std      Connection with detailed transaction codes.
+   connection=full     Full user agent connection :ref:`protocol tags <protocol_tags>`
+   ==================  ===============================================================
 
    Each paramater in the list must be separated by ``|`` or ``:``.  For example, ``for|by=uuid|proto`` is
    a valid value for this variable.  Note that the ``connection`` parameter is a non-standard extension to
