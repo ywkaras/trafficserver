@@ -207,7 +207,7 @@ ts2.Variables.port += 1
 # This Unix environment varible is used by traffic_manager.  It blocks traffic_manager from trying to obtain OS privileges.
 # This is necessary so that this test can be run by a non-root user.
 #
-ts2.Env["APACHE_TS_ELEVATE_ACCESS_MASK"] = "0"
+ts2.Env["TS_ELEVATE_ACCESS_MASK"] = "0"
 
 baselineTsSetup(ts2, 4444)
 
