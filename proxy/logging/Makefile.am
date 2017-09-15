@@ -71,7 +71,10 @@ liblogging_a_SOURCES = \
   LogSock.cc \
   LogSock.h \
   LogUtils.cc \
-  LogUtils.h
+  LogUtils.h \
+  LogUtilsHttp.cc \
+  LogCatUtilsHttp.cc \
+  LogUtilsHttp.h
 
 liblogcollation_a_SOURCES = \
   LogCollationAccept.cc \
@@ -84,6 +87,7 @@ liblogcollation_a_SOURCES = \
 
 check_PROGRAMS = \
   test_LogUtils \
+  test_LogUtilsHttp \
   test_MarshalIntegral
 
 TESTS = \
@@ -95,6 +99,15 @@ test_LogUtils_LDADD = \
 
 test_LogUtils_SOURCES = \
   test_LogUtils.cc
+
+test_LogUtilsHttp_CPPFLAGS =  $(AM_CPPFLAGS)\
+  -DTEST_LOG_UTILS_HTTP \
+  -I$(abs_top_srcdir)/tests/include
+
+test_LogUtilsHttp_SOURCES = \
+  LogUtilsHttp.cc \
+  LogCatUtilsHttp.cc \
+  unit-tests/test_LogUtilsHttp.cc
 
 test_MarshalIntegral_CPPFLAGS =  $(AM_CPPFLAGS)\
   -I$(abs_top_srcdir)/tests/include
