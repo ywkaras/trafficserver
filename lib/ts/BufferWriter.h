@@ -60,6 +60,9 @@ public:
     return write(sV.data(), sV.size());
   }
 
+  /// Return the written buffer.
+  virtual const char *data() const = 0;
+
   // Returns true if the instance is in an error state.
   //
   virtual bool error() const = 0;
@@ -170,6 +173,13 @@ public:
   //
   using BufferWriter::write;
 
+  /// Return the written buffer.
+  const char *
+  data() const override
+  {
+    return _buf;
+  }
+
   bool
   error() const override
   {
@@ -242,35 +252,7 @@ public:
     return string_view(_buf, size());
   }
 
-  // When possible, provide access to buffer contents as a nul-terminated string.  The next non-const member function call
-  // on the instance invalidates the return value.  Useful for passing the contents of the buffer to printf() and printf()
-  // wannabes.
-  //
-  const char *
-  cStr()
-  {
-    if (_attempted >= _capacity) {
-      return "";
-    }
-
-    _buf[_attempted] = '\0';
-
-    return (_buf);
-  }
-
-  // Like cStr(), but truncate to clear any error condition and provide room for the null character, if necessary.
-  //
-  const char *
-  cStrTrunc()
-  {
-    if (_attempted > _capacity) {
-      _attempted = _capacity - 1;
-    }
-
-    _buf[_attempted] = '\0';
-
-    return (_buf);
-  }
+  operator string_view() const { return view(); }
 
   // No copying
   //

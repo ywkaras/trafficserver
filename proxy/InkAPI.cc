@@ -8272,7 +8272,7 @@ TSHttpTxnConfigStringSet(TSHttpTxn txnp, TSOverridableConfigKey conf, const char
       if (!error.size()) {
         s->t_state.txn_conf->insert_forwarded = bs;
       } else {
-        Error("HTTP %s", error.cStrTrunc());
+        Error("HTTP %.*s", static_cast<int>(error.size()), error.data());
       }
     }
     break;

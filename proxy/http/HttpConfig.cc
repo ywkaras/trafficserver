@@ -193,7 +193,7 @@ http_insert_forwarded_cb(const char *name, RecDataT dtype, RecData data, void *c
         c->oride.insert_forwarded = bs;
         valid_p                   = true;
       } else {
-        Error("HTTP %s", error.cStrTrunc());
+        Error("HTTP %.*s", static_cast<int>(error.size()), error.data());
       }
     }
   }
@@ -975,7 +975,7 @@ HttpConfig::startup()
       if (!error.size()) {
         c.oride.insert_forwarded = bs;
       } else {
-        Error("HTTP %s", error.cStrTrunc());
+        Error("HTTP %.*s", static_cast<int>(error.size()), error.data());
       }
     }
   }

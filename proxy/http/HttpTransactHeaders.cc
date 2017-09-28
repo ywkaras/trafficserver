@@ -1191,7 +1191,8 @@ HttpTransactHeaders::add_forwarded_field_to_request(HttpTransact::State *s, HTTP
       request->value_append(MIME_FIELD_FORWARDED, MIME_LEN_FORWARDED, sV.data(), sV.size(), true, ','); // true => separator must
                                                                                                         // be inserted
 
-      Debug("http_trans", "[add_forwarded_field_to_outgoing_request] Forwarded header (%s) added", hdr.cStr());
+      Debug("http_trans", "[add_forwarded_field_to_outgoing_request] Forwarded header (%.*s) added", static_cast<int>(hdr.size()),
+            hdr.data());
     }
   }
 
