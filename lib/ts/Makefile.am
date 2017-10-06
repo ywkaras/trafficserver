@@ -132,6 +132,7 @@ libtsutil_la_SOURCES = \
   ink_sock.h \
   ink_sprintf.cc \
   ink_sprintf.h \
+	ink_std_compat.h \
   ink_stack_trace.cc \
   ink_stack_trace.h \
   ink_string.cc \
@@ -177,6 +178,8 @@ libtsutil_la_SOURCES = \
   Regression.cc \
   Regression.h \
   Result.h \
+  runroot.cc \
+  runroot.h \
   signals.cc \
   signals.h \
   SimpleTokenizer.h \
@@ -252,10 +255,11 @@ test_tslib_CPPFLAGS = $(AM_CPPFLAGS)\
 # add you catch based test file here for tslib
 test_tslib_LDADD = libtsutil.la
 test_tslib_SOURCES = \
-	unit-tests/main.cpp \
+	unit-tests/unit_test_main.cc \
+	unit-tests/test_BufferWriter.cc \
 	unit-tests/test_IpMap.cc \
-	unit-tests/test_layout.cpp \
-	unit-tests/BufferWriter.cpp
+	unit-tests/test_layout.cc \
+	unit-tests/test_string_view.cc
 
 CompileParseRules_SOURCES = CompileParseRules.cc
 

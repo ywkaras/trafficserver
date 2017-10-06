@@ -60,7 +60,7 @@
 #include "I_RecCore.h"
 #include "I_Machine.h"
 #include "HttpProxyServerMain.h"
-#include <ts/MemView.h>
+#include <ts/string_view.h>
 
 #include "api/ts/ts.h"
 
@@ -83,11 +83,11 @@
   _HDR.m_mime = _HDR.m_http->m_fields_impl;
 
 // Globals for new librecords stats
-static volatile int api_rsb_index = 0;
+static int api_rsb_index;
 static RecRawStatBlock *api_rsb;
 
 // Globals for the Sessions/Transaction index registry
-static volatile int next_argv_index = 0;
+static int next_argv_index;
 
 static std::type_info const &TYPE_INFO_MGMT_INT   = typeid(MgmtInt);
 static std::type_info const &TYPE_INFO_MGMT_BYTE  = typeid(MgmtByte);
@@ -216,6 +216,7 @@ tsapi const char *TS_MIME_FIELD_WARNING;
 tsapi const char *TS_MIME_FIELD_WWW_AUTHENTICATE;
 tsapi const char *TS_MIME_FIELD_XREF;
 tsapi const char *TS_MIME_FIELD_X_FORWARDED_FOR;
+tsapi const char *TS_MIME_FIELD_FORWARDED;
 
 /* MIME fields string lengths */
 tsapi int TS_MIME_LEN_ACCEPT;
@@ -290,6 +291,7 @@ tsapi int TS_MIME_LEN_WARNING;
 tsapi int TS_MIME_LEN_WWW_AUTHENTICATE;
 tsapi int TS_MIME_LEN_XREF;
 tsapi int TS_MIME_LEN_X_FORWARDED_FOR;
+tsapi int TS_MIME_LEN_FORWARDED;
 
 /* HTTP miscellaneous values */
 tsapi const char *TS_HTTP_VALUE_BYTES;
@@ -1500,6 +1502,7 @@ api_init()
     TS_MIME_FIELD_WWW_AUTHENTICATE          = MIME_FIELD_WWW_AUTHENTICATE;
     TS_MIME_FIELD_XREF                      = MIME_FIELD_XREF;
     TS_MIME_FIELD_X_FORWARDED_FOR           = MIME_FIELD_X_FORWARDED_FOR;
+    TS_MIME_FIELD_FORWARDED                 = MIME_FIELD_FORWARDED;
 
     TS_MIME_LEN_ACCEPT                    = MIME_LEN_ACCEPT;
     TS_MIME_LEN_ACCEPT_CHARSET            = MIME_LEN_ACCEPT_CHARSET;
@@ -1573,6 +1576,7 @@ api_init()
     TS_MIME_LEN_WWW_AUTHENTICATE          = MIME_LEN_WWW_AUTHENTICATE;
     TS_MIME_LEN_XREF                      = MIME_LEN_XREF;
     TS_MIME_LEN_X_FORWARDED_FOR           = MIME_LEN_X_FORWARDED_FOR;
+    TS_MIME_LEN_FORWARDED                 = MIME_LEN_FORWARDED;
 
     /* HTTP methods */
     TS_HTTP_METHOD_CONNECT = HTTP_METHOD_CONNECT;
@@ -7644,12 +7648,19 @@ TSHttpTxnServerPush(TSHttpTxn txnp, const char *url, int url_len)
     url_obj.destroy();
     return;
   }
+
   HttpSM *sm          = reinterpret_cast<HttpSM *>(txnp);
   Http2Stream *stream = dynamic_cast<Http2Stream *>(sm->ua_session);
   if (stream) {
     Http2ClientSession *parent = static_cast<Http2ClientSession *>(stream->get_parent());
     if (!parent->is_url_pushed(url, url_len)) {
-      stream->push_promise(url_obj);
+      HTTPHdr *hptr = &(sm->t_state.hdr_info.client_request);
+      TSMLoc obj    = reinterpret_cast<TSMLoc>(hptr->m_http);
+
+      MIMEHdrImpl *mh = _hdr_mloc_to_mime_hdr_impl(obj);
+      MIMEField *f    = mime_hdr_field_find(mh, MIME_FIELD_ACCEPT_ENCODING, MIME_LEN_ACCEPT_ENCODING);
+      stream->push_promise(url_obj, f);
+
       parent->add_url_to_pushed_table(url, url_len);
     }
   }
@@ -7834,6 +7845,9 @@ _conf_to_memberp(TSOverridableConfigKey conf, OverridableHttpConfigParams *overr
   case TS_CONFIG_HTTP_INSERT_SQUID_X_FORWARDED_FOR:
     ret = _memberp_to_generic(&overridableHttpConfig->insert_squid_x_forwarded_for, typep);
     break;
+  case TS_CONFIG_HTTP_INSERT_FORWARDED:
+    ret = _memberp_to_generic(&overridableHttpConfig->insert_forwarded, typep);
+    break;
   case TS_CONFIG_HTTP_SERVER_TCP_INIT_CWND:
     ret = _memberp_to_generic(&overridableHttpConfig->server_tcp_init_cwnd, typep);
     break;
@@ -7966,8 +7980,8 @@ _conf_to_memberp(TSOverridableConfigKey conf, OverridableHttpConfigParams *overr
   case TS_CONFIG_HTTP_CACHE_RANGE_LOOKUP:
     ret = _memberp_to_generic(&overridableHttpConfig->cache_range_lookup, typep);
     break;
-  case TS_CONFIG_HTTP_NORMALIZE_AE_GZIP:
-    ret = _memberp_to_generic(&overridableHttpConfig->normalize_ae_gzip, typep);
+  case TS_CONFIG_HTTP_NORMALIZE_AE:
+    ret = _memberp_to_generic(&overridableHttpConfig->normalize_ae, typep);
     break;
   case TS_CONFIG_HTTP_DEFAULT_BUFFER_SIZE:
     ret = _memberp_to_generic(&overridableHttpConfig->default_buffer_size_index, typep);
@@ -8258,6 +8272,17 @@ TSHttpTxnConfigStringSet(TSHttpTxn txnp, TSOverridableConfigKey conf, const char
       s->t_state.txn_conf->client_cert_filepath = const_cast<char *>(value);
     }
     break;
+  case TS_CONFIG_HTTP_INSERT_FORWARDED:
+    if (value && length > 0) {
+      ts::LocalBufferWriter<1024> error;
+      HttpForwarded::OptionBitSet bs = HttpForwarded::optStrToBitset(ts::string_view(value, length), error);
+      if (!error.size()) {
+        s->t_state.txn_conf->insert_forwarded = bs;
+      } else {
+        Error("HTTP %.*s", static_cast<int>(error.size()), error.data());
+      }
+    }
+    break;
   default:
     return TS_ERROR;
     break;
@@ -8328,6 +8353,12 @@ TSHttpTxnConfigFind(const char *name, int length, TSOverridableConfigKey *conf, 
     }
     break;
 
+  case 30:
+    if (!strncmp(name, "proxy.config.http.normalize_ae", length)) {
+      cnf = TS_CONFIG_HTTP_NORMALIZE_AE;
+    }
+    break;
+
   case 31:
     if (!strncmp(name, "proxy.config.http.chunking.size", length)) {
       cnf = TS_CONFIG_HTTP_CHUNKING_SIZE;
@@ -8348,21 +8379,15 @@ TSHttpTxnConfigFind(const char *name, int length, TSOverridableConfigKey *conf, 
       cnf = TS_CONFIG_HTTP_CACHE_GENERATION;
     } else if (!strncmp(name, "proxy.config.http.insert_client_ip", length)) {
       cnf = TS_CONFIG_HTTP_ANONYMIZE_INSERT_CLIENT_IP;
+    } else if (!strncmp(name, "proxy.config.http.insert_forwarded", length)) {
+      cnf = TS_CONFIG_HTTP_INSERT_FORWARDED;
+      typ = TS_RECORDDATATYPE_STRING;
     }
     break;
 
   case 35:
-    switch (name[length - 1]) {
-    case 'e':
-      if (!strncmp(name, "proxy.config.http.cache.range.write", length)) {
-        cnf = TS_CONFIG_HTTP_CACHE_RANGE_WRITE;
-      }
-      break;
-    case 'p':
-      if (!strncmp(name, "proxy.config.http.normalize_ae_gzip", length)) {
-        cnf = TS_CONFIG_HTTP_NORMALIZE_AE_GZIP;
-      }
-      break;
+    if (!strncmp(name, "proxy.config.http.cache.range.write", length)) {
+      cnf = TS_CONFIG_HTTP_CACHE_RANGE_WRITE;
     }
     break;
 
@@ -9341,10 +9366,10 @@ TSHttpTxnClientProtocolStackGet(TSHttpTxn txnp, int n, const char **result, int 
   HttpSM *sm = reinterpret_cast<HttpSM *>(txnp);
   int count  = 0;
   if (sm && n > 0) {
-    auto mem = static_cast<ts::StringView *>(alloca(sizeof(ts::StringView) * n));
+    auto mem = static_cast<ts::string_view *>(alloca(sizeof(ts::string_view) * n));
     count    = sm->populate_client_protocol(mem, n);
     for (int i = 0; i < count; ++i) {
-      result[i] = mem[i].ptr();
+      result[i] = mem[i].data();
     }
   }
   if (actual) {
@@ -9361,10 +9386,10 @@ TSHttpSsnClientProtocolStackGet(TSHttpSsn ssnp, int n, const char **result, int 
   ProxyClientSession *cs = reinterpret_cast<ProxyClientSession *>(ssnp);
   int count              = 0;
   if (cs && n > 0) {
-    auto mem = static_cast<ts::StringView *>(alloca(sizeof(ts::StringView) * n));
+    auto mem = static_cast<ts::string_view *>(alloca(sizeof(ts::string_view) * n));
     count    = cs->populate_protocol(mem, n);
     for (int i = 0; i < count; ++i) {
-      result[i] = mem[i].ptr();
+      result[i] = mem[i].data();
     }
   }
   if (actual) {
@@ -9384,7 +9409,7 @@ TSHttpTxnClientProtocolStackContains(TSHttpTxn txnp, const char *tag)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   HttpSM *sm = (HttpSM *)txnp;
-  return sm->client_protocol_contains(ts::StringView(tag));
+  return sm->client_protocol_contains(ts::string_view{tag});
 }
 
 const char *
@@ -9392,7 +9417,7 @@ TSHttpSsnClientProtocolStackContains(TSHttpSsn ssnp, const char *tag)
 {
   sdk_assert(sdk_sanity_check_http_ssn(ssnp) == TS_SUCCESS);
   ProxyClientSession *cs = reinterpret_cast<ProxyClientSession *>(ssnp);
-  return cs->protocol_contains(ts::StringView(tag));
+  return cs->protocol_contains(ts::string_view{tag});
 }
 
 const char *

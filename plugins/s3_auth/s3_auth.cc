@@ -364,6 +364,7 @@ public:
 
     /* Exclude headers that are meant to be changed */
     _v4excludeHeaders.insert("x-forwarded-for");
+    _v4excludeHeaders.insert("forwarded");
     _v4excludeHeaders.insert("via");
   }
 
@@ -396,7 +397,7 @@ private:
   bool _version_modified   = false;
   bool _virt_host_modified = false;
   TSCont _cont             = nullptr;
-  volatile int _ref_count  = 1;
+  int _ref_count           = 1;
   StringSet _v4includeHeaders;
   bool _v4includeHeaders_modified = false;
   StringSet _v4excludeHeaders;
