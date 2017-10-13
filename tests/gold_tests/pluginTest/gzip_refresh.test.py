@@ -29,11 +29,14 @@ Test.ContinueOnFail = True
 ts = Test.MakeATSProcess("ts")
 server = Test.MakeOriginServer("server")
 
-request_header = {"headers": "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n", "timestamp": "1469733493.993", "body": ""}
+request_header = { "headers": "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n", "timestamp": "1469733493.993", "body": ""}
 # expected response from the origin server
 response_header = {
-    "headers": "HTTP/1.1 200 OK\r\nConnection: close\r\nCache-Control: max-age=1,stale-while-revalidate=1000\r\n\r\n",
-    "timestamp": "1469733493.993", "body": ""}
+    "headers": "HTTP/1.1 200 OK\r\nConnection: close\r\n" +
+    'Etag: "359670651"\r\n' +
+    "Cache-Control: max-age=1,stale-while-revalidate=1000\r\n\r\n",
+    "timestamp": "1469733493.993",
+    "body": "yadayadayada"}
 
 # add response to the server dictionary
 server.addResponse("sessionfile.log", request_header, response_header)
@@ -56,7 +59,7 @@ log.ascii {
 )
 
 ts.Disk.remap_config.AddLine(
-    'map http://127.0.0.1:{0} http://www.example.com'.format(ts.Variables.port)
+    'map http://127.0.0.1:{0} http://127.0.0.1:{1}'.format(ts.Variables.port, server.Variables.Port)
 )
 
 tr = Test.AddTestRun()
