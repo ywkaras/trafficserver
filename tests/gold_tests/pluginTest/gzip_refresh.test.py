@@ -39,7 +39,7 @@ response_header = {
 server.addResponse("sessionfile.log", request_header, response_header)
 
 ts.Disk.records_config.update({
-    'proxy.config.diags.debug.enabled': 1,
+    'proxy.config.diags.debug.enabled': 1, # TEMP
     'proxy.config.http.server_ports': 'ipv4:{0}'.format(ts.Variables.port)
     # 'proxy.config.diags.debug.tags': 'http.*|dns',
 })
