@@ -2138,7 +2138,9 @@ char *
 TSUrlStringGet(TSMBuffer bufp, TSMLoc obj, int *length)
 {
   // bufp is not actually used anymore, so it can be null.
-  sdk_assert((sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS) or (sdk_sanity_check_null_ptr(bufp) == TS_SUCCESS));
+  if (bufp) {
+    sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
+  }
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)length) == TS_SUCCESS);
 
