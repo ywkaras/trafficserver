@@ -16,16 +16,31 @@
  * limitations under the License.
  */
 
+#include <thread>
+
 #include "ts/ts.h"
 
 // Placeholder test.
 //
 namespace Test1
 {
+TSMutex mtx{TSMutexCreate()};
+
+void thread()
+{
+  TSMutexLock(mtx);
+  TSMutexUnlock(mtx);
+}
+
 void
 x()
 {
-  TSReleaseAssert(true);
+  TSMutexLock(mtx);
+  TSMutexUnlock(mtx);
+
+  std::thread t(thread);
+
+  t.join();
 }
 
 } // end namespace Test1;
