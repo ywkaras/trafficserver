@@ -21,10 +21,10 @@
 #include <sstream>
 
 #include <ts/ts.h>
-
 #include <ts/TextView.h>
 
 #include <atscppapi/Continuation.h>
+#include <atscppapi/TSUnqPtr.h>
 
 // TSReleaseAssert() doesn't seem to produce any logging output for a debug build, so do both kinds of assert.
 //
@@ -159,6 +159,23 @@ f()
 TEST(f)
 
 } // end namespace ContinuationTest
+
+// Test for Continuation class.
+//
+namespace DeleterTest
+{
+
+void
+f()
+{
+  {
+    atscppapi::UnqPtrTSMBuffer p(TSMBufferCreate());
+  }
+}
+
+TEST(f)
+
+} // end namespace DeleterTest
 
 // Run all the tests.
 //
