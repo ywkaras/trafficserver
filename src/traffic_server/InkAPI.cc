@@ -513,19 +513,25 @@ _hdr_obj_to_mime_hdr_impl(HdrHeapObjImpl *obj)
 }
 
 inline MIMEHdrImpl *
-_hdr_mloc_to_mime_hdr_impl(TSMLoc mloc)
+_hdr_mloc_to_mime_hdr_impl(TSMIMEHdrLoc hdrLoc)
 {
-  return _hdr_obj_to_mime_hdr_impl((HdrHeapObjImpl *)mloc);
+  return _hdr_obj_to_mime_hdr_impl(reinterpret_cast<HdrHeapObjImpl *>(hdrLoc));
+}
+
+inline MIMEHdrImpl *
+_hdr_mloc_to_http_hdr_impl(TSHTTPHdrLoc hdrLoc)
+{
+  return _hdr_obj_to_mime_hdr_impl(reinterpret_cast<HdrHeapObjImpl *>(hdrLoc));
 }
 
 TSReturnCode
-sdk_sanity_check_field_handle(TSMLoc field, TSMLoc parent_hdr = nullptr)
+sdk_sanity_check_field_handle(TSMIMEHdrCompLoc field, TSMIMEHdrLoc parent_hdr = nullptr)
 {
-  if (field == TS_NULL_MLOC) {
+  if (field == nullptr) {
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *field_handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *field_handle = reinterpret_cast<MIMEFieldSDKHandle *>(field);
   if (field_handle->m_type != HDR_HEAP_OBJ_FIELD_SDK_HANDLE) {
     return TS_ERROR;
   }
@@ -551,14 +557,13 @@ sdk_sanity_check_mbuffer(TSMBuffer bufp)
 }
 
 TSReturnCode
-sdk_sanity_check_mime_hdr_handle(TSMLoc field)
+sdk_sanity_check_mime_hdr_handle(TSMIMEHdrLoc field)
 {
-  if (field == TS_NULL_MLOC) {
+  if (field == nullptr) {
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *field_handle = (MIMEFieldSDKHandle *)field;
-  if (field_handle->m_type != HDR_HEAP_OBJ_MIME_HEADER) {
+  if (reinterpret_cast<MIMEFieldSDKHandle *>(field)->m_type != HDR_HEAP_OBJ_MIME_HEADER) {
     return TS_ERROR;
   }
 
@@ -566,14 +571,13 @@ sdk_sanity_check_mime_hdr_handle(TSMLoc field)
 }
 
 TSReturnCode
-sdk_sanity_check_url_handle(TSMLoc field)
+sdk_sanity_check_url_handle(TSUrlHdrLoc field)
 {
-  if (field == TS_NULL_MLOC) {
+  if (field == nullptr) {
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *field_handle = (MIMEFieldSDKHandle *)field;
-  if (field_handle->m_type != HDR_HEAP_OBJ_URL) {
+  if (reinterpret_cast<MIMEFieldSDKHandle *>(field)->m_type != HDR_HEAP_OBJ_URL) {
     return TS_ERROR;
   }
 
@@ -581,14 +585,13 @@ sdk_sanity_check_url_handle(TSMLoc field)
 }
 
 TSReturnCode
-sdk_sanity_check_http_hdr_handle(TSMLoc field)
+sdk_sanity_check_http_hdr_handle(TSHTTPHdrLoc field)
 {
-  if (field == TS_NULL_MLOC) {
+  if (field == nullptr) {
     return TS_ERROR;
   }
 
-  HTTPHdrImpl *field_handle = (HTTPHdrImpl *)field;
-  if (field_handle->m_type != HDR_HEAP_OBJ_HTTP_HEADER) {
+  if (reinterpret_cast<HTTPHdrImpl *>(field)->m_type != HDR_HEAP_OBJ_HTTP_HEADER) {
     return TS_ERROR;
   }
 
@@ -1925,36 +1928,24 @@ TSfgets(TSFile filep, char *buf, size_t length)
 ////////////////////////////////////////////////////////////////////
 
 TSReturnCode
-TSHandleMLocRelease(TSMBuffer bufp, TSMLoc parent, TSMLoc mloc)
+TSHandleHdrCompLocRelease(TSMBuffer bufp, TSMIMEHdrLoc hdrLoc, TSMIMEHdrCompLoc compLoc)
 {
-  MIMEFieldSDKHandle *field_handle;
-  HdrHeapObjImpl *obj = (HdrHeapObjImpl *)mloc;
-
-  if (mloc == TS_NULL_MLOC) {
+  if (compLoc == nullptr) {
     return TS_SUCCESS;
   }
 
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
 
-  switch (obj->m_type) {
-  case HDR_HEAP_OBJ_URL:
-  case HDR_HEAP_OBJ_HTTP_HEADER:
-  case HDR_HEAP_OBJ_MIME_HEADER:
-    return TS_SUCCESS;
+  HdrHeapObjImpl *obj = reinterpret_cast<HdrHeapObjImpl *>(compLoc);
 
-  case HDR_HEAP_OBJ_FIELD_SDK_HANDLE:
-    field_handle = (MIMEFieldSDKHandle *)obj;
-    if (sdk_sanity_check_field_handle(mloc, parent) != TS_SUCCESS) {
-      return TS_ERROR;
-    }
+  sdk_assert(HDR_HEAP_OBJ_FIELD_SDK_HANDLE == obj->m_type);
 
-    sdk_free_field_handle(bufp, field_handle);
-    return TS_SUCCESS;
-
-  default:
-    ink_release_assert(!"invalid mloc");
+  if (sdk_sanity_check_field_handle(compLoc, hdrLoc) != TS_SUCCESS) {
     return TS_ERROR;
   }
+
+  sdk_free_field_handle(bufp, reinterpret_cast<MIMEFieldSDKHandle *>(obj));
+  return TS_SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -2019,7 +2010,7 @@ TSUrlCreate(TSMBuffer bufp, TSMLoc *locp)
 }
 
 TSReturnCode
-TSUrlClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMLoc src_url, TSMLoc *locp)
+TSUrlClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSUrlHdrLoc src_url, TSUrlHdrLoc *locp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(src_bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mbuffer(dest_bufp) == TS_SUCCESS);
@@ -2030,20 +2021,16 @@ TSUrlClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMLoc src_url, TSMLoc *locp
     return TS_ERROR;
   }
 
-  HdrHeap *s_heap, *d_heap;
-  URLImpl *s_url, *d_url;
+  HdrHeap *s_heap = reinterpret_cast<HdrHeapSDKHandle *>(src_bufp)->m_heap;
+  HdrHeap *d_heap = reinterpret_cast<HdrHeapSDKHandle *>(dest_bufp)->m_heap;
+  URLImpl *s_url  = reinterpret_cast<URLImpl *>(src_url);
 
-  s_heap = ((HdrHeapSDKHandle *)src_bufp)->m_heap;
-  d_heap = ((HdrHeapSDKHandle *)dest_bufp)->m_heap;
-  s_url  = (URLImpl *)src_url;
-
-  d_url = url_copy(s_url, s_heap, d_heap, (s_heap != d_heap));
-  *locp = (TSMLoc)d_url;
+  *locp = reinterpret_cast<TSUrlHdrLoc>(url_copy(s_url, s_heap, d_heap, (s_heap != d_heap)));
   return TS_SUCCESS;
 }
 
 TSReturnCode
-TSUrlCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc src_obj)
+TSUrlCopy(TSMBuffer dest_bufp, TSUrlHdrLoc dest_obj, TSMBuffer src_bufp, TSUrlHdrLoc src_obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(src_bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mbuffer(dest_bufp) == TS_SUCCESS);
@@ -2054,20 +2041,17 @@ TSUrlCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc src_o
     return TS_ERROR;
   }
 
-  HdrHeap *s_heap, *d_heap;
-  URLImpl *s_url, *d_url;
-
-  s_heap = ((HdrHeapSDKHandle *)src_bufp)->m_heap;
-  d_heap = ((HdrHeapSDKHandle *)dest_bufp)->m_heap;
-  s_url  = (URLImpl *)src_obj;
-  d_url  = (URLImpl *)dest_obj;
+  HdrHeap *s_heap = reinterpret_cast<HdrHeapSDKHandle *>(src_bufp)->m_heap;
+  HdrHeap *d_heap = reinterpret_cast<HdrHeapSDKHandle *>(dest_bufp)->m_heap;
+  URLImpl *s_url  = reinterpret_cast<URLImpl *>(src_obj);
+  URLImpl *d_url  = reinterpret_cast<URLImpl *>(dest_obj);
 
   url_copy_onto(s_url, s_heap, d_url, d_heap, (s_heap != d_heap));
   return TS_SUCCESS;
 }
 
 void
-TSUrlPrint(TSMBuffer bufp, TSMLoc obj, TSIOBuffer iobufp)
+TSUrlPrint(TSMBuffer bufp, TSUrlHdrLoc obj, TSIOBuffer iobufp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2102,7 +2086,7 @@ TSUrlPrint(TSMBuffer bufp, TSMLoc obj, TSIOBuffer iobufp)
 }
 
 TSParseResult
-TSUrlParse(TSMBuffer bufp, TSMLoc obj, const char **start, const char *end)
+TSUrlParse(TSMBuffer bufp, TSUrlHdrLoc obj, const char **start, const char *end)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2122,7 +2106,7 @@ TSUrlParse(TSMBuffer bufp, TSMLoc obj, const char **start, const char *end)
 }
 
 int
-TSUrlLengthGet(TSMBuffer bufp, TSMLoc obj)
+TSUrlLengthGet(TSMBuffer bufp, TSUrlHdrLoc obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2132,12 +2116,8 @@ TSUrlLengthGet(TSMBuffer bufp, TSMLoc obj)
 }
 
 char *
-TSUrlStringGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlStringGet(TSUrlHdrLoc obj, int *length)
 {
-  // bufp is not actually used anymore, so it can be null.
-  if (bufp) {
-    sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
-  }
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)length) == TS_SUCCESS);
 
@@ -2149,7 +2129,7 @@ using URLPartGetF = const char *(URL::*)(int *);
 using URLPartSetF = void (URL::*)(const char *, int);
 
 static const char *
-URLPartGet(TSMBuffer bufp, TSMLoc obj, int *length, URLPartGetF url_f)
+URLPartGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length, URLPartGetF url_f)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2164,7 +2144,7 @@ URLPartGet(TSMBuffer bufp, TSMLoc obj, int *length, URLPartGetF url_f)
 }
 
 static TSReturnCode
-URLPartSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length, URLPartSetF url_f)
+URLPartSet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length, URLPartSetF url_f)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2188,13 +2168,13 @@ URLPartSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length, URLPartSet
 }
 
 const char *
-TSUrlSchemeGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlSchemeGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length)
 {
   return URLPartGet(bufp, obj, length, &URL::scheme_get);
 }
 
 TSReturnCode
-TSUrlSchemeSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSUrlSchemeSet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length)
 {
   return URLPartSet(bufp, obj, value, length, &URL::scheme_set);
 }
@@ -2202,43 +2182,43 @@ TSUrlSchemeSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
 /* Internet specific URLs */
 
 const char *
-TSUrlUserGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlUserGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length)
 {
   return URLPartGet(bufp, obj, length, &URL::user_get);
 }
 
 TSReturnCode
-TSUrlUserSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSUrlUserSet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length)
 {
   return URLPartSet(bufp, obj, value, length, &URL::user_set);
 }
 
 const char *
-TSUrlPasswordGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlPasswordGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length)
 {
   return URLPartGet(bufp, obj, length, &URL::password_get);
 }
 
 TSReturnCode
-TSUrlPasswordSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSUrlPasswordSet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length)
 {
   return URLPartSet(bufp, obj, value, length, &URL::password_set);
 }
 
 const char *
-TSUrlHostGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlHostGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length)
 {
   return URLPartGet(bufp, obj, length, &URL::host_get);
 }
 
 TSReturnCode
-TSUrlHostSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSUrlHostSet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length)
 {
   return URLPartSet(bufp, obj, value, length, &URL::host_set);
 }
 
 int
-TSUrlPortGet(TSMBuffer bufp, TSMLoc obj)
+TSUrlPortGet(TSMBuffer bufp, TSUrlHdrLoc obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2251,7 +2231,7 @@ TSUrlPortGet(TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSUrlPortSet(TSMBuffer bufp, TSMLoc obj, int port)
+TSUrlPortSet(TSMBuffer bufp, TSUrlHdrLoc obj, int port)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2271,13 +2251,13 @@ TSUrlPortSet(TSMBuffer bufp, TSMLoc obj, int port)
 /* FTP and HTTP specific URLs  */
 
 const char *
-TSUrlPathGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlPathGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length)
 {
   return URLPartGet(bufp, obj, length, &URL::path_get);
 }
 
 TSReturnCode
-TSUrlPathSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSUrlPathSet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length)
 {
   return URLPartSet(bufp, obj, value, length, &URL::path_set);
 }
@@ -2285,7 +2265,7 @@ TSUrlPathSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
 /* FTP specific URLs */
 
 int
-TSUrlFtpTypeGet(TSMBuffer bufp, TSMLoc obj)
+TSUrlFtpTypeGet(TSMBuffer bufp, TSUrlHdrLoc obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2297,7 +2277,7 @@ TSUrlFtpTypeGet(TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSUrlFtpTypeSet(TSMBuffer bufp, TSMLoc obj, int type)
+TSUrlFtpTypeSet(TSMBuffer bufp, TSUrlHdrLoc obj, int type)
 {
   // The valid values are : 0, 65('A'), 97('a'),
   // 69('E'), 101('e'), 73 ('I') and 105('i').
@@ -2319,37 +2299,37 @@ TSUrlFtpTypeSet(TSMBuffer bufp, TSMLoc obj, int type)
 /* HTTP specific URLs */
 
 const char *
-TSUrlHttpParamsGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlHttpParamsGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length)
 {
   return URLPartGet(bufp, obj, length, &URL::params_get);
 }
 
 TSReturnCode
-TSUrlHttpParamsSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSUrlHttpParamsSet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length)
 {
   return URLPartSet(bufp, obj, value, length, &URL::params_set);
 }
 
 const char *
-TSUrlHttpQueryGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlHttpQueryGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length)
 {
   return URLPartGet(bufp, obj, length, &URL::query_get);
 }
 
 TSReturnCode
-TSUrlHttpQuerySet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSUrlHttpQuerySet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length)
 {
   return URLPartSet(bufp, obj, value, length, &URL::query_set);
 }
 
 const char *
-TSUrlHttpFragmentGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSUrlHttpFragmentGet(TSMBuffer bufp, TSUrlHdrLoc obj, int *length)
 {
   return URLPartGet(bufp, obj, length, &URL::fragment_get);
 }
 
 TSReturnCode
-TSUrlHttpFragmentSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSUrlHttpFragmentSet(TSMBuffer bufp, TSUrlHdrLoc obj, const char *value, int length)
 {
   return URLPartSet(bufp, obj, value, length, &URL::fragment_set);
 }
@@ -2418,7 +2398,7 @@ TSStringPercentDecode(const char *str, size_t str_len, char *dst, size_t dst_siz
 }
 
 TSReturnCode
-TSUrlPercentEncode(TSMBuffer bufp, TSMLoc obj, char *dst, size_t dst_size, size_t *length, const unsigned char *map)
+TSUrlPercentEncode(TSMBuffer bufp, TSUrlHdrLoc obj, char *dst, size_t dst_size, size_t *length, const unsigned char *map)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_url_handle(obj) == TS_SUCCESS);
@@ -2510,14 +2490,14 @@ TSMimeHdrCreate(TSMBuffer bufp, TSMLoc *locp)
 }
 
 TSReturnCode
-TSMimeHdrDestroy(TSMBuffer bufp, TSMLoc obj)
+TSMimeHdrDestroy(TSMBuffer bufp, TSMIMEHdrLoc obj)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
   // TS_ERROR. If allowed, return TS_SUCCESS. Changed the
   // return value of function from void to TSReturnCode.
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
-  sdk_assert((sdk_sanity_check_mime_hdr_handle(obj) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS));
+  sdk_assert(sdk_sanity_check_mime_hdr_handle(obj) == TS_SUCCESS);
 
   if (!isWriteable(bufp)) {
     return TS_ERROR;
@@ -2525,12 +2505,32 @@ TSMimeHdrDestroy(TSMBuffer bufp, TSMLoc obj)
 
   MIMEHdrImpl *mh = _hdr_mloc_to_mime_hdr_impl(obj);
 
-  mime_hdr_destroy(((HdrHeapSDKHandle *)bufp)->m_heap, mh);
+  mime_hdr_destroy(reinterpret_cast<HdrHeapSDKHandle *>(bufp)->m_heap, mh);
   return TS_SUCCESS;
 }
 
 TSReturnCode
-TSMimeHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc *locp)
+TSHttpHdrDestroy(TSMBuffer bufp, TSHTTPHdrLoc obj)
+{
+  // Allow to modify the buffer only
+  // if bufp is modifiable. If bufp is not modifiable return
+  // TS_ERROR. If allowed, return TS_SUCCESS. Changed the
+  // return value of function from void to TSReturnCode.
+  sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
+  sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
+
+  if (!isWriteable(bufp)) {
+    return TS_ERROR;
+  }
+
+  MIMEHdrImpl *mh = _hdr_mloc_to_http_hdr_impl(obj);
+
+  mime_hdr_destroy(reinterpret_cast<HdrHeapSDKHandle *>(bufp)->m_heap, mh);
+  return TS_SUCCESS;
+}
+
+TSReturnCode x
+TSMimeHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMIMEHdrLoc src_hdr, TSMIMEHdrLoc *locp)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -2538,8 +2538,7 @@ TSMimeHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc *
   sdk_assert(sdk_sanity_check_mbuffer(dest_bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mbuffer(src_bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mime_hdr_handle(src_hdr) == TS_SUCCESS);
-  sdk_assert(sdk_sanity_check_http_hdr_handle(src_hdr) == TS_SUCCESS);
-  sdk_assert(sdk_sanity_check_null_ptr((void *)locp) == TS_SUCCESS);
+  sdk_assert(sdk_sanity_check_null_ptr(locp) == TS_SUCCESS);
 
   if (!isWriteable(dest_bufp)) {
     return TS_ERROR;
@@ -2548,17 +2547,17 @@ TSMimeHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc *
   HdrHeap *s_heap, *d_heap;
   MIMEHdrImpl *s_mh, *d_mh;
 
-  s_heap = ((HdrHeapSDKHandle *)src_bufp)->m_heap;
-  d_heap = ((HdrHeapSDKHandle *)dest_bufp)->m_heap;
+  s_heap = (reinterpret_cast<HdrHeapSDKHandle *>(src_bufp)->m_heap;
+  d_heap = (reinterpret_cast<HdrHeapSDKHandle *>(dest_bufp)->m_heap;
   s_mh   = _hdr_mloc_to_mime_hdr_impl(src_hdr);
 
   d_mh  = mime_hdr_clone(s_mh, s_heap, d_heap, (s_heap != d_heap));
-  *locp = (TSMLoc)d_mh;
+  *locp = reinterpret_cast<TSMIMEHdrLoc>(d_mh);
 
   return TS_SUCCESS;
 }
 
-TSReturnCode
+TSReturnCode x
 TSMimeHdrCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc src_obj)
 {
   // Allow to modify the buffer only
@@ -2589,7 +2588,7 @@ TSMimeHdrCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc s
   return TS_SUCCESS;
 }
 
-void
+void x
 TSMimeHdrPrint(TSMBuffer bufp, TSMLoc obj, TSIOBuffer iobufp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
