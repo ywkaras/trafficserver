@@ -143,7 +143,7 @@ transformable(TSHttpTxn txnp)
     returnValue        = false;
     const TSMLoc field = TSMimeHdrFieldFind(buffer, location, TS_MIME_FIELD_CONTENT_TYPE, TS_MIME_LEN_CONTENT_TYPE);
 
-    if (field != TS_NULL_MLOC) {
+    if (field != nullptr) {
       int length                = 0;
       const char *const content = TSMimeHdrFieldValueStringGet(buffer, location, field, 0, &length);
 
@@ -155,7 +155,7 @@ transformable(TSHttpTxn txnp)
     }
   }
 
-  CHECK(TSHandleMLocRelease(buffer, TS_NULL_MLOC, location));
+  CHECK(TSHandleMLocRelease(buffer, nullptr, location));
 
   returnValue &= !TSHttpTxnIsInternal(txnp);
   return returnValue;

@@ -52,7 +52,7 @@ namespace utils
     static void invokePluginForEvent(TransactionPlugin *, TSHttpTxn, TSEvent);
     static void invokePluginForEvent(GlobalPlugin *, TSHttpTxn, TSEvent);
     static void invokePluginForEvent(GlobalPlugin *, TSHttpAltInfo, TSEvent);
-    static HttpVersion getHttpVersion(TSMBuffer hdr_buf, TSMLoc hdr_loc);
+    static HttpVersion getHttpVersion(TSMBuffer hdr_buf, TSHttpHdrLoc hdr_loc);
     static void initTransactionManagement();
     static std::string consumeFromTSIOBufferReader(TSIOBufferReader);
     static std::shared_ptr<Mutex> getTransactionPluginMutex(TransactionPlugin &);
@@ -77,7 +77,7 @@ namespace utils
     }
 
     static void
-    initResponse(Response &response, TSMBuffer hdr_buf, TSMLoc hdr_loc)
+    initResponse(Response &response, TSMBuffer hdr_buf, TSHttpHdrLoc hdr_loc)
     {
       response.init(hdr_buf, hdr_loc);
     }

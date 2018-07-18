@@ -157,7 +157,7 @@ struct GeneratorHttpHeader {
     }
 
     TSHttpHdrDestroy(this->buffer, this->header);
-    TSHandleMLocRelease(this->buffer, TS_NULL_MLOC, this->header);
+    TSHandleMLocRelease(this->buffer, nullptr, this->header);
     TSMBufferDestroy(this->buffer);
   }
 };
@@ -276,7 +276,7 @@ GeneratorGetRequestHeader(GeneratorHttpHeader &request, const char *field_name, 
   TSMLoc field;
 
   field = TSMimeHdrFieldFind(request.buffer, request.header, field_name, field_len);
-  if (field != TS_NULL_MLOC) {
+  if (field != nullptr) {
     default_value = TSMimeHdrFieldValueInt64Get(request.buffer, request.header, field, -1);
   }
 

@@ -79,10 +79,56 @@
  *   held for the entire duration of the IOCore call
  ***************************************************************/
 
+// Pairs of TS API type, core types (that API type points to).  The API types should not appear anywhere in this file except in
+// this macro.
+//
+#define TSAPI_CORE_TYPE \
+X(TSUrlHdrLoc, URLImpl) \
+X(TSHttpHdrLoc, HTTPHdrImpl) \
+X(TSMimeHdrLoc, MIMEHdrImpl) \
+X(TSMMimeHdrFldLoc, MIMEFieldSDKHandle)
+
+namespace
+{
+
+template <typename TSAPIType>
+struct TSAPIToCore;
+
+#undef X
+#define X(A, B) template <> struct TSAPIToCore<A> { typedef B *Type; };
+
+TSAPI_CORE_TYPE
+
+template <typename CorePtr>
+struct CoreToTSAPI;
+
+#undef X
+#define X(A, B) template <> struct CoreToTSAPI<B *> { typedef A Type; };
+
+TSAPI_CORE_TYPE
+
+#undef X
+
+template <typename CorePtr>
+inline CoreToTSAPI<CorePtr>::Type
+cvtCoreToTSAPI(CorePtr Ptr)
+{
+  return reinterpret_cast<CoreToTSAPI<CorePtr>::Type>(Ptr);
+}
+
+template <typename TSAPIType>
+inline TSAPIToCore<TSAPIType>::Type
+cvtTSAPIToCore(TSAPIType Ptr)
+{
+  return reinterpret_cast<TSAPIToCore<TSAPIType>::Type>(Ptr);
+}
+
+} // end anonymous namespace
+
 // helper macro for setting HTTPHdr data
 #define SET_HTTP_HDR(_HDR, _BUF_PTR, _OBJ_PTR)          \
   _HDR.m_heap = ((HdrHeapSDKHandle *)_BUF_PTR)->m_heap; \
-  _HDR.m_http = (HTTPHdrImpl *)_OBJ_PTR;                \
+  _HDR.m_http = cvtTSAPIToCore(_OBJ_PTR);               \
   _HDR.m_mime = _HDR.m_http->m_fields_impl;
 
 // Globals for new librecords stats
@@ -377,9 +423,6 @@ tsapi int TS_HTTP_LEN_PUT;
 tsapi int TS_HTTP_LEN_TRACE;
 tsapi int TS_HTTP_LEN_PUSH;
 
-/* MLoc Constants */
-tsapi const TSMLoc TS_NULL_MLOC = (TSMLoc) nullptr;
-
 HttpAPIHooks *http_global_hooks        = nullptr;
 SslAPIHooks *ssl_hooks                 = nullptr;
 LifecycleAPIHooks *lifecycle_hooks     = nullptr;
@@ -525,7 +568,7 @@ _hdr_mloc_to_http_hdr_impl(TSHTTPHdrLoc hdrLoc)
 }
 
 TSReturnCode
-sdk_sanity_check_field_handle(TSMIMEHdrCompLoc field, TSMIMEHdrLoc parent_hdr = nullptr)
+sdk_sanity_check_field_handle(TSMIMEHdrFldLoc field, TSMIMEHdrLoc parent_hdr = nullptr)
 {
   if (field == nullptr) {
     return TS_ERROR;
@@ -1928,23 +1971,23 @@ TSfgets(TSFile filep, char *buf, size_t length)
 ////////////////////////////////////////////////////////////////////
 
 TSReturnCode
-TSHandleHdrCompLocRelease(TSMBuffer bufp, TSMIMEHdrLoc hdrLoc, TSMIMEHdrCompLoc compLoc)
+TSMimeHdrFldRelease(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdrLoc, CoreToTSAPI<MIMEFldSDKHandle *>::Type fldLoc)
 {
-  if (compLoc == nullptr) {
+  if (fldLoc == nullptr) {
     return TS_SUCCESS;
   }
 
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
 
-  HdrHeapObjImpl *obj = reinterpret_cast<HdrHeapObjImpl *>(compLoc);
+  HdrHeapObjImpl *obj = reinterpret_cast<HdrHeapObjImpl *>(fldLoc);
 
   sdk_assert(HDR_HEAP_OBJ_FIELD_SDK_HANDLE == obj->m_type);
 
-  if (sdk_sanity_check_field_handle(compLoc, hdrLoc) != TS_SUCCESS) {
+  if (sdk_sanity_check_field_handle(fldLoc, hdrLoc) != TS_SUCCESS) {
     return TS_ERROR;
   }
 
-  sdk_free_field_handle(bufp, reinterpret_cast<MIMEFieldSDKHandle *>(obj));
+  sdk_free_field_handle(bufp, cvtTSAPIToCore(fldLoc));
   return TS_SUCCESS;
 }
 
@@ -1994,16 +2037,15 @@ TSMBufferDestroy(TSMBuffer bufp)
 ////////////////////////////////////////////////////////////////////
 
 // TSMBuffer: pointers to HdrHeapSDKHandle objects
-// TSMLoc:    pointers to URLImpl objects
 TSReturnCode
-TSUrlCreate(TSMBuffer bufp, TSMLoc *locp)
+TSUrlCreate(TSMBuffer bufp, CoreToTSAPI<URLImpl *>::Type *locp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr(locp) == TS_SUCCESS);
 
   if (isWriteable(bufp)) {
     HdrHeap *heap = ((HdrHeapSDKHandle *)bufp)->m_heap;
-    *locp         = (TSMLoc)url_create(heap);
+    *locp         = cvtCoreToTSAPI(url_create(heap));
     return TS_SUCCESS;
   }
   return TS_ERROR;
@@ -2470,10 +2512,9 @@ TSMimeParserDestroy(TSMimeParser parser)
 /***********/
 
 // TSMBuffer: pointers to HdrHeapSDKHandle objects
-// TSMLoc:    pointers to MIMEFieldSDKHandle objects
 
 TSReturnCode
-TSMimeHdrCreate(TSMBuffer bufp, TSMLoc *locp)
+TSMimeHdrCreate(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type *locp)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -2485,7 +2526,7 @@ TSMimeHdrCreate(TSMBuffer bufp, TSMLoc *locp)
     return TS_ERROR;
   }
 
-  *locp = reinterpret_cast<TSMLoc>(mime_hdr_create(((HdrHeapSDKHandle *)bufp)->m_heap));
+  *locp = cvtCoreToTSAPI(mime_hdr_create(((HdrHeapSDKHandle *)bufp)->m_heap));
   return TS_SUCCESS;
 }
 
@@ -2557,8 +2598,9 @@ TSMimeHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMIMEHdrLoc src_hdr, TS
   return TS_SUCCESS;
 }
 
-TSReturnCode x
-TSMimeHdrCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc src_obj)
+TSReturnCode
+TSMimeHdrCopy(TSMBuffer dest_bufp, CoreToTSAPI<MIMEHdrImpl *>::Type dest_obj, TSMBuffer src_bufp,
+              CoreToTSAPI<MIMEHdrImpl *>::Type src_obj)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -2588,8 +2630,8 @@ TSMimeHdrCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc s
   return TS_SUCCESS;
 }
 
-void x
-TSMimeHdrPrint(TSMBuffer bufp, TSMLoc obj, TSIOBuffer iobufp)
+void
+TSMimeHdrPrint(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type obj, TSIOBuffer iobufp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(obj) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS));
@@ -2620,7 +2662,7 @@ TSMimeHdrPrint(TSMBuffer bufp, TSMLoc obj, TSIOBuffer iobufp)
 }
 
 TSParseResult
-TSMimeHdrParse(TSMimeParser parser, TSMBuffer bufp, TSMLoc obj, const char **start, const char *end)
+TSMimeHdrParse(TSMimeParser parser, TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type obj, const char **start, const char *end)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(obj) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS));
@@ -2638,7 +2680,7 @@ TSMimeHdrParse(TSMimeParser parser, TSMBuffer bufp, TSMLoc obj, const char **sta
 }
 
 int
-TSMimeHdrLengthGet(TSMBuffer bufp, TSMLoc obj)
+TSMimeHdrLengthGet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(obj) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS));
@@ -2648,7 +2690,7 @@ TSMimeHdrLengthGet(TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSMimeHdrFieldsClear(TSMBuffer bufp, TSMLoc obj)
+TSMimeHdrFieldsClear(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(obj) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS));
@@ -2664,7 +2706,7 @@ TSMimeHdrFieldsClear(TSMBuffer bufp, TSMLoc obj)
 }
 
 int
-TSMimeHdrFieldsCount(TSMBuffer bufp, TSMLoc obj)
+TSMimeHdrFieldsCount(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(obj) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS));
@@ -2676,9 +2718,9 @@ TSMimeHdrFieldsCount(TSMBuffer bufp, TSMLoc obj)
 // The following three helper functions should not be used in plugins! Since they are not used
 // by plugins, there's no need to validate the input.
 const char *
-TSMimeFieldValueGet(TSMBuffer /* bufp ATS_UNUSED */, TSMLoc field_obj, int idx, int *value_len_ptr)
+TSMimeFieldValueGet(TSMBuffer /* bufp ATS_UNUSED */, CoreToTSAPI<MIMEFieldSDKHangle *>::Type field_obj, int idx, int *value_len_ptr)
 {
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field_obj;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field_obj);
 
   if (idx >= 0) {
     return mime_field_value_get_comma_val(handle->field_ptr, value_len_ptr, idx);
@@ -2688,9 +2730,9 @@ TSMimeFieldValueGet(TSMBuffer /* bufp ATS_UNUSED */, TSMLoc field_obj, int idx, 
 }
 
 void
-TSMimeFieldValueSet(TSMBuffer bufp, TSMLoc field_obj, int idx, const char *value, int length)
+TSMimeFieldValueSet(TSMBuffer bufp, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field_obj, int idx, const char *value, int length)
 {
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field_obj;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field_obj);
   HdrHeap *heap              = ((HdrHeapSDKHandle *)bufp)->m_heap;
 
   if (length == -1) {
@@ -2705,9 +2747,9 @@ TSMimeFieldValueSet(TSMBuffer bufp, TSMLoc field_obj, int idx, const char *value
 }
 
 void
-TSMimeFieldValueInsert(TSMBuffer bufp, TSMLoc field_obj, const char *value, int length, int idx)
+TSMimeFieldValueInsert(TSMBuffer bufp, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field_obj, const char *value, int length, int idx)
 {
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field_obj;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field_obj);
   HdrHeap *heap              = ((HdrHeapSDKHandle *)bufp)->m_heap;
 
   if (length == -1) {
@@ -2722,17 +2764,17 @@ TSMimeFieldValueInsert(TSMBuffer bufp, TSMLoc field_obj, const char *value, int 
 /****************/
 
 // TSMBuffer: pointers to HdrHeapSDKHandle objects
-// TSMLoc:    pointers to MIMEFieldSDKHandle objects
 
 int
-TSMimeHdrFieldEqual(TSMBuffer bufp, TSMLoc hdr_obj, TSMLoc field1_obj, TSMLoc field2_obj)
+TSMimeHdrFieldEqual(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr_obj, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field1_obj,
+                    CoreToTSAPI<MIMEFieldSDKHandle *>::Type field2_obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_field_handle(field1_obj, hdr_obj) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_field_handle(field2_obj, hdr_obj) == TS_SUCCESS);
 
-  MIMEFieldSDKHandle *field1_handle = (MIMEFieldSDKHandle *)field1_obj;
-  MIMEFieldSDKHandle *field2_handle = (MIMEFieldSDKHandle *)field2_obj;
+  MIMEFieldSDKHandle *field1_handle = cvtTSAPIToCore(field1_obj);
+  MIMEFieldSDKHandle *field2_handle = cvtTSAPIToCore(field2_obj);
 
   if ((field1_handle == nullptr) || (field2_handle == nullptr)) {
     return (field1_handle == field2_handle);
@@ -2740,8 +2782,8 @@ TSMimeHdrFieldEqual(TSMBuffer bufp, TSMLoc hdr_obj, TSMLoc field1_obj, TSMLoc fi
   return (field1_handle->field_ptr == field2_handle->field_ptr);
 }
 
-TSMLoc
-TSMimeHdrFieldGet(TSMBuffer bufp, TSMLoc hdr_obj, int idx)
+CoreToTSAPI<MIMEFieldSDKHandle *>::Type
+TSMimeHdrFieldGet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr_obj, int idx)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr_obj) == TS_SUCCESS) ||
@@ -2752,17 +2794,17 @@ TSMimeHdrFieldGet(TSMBuffer bufp, TSMLoc hdr_obj, int idx)
   MIMEField *f    = mime_hdr_field_get(mh, idx);
 
   if (f == nullptr) {
-    return TS_NULL_MLOC;
+    return nullptr;
   }
 
   MIMEFieldSDKHandle *h = sdk_alloc_field_handle(bufp, mh);
 
   h->field_ptr = f;
-  return reinterpret_cast<TSMLoc>(h);
+  return cvtCoreToTSAPI(h);
 }
 
-TSMLoc
-TSMimeHdrFieldFind(TSMBuffer bufp, TSMLoc hdr_obj, const char *name, int length)
+CoreToTSAPI<MIMEFieldSDKHandle *>::Type
+TSMimeHdrFieldFind(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr_obj, const char *name, int length)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr_obj) == TS_SUCCESS) ||
@@ -2777,17 +2819,17 @@ TSMimeHdrFieldFind(TSMBuffer bufp, TSMLoc hdr_obj, const char *name, int length)
   MIMEField *f    = mime_hdr_field_find(mh, name, length);
 
   if (f == nullptr) {
-    return TS_NULL_MLOC;
+    return nullptr;
   }
 
   MIMEFieldSDKHandle *h = sdk_alloc_field_handle(bufp, mh);
 
   h->field_ptr = f;
-  return reinterpret_cast<TSMLoc>(h);
+  return cvtCoreToTSAPI(h);
 }
 
 TSReturnCode
-TSMimeHdrFieldAppend(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
+TSMimeHdrFieldAppend(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type mh_mloc, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field_mloc)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -2804,7 +2846,7 @@ TSMimeHdrFieldAppend(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
 
   MIMEField *mh_field;
   MIMEHdrImpl *mh                  = _hdr_mloc_to_mime_hdr_impl(mh_mloc);
-  MIMEFieldSDKHandle *field_handle = (MIMEFieldSDKHandle *)field_mloc;
+  MIMEFieldSDKHandle *field_handle = cvtTSAPIToCore(field_mloc);
 
   //////////////////////////////////////////////////////////////////////
   // The field passed in field_mloc might have been allocated from    //
@@ -2838,7 +2880,7 @@ TSMimeHdrFieldAppend(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
 }
 
 TSReturnCode
-TSMimeHdrFieldRemove(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
+TSMimeHdrFieldRemove(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type mh_mloc, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field_mloc)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -2853,7 +2895,7 @@ TSMimeHdrFieldRemove(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *field_handle = (MIMEFieldSDKHandle *)field_mloc;
+  MIMEFieldSDKHandle *field_handle = cvtTSAPIToCore(field_mloc);
 
   if (field_handle->mh != nullptr) {
     MIMEHdrImpl *mh = _hdr_mloc_to_mime_hdr_impl(mh_mloc);
@@ -2865,7 +2907,7 @@ TSMimeHdrFieldRemove(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
 }
 
 TSReturnCode
-TSMimeHdrFieldDestroy(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
+TSMimeHdrFieldDestroy(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type mh_mloc, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field_mloc)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -2880,7 +2922,7 @@ TSMimeHdrFieldDestroy(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *field_handle = (MIMEFieldSDKHandle *)field_mloc;
+  MIMEFieldSDKHandle *field_handle = cvtTSAPIToCore(field_mloc);
 
   if (field_handle->mh == nullptr) { // NOT SUPPORTED!!
     ink_release_assert(!"Failed MH");
@@ -2902,7 +2944,7 @@ TSMimeHdrFieldDestroy(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc field_mloc)
 }
 
 TSReturnCode
-TSMimeHdrFieldCreate(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc *locp)
+TSMimeHdrFieldCreate(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type mh_mloc, CoreToTSAPI<MIMEFieldSDKHandle *>::Type *locp)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -2921,12 +2963,13 @@ TSMimeHdrFieldCreate(TSMBuffer bufp, TSMLoc mh_mloc, TSMLoc *locp)
   MIMEFieldSDKHandle *h = sdk_alloc_field_handle(bufp, mh);
 
   h->field_ptr = mime_field_create(heap, mh);
-  *locp        = reinterpret_cast<TSMLoc>(h);
+  *locp        = cvtCoreToTSAPI(h);
   return TS_SUCCESS;
 }
 
 TSReturnCode
-TSMimeHdrFieldCreateNamed(TSMBuffer bufp, TSMLoc mh_mloc, const char *name, int name_len, TSMLoc *locp)
+TSMimeHdrFieldCreateNamed(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type mh_mloc, const char *name, int name_len,
+CoreToTSAPI<MIMEFieldSDKHandle *>::Type *locp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(mh_mloc) == TS_SUCCESS) ||
@@ -2946,12 +2989,13 @@ TSMimeHdrFieldCreateNamed(TSMBuffer bufp, TSMLoc mh_mloc, const char *name, int 
   HdrHeap *heap         = (HdrHeap *)(((HdrHeapSDKHandle *)bufp)->m_heap);
   MIMEFieldSDKHandle *h = sdk_alloc_field_handle(bufp, mh);
   h->field_ptr          = mime_field_create_named(heap, mh, name, name_len);
-  *locp                 = reinterpret_cast<TSMLoc>(h);
+  *locp                 = cvtCoreToTSAPI(h);
   return TS_SUCCESS;
 }
 
 TSReturnCode
-TSMimeHdrFieldCopy(TSMBuffer dest_bufp, TSMLoc dest_hdr, TSMLoc dest_field, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc src_field)
+TSMimeHdrFieldCopy(TSMBuffer dest_bufp, CoreToTSAPI<MIMEHdrImpl *>::Type dest_hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type dest_field, TSMBuffer
+src_bufp, CoreToTSAPI<MIMEHdrImpl *>::Type src_hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type src_field)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -2971,8 +3015,8 @@ TSMimeHdrFieldCopy(TSMBuffer dest_bufp, TSMLoc dest_hdr, TSMLoc dest_field, TSMB
   }
 
   bool dest_attached;
-  MIMEFieldSDKHandle *s_handle = (MIMEFieldSDKHandle *)src_field;
-  MIMEFieldSDKHandle *d_handle = (MIMEFieldSDKHandle *)dest_field;
+  MIMEFieldSDKHandle *s_handle = cvtTSAPIToCore(src_field);
+  MIMEFieldSDKHandle *d_handle = cvtTSAPIToCore(dest_field);
   HdrHeap *d_heap              = ((HdrHeapSDKHandle *)dest_bufp)->m_heap;
 
   // FIX: This tortuous detach/change/attach algorithm is due to the
@@ -2998,7 +3042,8 @@ TSMimeHdrFieldCopy(TSMBuffer dest_bufp, TSMLoc dest_hdr, TSMLoc dest_field, TSMB
 }
 
 TSReturnCode
-TSMimeHdrFieldClone(TSMBuffer dest_bufp, TSMLoc dest_hdr, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc src_field, TSMLoc *locp)
+TSMimeHdrFieldClone(TSMBuffer dest_bufp, CoreToTSAPI<MIMEHdrImpl *>::Type dest_hdr, TSMBuffer src_bufp, CoreToTSAPI<MIMEHdrImpl *>::Type src_hdr,
+CoreToTSAPI<MIMEFieldSDKHandle *>::Type src_field, CoreToTSAPI<MIMEFieldSDKHandle *>::Type *locp)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3026,8 +3071,9 @@ TSMimeHdrFieldClone(TSMBuffer dest_bufp, TSMLoc dest_hdr, TSMBuffer src_bufp, TS
 }
 
 TSReturnCode
-TSMimeHdrFieldCopyValues(TSMBuffer dest_bufp, TSMLoc dest_hdr, TSMLoc dest_field, TSMBuffer src_bufp, TSMLoc src_hdr,
-                         TSMLoc src_field)
+TSMimeHdrFieldCopyValues(TSMBuffer dest_bufp, CoreToTSAPI<MIMEHdrImpl *>::Type dest_hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type dest_field, TSMBuffer
+src_bufp, CoreToTSAPI<MIMEHdrImpl *>::Type src_hdr,
+                         CoreToTSAPI<MIMEFieldSDKHandle *>::Type src_field)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3046,8 +3092,8 @@ TSMimeHdrFieldCopyValues(TSMBuffer dest_bufp, TSMLoc dest_hdr, TSMLoc dest_field
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *s_handle = (MIMEFieldSDKHandle *)src_field;
-  MIMEFieldSDKHandle *d_handle = (MIMEFieldSDKHandle *)dest_field;
+  MIMEFieldSDKHandle *s_handle = cvtTSAPIToCore(src_field);
+  MIMEFieldSDKHandle *d_handle = cvtTSAPIToCore(dest_field);
   HdrHeap *d_heap              = ((HdrHeapSDKHandle *)dest_bufp)->m_heap;
   MIMEField *s_field, *d_field;
 
@@ -3061,22 +3107,22 @@ TSMimeHdrFieldCopyValues(TSMBuffer dest_bufp, TSMLoc dest_hdr, TSMLoc dest_field
 //       If we threaded all the MIMEFields, this function could be easier,
 //       but we'd have to print dups in order and we'd need a flag saying
 //       end of dup list or dup follows.
-TSMLoc
-TSMimeHdrFieldNext(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
+CoreToTSAPI<MIMEFieldSDKHandle *>::Type
+TSMimeHdrFieldNext(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
   sdk_assert(sdk_sanity_check_field_handle(field, hdr) == TS_SUCCESS);
 
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field);
 
   if (handle->mh == nullptr) {
-    return TS_NULL_MLOC;
+    return nullptr;
   }
 
   int slotnum = mime_hdr_field_slotnum(handle->mh, handle->field_ptr);
   if (slotnum == -1) {
-    return TS_NULL_MLOC;
+    return nullptr;
   }
 
   while (true) {
@@ -3084,62 +3130,62 @@ TSMimeHdrFieldNext(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
     MIMEField *f = mime_hdr_field_get_slotnum(handle->mh, slotnum);
 
     if (f == nullptr) {
-      return TS_NULL_MLOC;
+      return nullptr;
     }
     if (f->is_live()) {
       MIMEFieldSDKHandle *h = sdk_alloc_field_handle(bufp, handle->mh);
 
       h->field_ptr = f;
-      return reinterpret_cast<TSMLoc>(h);
+      return cvtCoreToTSAPI(h);
     }
   }
-  return TS_NULL_MLOC; // Shouldn't happen.
+  return nullptr; // Shouldn't happen.
 }
 
-TSMLoc
-TSMimeHdrFieldNextDup(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
+CoreToTSAPI<MIMEFieldSDKHandle *>::Type
+TSMimeHdrFieldNextDup(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
   sdk_assert(sdk_sanity_check_field_handle(field, hdr) == TS_SUCCESS);
 
   MIMEHdrImpl *mh                  = _hdr_mloc_to_mime_hdr_impl(hdr);
-  MIMEFieldSDKHandle *field_handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *field_handle = cvtTSAPIToCore(field);
   MIMEField *next                  = field_handle->field_ptr->m_next_dup;
   if (next == nullptr) {
-    return TS_NULL_MLOC;
+    return nullptr;
   }
 
   MIMEFieldSDKHandle *next_handle = sdk_alloc_field_handle(bufp, mh);
   next_handle->field_ptr          = next;
-  return (TSMLoc)next_handle;
+  return cvtCoreToTSAPI(next_handle);
 }
 
 int
-TSMimeHdrFieldLengthGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
+TSMimeHdrFieldLengthGet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
   sdk_assert(sdk_sanity_check_field_handle(field, hdr) == TS_SUCCESS);
 
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field);
   return mime_field_length_get(handle->field_ptr);
 }
 
 const char *
-TSMimeHdrFieldNameGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int *length)
+TSMimeHdrFieldNameGet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int *length)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
   sdk_assert(sdk_sanity_check_field_handle(field, hdr) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)length) == TS_SUCCESS);
 
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field);
   return mime_field_name_get(handle->field_ptr, length);
 }
 
 TSReturnCode
-TSMimeHdrFieldNameSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, const char *name, int length)
+TSMimeHdrFieldNameSet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, const char *name, int length)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3158,7 +3204,7 @@ TSMimeHdrFieldNameSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, const char *name
     length = strlen(name);
   }
 
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field);
   HdrHeap *heap              = ((HdrHeapSDKHandle *)bufp)->m_heap;
 
   int attached = (handle->mh && handle->field_ptr->is_live());
@@ -3176,7 +3222,7 @@ TSMimeHdrFieldNameSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, const char *name
 }
 
 TSReturnCode
-TSMimeHdrFieldValuesClear(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
+TSMimeHdrFieldValuesClear(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3190,7 +3236,7 @@ TSMimeHdrFieldValuesClear(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field);
   HdrHeap *heap              = ((HdrHeapSDKHandle *)bufp)->m_heap;
 
   /**
@@ -3203,18 +3249,18 @@ TSMimeHdrFieldValuesClear(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
 }
 
 int
-TSMimeHdrFieldValuesCount(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
+TSMimeHdrFieldValuesCount(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
   sdk_assert(sdk_sanity_check_field_handle(field, hdr) == TS_SUCCESS);
 
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field);
   return mime_field_value_get_comma_val_count(handle->field_ptr);
 }
 
 const char *
-TSMimeHdrFieldValueStringGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, int *value_len_ptr)
+TSMimeHdrFieldValueStringGet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, int *value_len_ptr)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
@@ -3225,7 +3271,7 @@ TSMimeHdrFieldValueStringGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, 
 }
 
 time_t
-TSMimeHdrFieldValueDateGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
+TSMimeHdrFieldValueDateGet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
@@ -3242,7 +3288,7 @@ TSMimeHdrFieldValueDateGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field)
 }
 
 int
-TSMimeHdrFieldValueIntGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx)
+TSMimeHdrFieldValueIntGet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
@@ -3259,7 +3305,7 @@ TSMimeHdrFieldValueIntGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx)
 }
 
 int64_t
-TSMimeHdrFieldValueInt64Get(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx)
+TSMimeHdrFieldValueInt64Get(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
@@ -3276,7 +3322,7 @@ TSMimeHdrFieldValueInt64Get(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx)
 }
 
 unsigned int
-TSMimeHdrFieldValueUintGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx)
+TSMimeHdrFieldValueUintGet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert((sdk_sanity_check_mime_hdr_handle(hdr) == TS_SUCCESS) || (sdk_sanity_check_http_hdr_handle(hdr) == TS_SUCCESS));
@@ -3293,7 +3339,7 @@ TSMimeHdrFieldValueUintGet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx)
 }
 
 TSReturnCode
-TSMimeHdrFieldValueStringSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, const char *value, int length)
+TSMimeHdrFieldValueStringSet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, const char *value, int length)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3317,7 +3363,7 @@ TSMimeHdrFieldValueStringSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, 
 }
 
 TSReturnCode
-TSMimeHdrFieldValueDateSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, time_t value)
+TSMimeHdrFieldValueDateSet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, time_t value)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3341,7 +3387,7 @@ TSMimeHdrFieldValueDateSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, time_t valu
 }
 
 TSReturnCode
-TSMimeHdrFieldValueIntSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, int value)
+TSMimeHdrFieldValueIntSet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, int value)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3363,7 +3409,7 @@ TSMimeHdrFieldValueIntSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, int
 }
 
 TSReturnCode
-TSMimeHdrFieldValueInt64Set(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, int64_t value)
+TSMimeHdrFieldValueInt64Set(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, int64_t value)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3385,7 +3431,7 @@ TSMimeHdrFieldValueInt64Set(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, i
 }
 
 TSReturnCode
-TSMimeHdrFieldValueUintSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, unsigned int value)
+TSMimeHdrFieldValueUintSet(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, unsigned int value)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3407,7 +3453,7 @@ TSMimeHdrFieldValueUintSet(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, un
 }
 
 TSReturnCode
-TSMimeHdrFieldValueAppend(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, const char *value, int length)
+TSMimeHdrFieldValueAppend(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, const char *value, int length)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3423,7 +3469,7 @@ TSMimeHdrFieldValueAppend(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, con
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field);
   HdrHeap *heap              = ((HdrHeapSDKHandle *)bufp)->m_heap;
 
   if (length == -1) {
@@ -3434,7 +3480,7 @@ TSMimeHdrFieldValueAppend(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, con
 }
 
 TSReturnCode
-TSMimeHdrFieldValueStringInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, const char *value, int length)
+TSMimeHdrFieldValueStringInsert(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, const char *value, int length)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3456,7 +3502,7 @@ TSMimeHdrFieldValueStringInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int id
 }
 
 TSReturnCode
-TSMimeHdrFieldValueIntInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, int value)
+TSMimeHdrFieldValueIntInsert(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, int value)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3477,7 +3523,7 @@ TSMimeHdrFieldValueIntInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, 
 }
 
 TSReturnCode
-TSMimeHdrFieldValueUintInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx, unsigned int value)
+TSMimeHdrFieldValueUintInsert(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx, unsigned int value)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3498,7 +3544,7 @@ TSMimeHdrFieldValueUintInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx,
 }
 
 TSReturnCode
-TSMimeHdrFieldValueDateInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, time_t value)
+TSMimeHdrFieldValueDateInsert(TSMBuffer bufp, CoreToTSAPI<MIMEHdrImpl *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, time_t value)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3524,7 +3570,7 @@ TSMimeHdrFieldValueDateInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, time_t v
 }
 
 TSReturnCode
-TSMimeHdrFieldValueDelete(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx)
+TSMimeHdrFieldValueDelete(TSMBuffer bufp, CoreToTSAPI<MIMEFieldSDKHandle *>::Type hdr, CoreToTSAPI<MIMEFieldSDKHandle *>::Type field, int idx)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3539,7 +3585,7 @@ TSMimeHdrFieldValueDelete(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx)
     return TS_ERROR;
   }
 
-  MIMEFieldSDKHandle *handle = (MIMEFieldSDKHandle *)field;
+  MIMEFieldSDKHandle *handle = cvtTSAPIToCore(field);
   HdrHeap *heap              = ((HdrHeapSDKHandle *)bufp)->m_heap;
 
   mime_field_value_delete_comma_val(heap, handle->mh, handle->field_ptr, idx);
@@ -3577,7 +3623,7 @@ TSHttpParserDestroy(TSHttpParser parser)
 /* HttpHdr */
 /***********/
 
-TSMLoc
+CoreToTSAPI<HTTPHdrImpl *>::Type
 TSHttpHdrCreate(TSMBuffer bufp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
@@ -3585,11 +3631,11 @@ TSHttpHdrCreate(TSMBuffer bufp)
   HTTPHdr h;
   h.m_heap = ((HdrHeapSDKHandle *)bufp)->m_heap;
   h.create(HTTP_TYPE_UNKNOWN);
-  return (TSMLoc)(h.m_http);
+  return (CoreToTSAPI<HTTPHdrImpl *>::Type)(h.m_http);
 }
 
 void
-TSHttpHdrDestroy(TSMBuffer bufp, TSMLoc obj)
+TSHttpHdrDestroy(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3601,7 +3647,7 @@ TSHttpHdrDestroy(TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSHttpHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc *locp)
+TSHttpHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, CoreToTSAPI<HTTPHdrImpl *>::Type src_hdr, CoreToTSAPI<HTTPHdrImpl *>::Type *locp)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3619,7 +3665,7 @@ TSHttpHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc *
 
   s_heap = ((HdrHeapSDKHandle *)src_bufp)->m_heap;
   d_heap = ((HdrHeapSDKHandle *)dest_bufp)->m_heap;
-  s_hh   = (HTTPHdrImpl *)src_hdr;
+  s_hh   = cvtTSAPIToCore(src_hdr);
 
   if (s_hh->m_type != HDR_HEAP_OBJ_HTTP_HEADER) {
     return TS_ERROR;
@@ -3628,13 +3674,13 @@ TSHttpHdrClone(TSMBuffer dest_bufp, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc *
   // TODO: This is never used
   // inherit_strs = (s_heap != d_heap ? true : false);
   d_hh  = http_hdr_clone(s_hh, s_heap, d_heap);
-  *locp = (TSMLoc)d_hh;
+  *locp = cvtCoreToTSAPI(d_hh);
 
   return TS_SUCCESS;
 }
 
 TSReturnCode
-TSHttpHdrCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc src_obj)
+TSHttpHdrCopy(TSMBuffer dest_bufp, CoreToTSAPI<HTTPHdrImpl *>::Type dest_obj, TSMBuffer src_bufp, CoreToTSAPI<HTTPHdrImpl *>::Type src_obj)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3655,8 +3701,8 @@ TSHttpHdrCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc s
 
   s_heap = ((HdrHeapSDKHandle *)src_bufp)->m_heap;
   d_heap = ((HdrHeapSDKHandle *)dest_bufp)->m_heap;
-  s_hh   = (HTTPHdrImpl *)src_obj;
-  d_hh   = (HTTPHdrImpl *)dest_obj;
+  s_hh   = cvtTSAPIToCore(src_obj);
+  d_hh   = cvtTSAPIToCore(dest_obj);
 
   if ((s_hh->m_type != HDR_HEAP_OBJ_HTTP_HEADER) || (d_hh->m_type != HDR_HEAP_OBJ_HTTP_HEADER)) {
     return TS_ERROR;
@@ -3669,7 +3715,7 @@ TSHttpHdrCopy(TSMBuffer dest_bufp, TSMLoc dest_obj, TSMBuffer src_bufp, TSMLoc s
 }
 
 void
-TSHttpHdrPrint(TSMBuffer bufp, TSMLoc obj, TSIOBuffer iobufp)
+TSHttpHdrPrint(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, TSIOBuffer iobufp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3704,7 +3750,7 @@ TSHttpHdrPrint(TSMBuffer bufp, TSMLoc obj, TSIOBuffer iobufp)
 }
 
 TSParseResult
-TSHttpHdrParseReq(TSHttpParser parser, TSMBuffer bufp, TSMLoc obj, const char **start, const char *end)
+TSHttpHdrParseReq(TSHttpParser parser, TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, const char **start, const char *end)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3725,7 +3771,7 @@ TSHttpHdrParseReq(TSHttpParser parser, TSMBuffer bufp, TSMLoc obj, const char **
 }
 
 TSParseResult
-TSHttpHdrParseResp(TSHttpParser parser, TSMBuffer bufp, TSMLoc obj, const char **start, const char *end)
+TSHttpHdrParseResp(TSHttpParser parser, TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, const char **start, const char *end)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3746,7 +3792,7 @@ TSHttpHdrParseResp(TSHttpParser parser, TSMBuffer bufp, TSMLoc obj, const char *
 }
 
 int
-TSHttpHdrLengthGet(TSMBuffer bufp, TSMLoc obj)
+TSHttpHdrLengthGet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3759,7 +3805,7 @@ TSHttpHdrLengthGet(TSMBuffer bufp, TSMLoc obj)
 }
 
 TSHttpType
-TSHttpHdrTypeGet(TSMBuffer bufp, TSMLoc obj)
+TSHttpHdrTypeGet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3773,7 +3819,7 @@ TSHttpHdrTypeGet(TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSHttpHdrTypeSet(TSMBuffer bufp, TSMLoc obj, TSHttpType type)
+TSHttpHdrTypeSet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, TSHttpType type)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3812,7 +3858,7 @@ TSHttpHdrTypeSet(TSMBuffer bufp, TSMLoc obj, TSHttpType type)
 }
 
 int
-TSHttpHdrVersionGet(TSMBuffer bufp, TSMLoc obj)
+TSHttpHdrVersionGet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3825,7 +3871,7 @@ TSHttpHdrVersionGet(TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSHttpHdrVersionSet(TSMBuffer bufp, TSMLoc obj, int ver)
+TSHttpHdrVersionSet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, int ver)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3849,7 +3895,7 @@ TSHttpHdrVersionSet(TSMBuffer bufp, TSMLoc obj, int ver)
 }
 
 const char *
-TSHttpHdrMethodGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSHttpHdrMethodGet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, int *length)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3862,7 +3908,7 @@ TSHttpHdrMethodGet(TSMBuffer bufp, TSMLoc obj, int *length)
 }
 
 TSReturnCode
-TSHttpHdrMethodSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSHttpHdrMethodSet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, const char *value, int length)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3888,7 +3934,7 @@ TSHttpHdrMethodSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
 }
 
 const char *
-TSHttpHdrHostGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSHttpHdrHostGet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, int *length)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3901,23 +3947,23 @@ TSHttpHdrHostGet(TSMBuffer bufp, TSMLoc obj, int *length)
 }
 
 TSReturnCode
-TSHttpHdrUrlGet(TSMBuffer bufp, TSMLoc obj, TSMLoc *locp)
+TSHttpHdrUrlGet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, CoreToTSAPI<URLImpl *>::Type *locp)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
 
-  HTTPHdrImpl *hh = (HTTPHdrImpl *)obj;
+  HTTPHdrImpl *hh = cvtTSAPIToCore(obj);
 
   if (hh->m_polarity != HTTP_TYPE_REQUEST) {
     return TS_ERROR;
   }
 
-  *locp = ((TSMLoc)hh->u.req.m_url_impl);
+  *locp = (cvtCoreToTSAPI(hh->u.req.m_url_impl);
   return TS_SUCCESS;
 }
 
 TSReturnCode
-TSHttpHdrUrlSet(TSMBuffer bufp, TSMLoc obj, TSMLoc url)
+TSHttpHdrUrlSet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, CoreToTSAPI<URLImpl *>::Type url)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3932,7 +3978,7 @@ TSHttpHdrUrlSet(TSMBuffer bufp, TSMLoc obj, TSMLoc url)
   }
 
   HdrHeap *heap   = ((HdrHeapSDKHandle *)bufp)->m_heap;
-  HTTPHdrImpl *hh = (HTTPHdrImpl *)obj;
+  HTTPHdrImpl *hh = cvtTSAPIToCore(obj);
 
   if (hh->m_type != HDR_HEAP_OBJ_HTTP_HEADER) {
     return TS_ERROR;
@@ -3944,7 +3990,7 @@ TSHttpHdrUrlSet(TSMBuffer bufp, TSMLoc obj, TSMLoc url)
 }
 
 TSHttpStatus
-TSHttpHdrStatusGet(TSMBuffer bufp, TSMLoc obj)
+TSHttpHdrStatusGet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3956,7 +4002,7 @@ TSHttpHdrStatusGet(TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSHttpHdrStatusSet(TSMBuffer bufp, TSMLoc obj, TSHttpStatus status)
+TSHttpHdrStatusSet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, TSHttpStatus status)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -3978,7 +4024,7 @@ TSHttpHdrStatusSet(TSMBuffer bufp, TSMLoc obj, TSHttpStatus status)
 }
 
 const char *
-TSHttpHdrReasonGet(TSMBuffer bufp, TSMLoc obj, int *length)
+TSHttpHdrReasonGet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, int *length)
 {
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_http_hdr_handle(obj) == TS_SUCCESS);
@@ -3991,7 +4037,7 @@ TSHttpHdrReasonGet(TSMBuffer bufp, TSMLoc obj, int *length)
 }
 
 TSReturnCode
-TSHttpHdrReasonSet(TSMBuffer bufp, TSMLoc obj, const char *value, int length)
+TSHttpHdrReasonSet(TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj, const char *value, int length)
 {
   // Allow to modify the buffer only
   // if bufp is modifiable. If bufp is not modifiable return
@@ -4068,7 +4114,7 @@ TSCacheKeyDigestSet(TSCacheKey key, const char *input, int length)
 }
 
 TSReturnCode
-TSCacheKeyDigestFromUrlSet(TSCacheKey key, TSMLoc url)
+TSCacheKeyDigestFromUrlSet(TSCacheKey key, CoreToTSAPI<URLImpl *>::Type url)
 {
   sdk_assert(sdk_sanity_check_cachekey(key) == TS_SUCCESS);
 
@@ -4165,22 +4211,22 @@ TSCacheHttpInfoCopy(TSCacheHttpInfo infop)
 }
 
 void
-TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *obj)
+TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   CacheHTTPInfo *info = (CacheHTTPInfo *)infop;
 
   *(reinterpret_cast<HTTPHdr **>(bufp)) = info->request_get();
-  *obj                                  = reinterpret_cast<TSMLoc>(info->request_get()->m_http);
+  *obj                                  = cvtCoreToTSAPI(info->request_get()->m_http);
   sdk_assert(sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS);
 }
 
 void
-TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *obj)
+TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   CacheHTTPInfo *info = (CacheHTTPInfo *)infop;
 
   *(reinterpret_cast<HTTPHdr **>(bufp)) = info->response_get();
-  *obj                                  = reinterpret_cast<TSMLoc>(info->response_get()->m_http);
+  *obj                                  = cvtCoreToTSAPI(info->response_get()->m_http);
   sdk_assert(sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS);
 }
 
@@ -4206,7 +4252,7 @@ TSCacheHttpInfoSizeGet(TSCacheHttpInfo infop)
 }
 
 void
-TSCacheHttpInfoReqSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj)
+TSCacheHttpInfoReqSet(TSCacheHttpInfo infop, TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj)
 {
   HTTPHdr h;
 
@@ -4217,7 +4263,7 @@ TSCacheHttpInfoReqSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj)
 }
 
 void
-TSCacheHttpInfoRespSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj)
+TSCacheHttpInfoRespSet(TSCacheHttpInfo infop, TSMBuffer bufp, CoreToTSAPI<HTTPHdrImpl *>::Type obj)
 {
   HTTPHdr h;
 
@@ -4696,7 +4742,7 @@ TSHttpTxnClientKeepaliveSet(TSHttpTxn txnp, int set)
 }
 
 TSReturnCode
-TSHttpTxnClientReqGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpTxnClientReqGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
@@ -4707,7 +4753,7 @@ TSHttpTxnClientReqGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 
   if (hptr->valid()) {
     *(reinterpret_cast<HTTPHdr **>(bufp)) = hptr;
-    *obj                                  = reinterpret_cast<TSMLoc>(hptr->m_http);
+    *obj                                  = cvtCoreToTSAPI(hptr->m_http);
     if (sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS) {
       hptr->mark_target_dirty();
       return TS_SUCCESS;
@@ -4719,7 +4765,7 @@ TSHttpTxnClientReqGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 
 // pristine url is the url before remap
 TSReturnCode
-TSHttpTxnPristineUrlGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *url_loc)
+TSHttpTxnPristineUrlGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<URLImpl *>::Type *url_loc)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
@@ -4730,11 +4776,11 @@ TSHttpTxnPristineUrlGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *url_loc)
 
   if (hptr->valid()) {
     *(reinterpret_cast<HTTPHdr **>(bufp)) = hptr;
-    *url_loc                              = (TSMLoc)sm->t_state.unmapped_url.m_url_impl;
+    *url_loc                              = cvtCoreToTSAPI(sm->t_state.unmapped_url.m_url_impl);
 
     if (sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS) {
       if (*url_loc == nullptr) {
-        *url_loc = (TSMLoc)hptr->m_http->u.req.m_url_impl;
+        *url_loc = cvtCoreToTSAPI(hptr->m_http->u.req.m_url_impl);
       }
       if (*url_loc) {
         return TS_SUCCESS;
@@ -4758,7 +4804,7 @@ TSHttpTxnEffectiveUrlStringGet(TSHttpTxn txnp, int *length)
 }
 
 TSReturnCode
-TSHttpTxnClientRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpTxnClientRespGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
@@ -4769,7 +4815,7 @@ TSHttpTxnClientRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 
   if (hptr->valid()) {
     *(reinterpret_cast<HTTPHdr **>(bufp)) = hptr;
-    *obj                                  = reinterpret_cast<TSMLoc>(hptr->m_http);
+    *obj                                  = cvtCoreToTSAPI(hptr->m_http);
     sdk_assert(sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS);
     return TS_SUCCESS;
   }
@@ -4778,7 +4824,7 @@ TSHttpTxnClientRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 }
 
 TSReturnCode
-TSHttpTxnServerReqGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpTxnServerReqGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
@@ -4789,7 +4835,7 @@ TSHttpTxnServerReqGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 
   if (hptr->valid()) {
     *(reinterpret_cast<HTTPHdr **>(bufp)) = hptr;
-    *obj                                  = reinterpret_cast<TSMLoc>(hptr->m_http);
+    *obj                                  = cvtCoreToTSAPI(hptr->m_http);
     sdk_assert(sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS);
     return TS_SUCCESS;
   }
@@ -4798,7 +4844,7 @@ TSHttpTxnServerReqGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 }
 
 TSReturnCode
-TSHttpTxnServerRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpTxnServerRespGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
@@ -4809,7 +4855,7 @@ TSHttpTxnServerRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 
   if (hptr->valid()) {
     *(reinterpret_cast<HTTPHdr **>(bufp)) = hptr;
-    *obj                                  = reinterpret_cast<TSMLoc>(hptr->m_http);
+    *obj                                  = cvtCoreToTSAPI(hptr->m_http);
     sdk_assert(sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS);
     return TS_SUCCESS;
   }
@@ -4818,7 +4864,7 @@ TSHttpTxnServerRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 }
 
 TSReturnCode
-TSHttpTxnCachedReqGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpTxnCachedReqGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
@@ -4849,14 +4895,14 @@ TSHttpTxnCachedReqGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
   }
 
   *(reinterpret_cast<HdrHeapSDKHandle **>(bufp)) = *handle;
-  *obj                                           = reinterpret_cast<TSMLoc>(cached_hdr->m_http);
+  *obj                                           = cvtCoreToTSAPI(cached_hdr->m_http);
   sdk_assert(sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS);
 
   return TS_SUCCESS;
 }
 
 TSReturnCode
-TSHttpTxnCachedRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpTxnCachedRespGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
@@ -4887,14 +4933,14 @@ TSHttpTxnCachedRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
   }
 
   *(reinterpret_cast<HdrHeapSDKHandle **>(bufp)) = *handle;
-  *obj                                           = reinterpret_cast<TSMLoc>(cached_hdr->m_http);
+  *obj                                           = cvtCoreToTSAPI(cached_hdr->m_http);
   sdk_assert(sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS);
 
   return TS_SUCCESS;
 }
 
 TSReturnCode
-TSHttpTxnCachedRespModifiableGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpTxnCachedRespModifiableGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
@@ -4923,7 +4969,7 @@ TSHttpTxnCachedRespModifiableGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 
   ink_assert(c_resp != nullptr && c_resp->valid());
   *(reinterpret_cast<HTTPHdr **>(bufp)) = c_resp;
-  *obj                                  = reinterpret_cast<TSMLoc>(c_resp->m_http);
+  *obj                                  = cvtCoreToTSAPI(c_resp->m_http);
   sdk_assert(sdk_sanity_check_mbuffer(*bufp) == TS_SUCCESS);
 
   return TS_SUCCESS;
@@ -5056,7 +5102,7 @@ TSHttpTxnIsWebsocket(TSHttpTxn txnp)
 }
 
 TSReturnCode
-TSHttpTxnCacheLookupUrlGet(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc obj)
+TSHttpTxnCacheLookupUrlGet(TSHttpTxn txnp, TSMBuffer bufp, CoreToTSAPI<URLImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
@@ -5081,7 +5127,7 @@ TSHttpTxnCacheLookupUrlGet(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSHttpTxnCacheLookupUrlSet(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc obj)
+TSHttpTxnCacheLookupUrlSet(TSHttpTxn txnp, TSMBuffer bufp, CoreToTSAPI<URLImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
@@ -5118,7 +5164,7 @@ TSHttpTxnCacheLookupUrlSet(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc obj)
  * SKH 1/15/2015
  */
 TSReturnCode
-TSHttpTxnRedirectRequest(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc url_loc)
+TSHttpTxnRedirectRequest(TSHttpTxn txnp, TSMBuffer bufp, CoreToTSAPI<URLImpl *>::Type url_loc)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
@@ -5352,7 +5398,7 @@ TSHttpTxnUpdateCachedObject(TSHttpTxn txnp)
 }
 
 TSReturnCode
-TSHttpTxnTransformRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpTxnTransformRespGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
 
@@ -5361,7 +5407,7 @@ TSHttpTxnTransformRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 
   if (hptr->valid()) {
     *(reinterpret_cast<HTTPHdr **>(bufp)) = hptr;
-    *obj                                  = reinterpret_cast<TSMLoc>(hptr->m_http);
+    *obj                                  = cvtCoreToTSAPI(hptr->m_http);
     return sdk_sanity_check_mbuffer(*bufp);
   }
 
@@ -5700,7 +5746,7 @@ TSHttpTxnParentProxySet(TSHttpTxn txnp, const char *hostname, int port)
 }
 
 TSReturnCode
-TSHttpTxnParentSelectionUrlGet(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc obj)
+TSHttpTxnParentSelectionUrlGet(TSHttpTxn txnp, TSMBuffer bufp, CoreToTSAPI<URLImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
@@ -5725,7 +5771,7 @@ TSHttpTxnParentSelectionUrlGet(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc obj)
 }
 
 TSReturnCode
-TSHttpTxnParentSelectionUrlSet(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc obj)
+TSHttpTxnParentSelectionUrlSet(TSHttpTxn txnp, TSMBuffer bufp, CoreToTSAPI<URLImpl *>::Type obj)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_mbuffer(bufp) == TS_SUCCESS);
@@ -6306,40 +6352,40 @@ TSHttpCurrentServerConnectionsGet(void)
 
 /* HTTP alternate selection */
 TSReturnCode
-TSHttpAltInfoClientReqGet(TSHttpAltInfo infop, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpAltInfoClientReqGet(TSHttpAltInfo infop, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_alt_info(infop) == TS_SUCCESS);
 
   HttpAltInfo *info = (HttpAltInfo *)infop;
 
   *(reinterpret_cast<HTTPHdr **>(bufp)) = &info->m_client_req;
-  *obj                                  = reinterpret_cast<TSMLoc>(info->m_client_req.m_http);
+  *obj                                  = cvtCoreToTSAPI(info->m_client_req.m_http);
 
   return sdk_sanity_check_mbuffer(*bufp);
 }
 
 TSReturnCode
-TSHttpAltInfoCachedReqGet(TSHttpAltInfo infop, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpAltInfoCachedReqGet(TSHttpAltInfo infop, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_alt_info(infop) == TS_SUCCESS);
 
   HttpAltInfo *info = (HttpAltInfo *)infop;
 
   *(reinterpret_cast<HTTPHdr **>(bufp)) = &info->m_cached_req;
-  *obj                                  = reinterpret_cast<TSMLoc>(info->m_cached_req.m_http);
+  *obj                                  = cvtCoreToTSAPI(info->m_cached_req.m_http);
 
   return sdk_sanity_check_mbuffer(*bufp);
 }
 
 TSReturnCode
-TSHttpAltInfoCachedRespGet(TSHttpAltInfo infop, TSMBuffer *bufp, TSMLoc *obj)
+TSHttpAltInfoCachedRespGet(TSHttpAltInfo infop, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_alt_info(infop) == TS_SUCCESS);
 
   HttpAltInfo *info = (HttpAltInfo *)infop;
 
   *(reinterpret_cast<HTTPHdr **>(bufp)) = &info->m_cached_resp;
-  *obj                                  = reinterpret_cast<TSMLoc>(info->m_cached_resp.m_http);
+  *obj                                  = cvtCoreToTSAPI(info->m_cached_resp.m_http);
 
   return sdk_sanity_check_mbuffer(*bufp);
 }
@@ -7510,7 +7556,7 @@ TSFetchRespGet(TSHttpTxn txnp, int *length)
 }
 
 TSReturnCode
-TSFetchPageRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
+TSFetchPageRespGet(TSHttpTxn txnp, TSMBuffer *bufp, CoreToTSAPI<HTTPHdrImpl *>::Type *obj)
 {
   sdk_assert(sdk_sanity_check_null_ptr((void *)bufp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr((void *)obj) == TS_SUCCESS);
@@ -7519,7 +7565,7 @@ TSFetchPageRespGet(TSHttpTxn txnp, TSMBuffer *bufp, TSMLoc *obj)
 
   if (hptr->valid()) {
     *(reinterpret_cast<HTTPHdr **>(bufp)) = hptr;
-    *obj                                  = reinterpret_cast<TSMLoc>(hptr->m_http);
+    *obj                                  = cvtCoreToTSAPI(hptr->m_http);
     return sdk_sanity_check_mbuffer(*bufp);
   }
 
@@ -7636,7 +7682,7 @@ TSFetchRespHdrMBufGet(TSFetchSM fetch_sm)
   return ((FetchSM *)fetch_sm)->resp_hdr_bufp();
 }
 
-TSMLoc
+CoreToTSAPI<HTTPHdrImpl *>::Type
 TSFetchRespHdrMLocGet(TSFetchSM fetch_sm)
 {
   sdk_assert(sdk_sanity_check_fetch_sm(fetch_sm) == TS_SUCCESS);
@@ -7687,7 +7733,7 @@ TSHttpTxnServerPush(TSHttpTxn txnp, const char *url, int url_len)
     SCOPED_MUTEX_LOCK(lock, ua_session->mutex, this_ethread());
     if (!ua_session->connection_state.is_state_closed() && !ua_session->is_url_pushed(url, url_len)) {
       HTTPHdr *hptr = &(sm->t_state.hdr_info.client_request);
-      TSMLoc obj    = reinterpret_cast<TSMLoc>(hptr->m_http);
+      auto obj    = reinterpret_cast<CoreToTSAPI<HTTPHdrImpl *>::Type>(hptr->m_http);
 
       MIMEHdrImpl *mh = _hdr_mloc_to_mime_hdr_impl(obj);
       MIMEField *f    = mime_hdr_field_find(mh, MIME_FIELD_ACCEPT_ENCODING, MIME_LEN_ACCEPT_ENCODING);
@@ -9614,7 +9660,7 @@ namespace
 // Function that contains the common logic for TSRemapFrom/ToUrlGet().
 //
 TSReturnCode
-remapUrlGet(TSHttpTxn txnp, TSMLoc *urlLocp, URL *(UrlMappingContainer::*mfp)() const)
+remapUrlGet(TSHttpTxn txnp, CoreToTSAPI<URLImpl *>::Type *urlLocp, URL *(UrlMappingContainer::*mfp)() const)
 {
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   sdk_assert(sdk_sanity_check_null_ptr(urlLocp) == TS_SUCCESS);
@@ -9630,7 +9676,7 @@ remapUrlGet(TSHttpTxn txnp, TSMLoc *urlLocp, URL *(UrlMappingContainer::*mfp)() 
     return TS_ERROR;
   }
 
-  *urlLocp = reinterpret_cast<TSMLoc>(urlImpl);
+  *urlLocp = cvtCoreToTSAPI(urlImpl);
 
   return TS_SUCCESS;
 }
@@ -9638,13 +9684,13 @@ remapUrlGet(TSHttpTxn txnp, TSMLoc *urlLocp, URL *(UrlMappingContainer::*mfp)() 
 } // end anonymous namespace
 
 tsapi TSReturnCode
-TSRemapFromUrlGet(TSHttpTxn txnp, TSMLoc *urlLocp)
+TSRemapFromUrlGet(TSHttpTxn txnp, CoreToTSAPI<URLImpl *>::Type *urlLocp)
 {
   return remapUrlGet(txnp, urlLocp, &UrlMappingContainer::getFromURL);
 }
 
 tsapi TSReturnCode
-TSRemapToUrlGet(TSHttpTxn txnp, TSMLoc *urlLocp)
+TSRemapToUrlGet(TSHttpTxn txnp, CoreToTSAPI<URLImpl *>::Type *urlLocp)
 {
   return remapUrlGet(txnp, urlLocp, &UrlMappingContainer::getToURL);
 }

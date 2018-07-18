@@ -118,7 +118,7 @@ modify_header(TSHttpTxn txnp)
     TSMimeHdrFieldValueDateInsert(resp_bufp, resp_loc, new_field_loc, recvd_time);
 
     TSHandleMLocRelease(resp_bufp, resp_loc, new_field_loc);
-    TSHandleMLocRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
+    TSHandleMLocRelease(resp_bufp, nullptr, resp_loc);
 
   } else if (TS_HTTP_STATUS_NOT_MODIFIED == resp_status) {
     TSDebug(PLUGIN_NAME, "Processing 304 Not Modified");

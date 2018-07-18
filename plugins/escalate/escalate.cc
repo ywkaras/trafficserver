@@ -108,7 +108,7 @@ EscalateResponse(TSCont cont, TSEvent event, void *edata)
 
   // Next, the response status ...
   status = TSHttpHdrStatusGet(mbuf, hdrp);
-  TSHandleMLocRelease(mbuf, TS_NULL_MLOC, hdrp); // Don't need this any more
+  TSHandleMLocRelease(mbuf, nullptr, hdrp); // Don't need this any more
 
   // See if we have an escalation retry config for this response code
   entry = es->status_map.find((unsigned)status);
@@ -125,7 +125,7 @@ EscalateResponse(TSCont cont, TSEvent event, void *edata)
     if (es->use_pristine) {
       if (TS_SUCCESS == TSHttpTxnPristineUrlGet(txn, &mbuf, &url)) {
         url_str = MakeEscalateUrl(mbuf, url, entry->second.target.c_str(), entry->second.target.size(), url_len);
-        TSHandleMLocRelease(mbuf, TS_NULL_MLOC, url);
+        TSHandleMLocRelease(mbuf, nullptr, url);
       }
     } else {
       if (TS_SUCCESS == TSHttpTxnClientReqGet(txn, &mbuf, &hdrp)) {
@@ -133,7 +133,7 @@ EscalateResponse(TSCont cont, TSEvent event, void *edata)
           url_str = MakeEscalateUrl(mbuf, url, entry->second.target.c_str(), entry->second.target.size(), url_len);
         }
         // Release the request MLoc
-        TSHandleMLocRelease(mbuf, TS_NULL_MLOC, hdrp);
+        TSHandleMLocRelease(mbuf, nullptr, hdrp);
       }
     }
   }

@@ -181,15 +181,15 @@ ts_lua_server_request_header_get(lua_State *L)
   if (key && key_len) {
     field_loc = TSMimeHdrFieldFind(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, key, key_len);
 
-    if (field_loc != TS_NULL_MLOC) {
+    if (field_loc != nullptr) {
       count = 0;
-      while (field_loc != TS_NULL_MLOC) {
+      while (field_loc != nullptr) {
         val = TSMimeHdrFieldValueStringGet(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc, -1, &val_len);
         next_field_loc = TSMimeHdrFieldNextDup(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
         lua_pushlstring(L, val, val_len);
         count++;
         // multiple headers with the same name must be semantically the same as one value which is comma seperated
-        if (next_field_loc != TS_NULL_MLOC) {
+        if (next_field_loc != nullptr) {
           lua_pushlstring(L, ",", 1);
           count++;
         }
@@ -244,15 +244,15 @@ ts_lua_server_request_header_set(lua_State *L)
   field_loc = TSMimeHdrFieldFind(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, key, key_len);
 
   if (remove) {
-    while (field_loc != TS_NULL_MLOC) {
+    while (field_loc != nullptr) {
       tmp = TSMimeHdrFieldNextDup(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       TSMimeHdrFieldDestroy(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       TSHandleMLocRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       field_loc = tmp;
     }
-  } else if (field_loc != TS_NULL_MLOC) {
+  } else if (field_loc != nullptr) {
     first = 1;
-    while (field_loc != TS_NULL_MLOC) {
+    while (field_loc != nullptr) {
       tmp = TSMimeHdrFieldNextDup(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       if (first) {
         first = 0;
@@ -272,107 +272,6 @@ ts_lua_server_request_header_set(lua_State *L)
     TSMimeHdrFieldValueStringSet(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc, -1, val, val_len);
     TSMimeHdrFieldAppend(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
   }
-
-  if (field_loc != TS_NULL_MLOC) {
-    TSHandleMLocRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
-  }
-
-  return 0;
-}
-
-static void
-ts_lua_inject_server_request_headers_api(lua_State *L)
-{
-  lua_pushcfunction(L, ts_lua_server_request_get_headers);
-  lua_setfield(L, -2, "get_headers");
-}
-
-static int
-ts_lua_server_request_get_headers(lua_State *L)
-{
-  const char *name;
-  const char *value;
-  int name_len;
-  int value_len;
-  TSMLoc field_loc;
-  TSMLoc next_field_loc;
-  const char *tvalue;
-  size_t tvalue_len;
-
-  ts_lua_http_ctx *http_ctx;
-
-  GET_HTTP_CONTEXT(http_ctx, L);
-
-  TS_LUA_CHECK_SERVER_REQUEST_HDR(http_ctx);
-
-  lua_newtable(L);
-
-  field_loc = TSMimeHdrFieldGet(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, 0);
-
-  while (field_loc != TS_NULL_MLOC) {
-    name = TSMimeHdrFieldNameGet(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc, &name_len);
-    if (name && name_len) {
-      // retrieve the header name from table
-      lua_pushlstring(L, name, name_len);
-      lua_gettable(L, -2);
-      if (lua_isnil(L, -1)) {
-        // if header name does not exist in the table, insert it
-        lua_pop(L, 1);
-        value =
-          TSMimeHdrFieldValueStringGet(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc, -1, &value_len);
-        lua_pushlstring(L, name, name_len);
-        lua_pushlstring(L, value, value_len);
-        lua_rawset(L, -3);
-      } else {
-        // if header name exists in the table, append a command and the new value to the end of the existing value
-        tvalue = lua_tolstring(L, -1, &tvalue_len);
-        lua_pop(L, 1);
-        value =
-          TSMimeHdrFieldValueStringGet(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc, -1, &value_len);
-        lua_pushlstring(L, name, name_len);
-        lua_pushlstring(L, tvalue, tvalue_len);
-        lua_pushlstring(L, ",", 1);
-        lua_pushlstring(L, value, value_len);
-        lua_concat(L, 3);
-        lua_rawset(L, -3);
-      }
-    }
-
-    next_field_loc = TSMimeHdrFieldNext(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
-    TSHandleMLocRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
-    field_loc = next_field_loc;
-  }
-
-  return 1;
-}
-
-static void
-ts_lua_inject_server_request_get_header_size_api(lua_State *L)
-{
-  lua_pushcfunction(L, ts_lua_server_request_get_header_size);
-  lua_setfield(L, -2, "get_header_size");
-}
-
-static int
-ts_lua_server_request_get_header_size(lua_State *L)
-{
-  int header_size;
-  ts_lua_http_ctx *http_ctx;
-
-  GET_HTTP_CONTEXT(http_ctx, L);
-
-  header_size = TSHttpTxnServerReqHdrBytesGet(http_ctx->txnp);
-  lua_pushnumber(L, header_size);
-
-  return 1;
-}
-
-static void
-ts_lua_inject_server_request_get_body_size_api(lua_State *L)
-{
-  lua_pushcfunction(L, ts_lua_server_request_get_body_size);
-  lua_setfield(L, -2, "get_body_size");
-}
 
 static int
 ts_lua_server_request_get_body_size(lua_State *L)

@@ -151,7 +151,7 @@ classifyUserAgent(const Classifier &c, TSMBuffer buf, TSMLoc hdrs, String &class
   bool matched = false;
 
   field = TSMimeHdrFieldFind(buf, hdrs, TS_MIME_FIELD_USER_AGENT, TS_MIME_LEN_USER_AGENT);
-  while (field != TS_NULL_MLOC && !matched) {
+  while (field != nullptr && !matched) {
     const char *value;
     int len;
     int count = TSMimeHdrFieldValuesCount(buf, hdrs, field);
@@ -229,14 +229,14 @@ CacheKey::CacheKey(TSHttpTxn txn, String separator, CacheKeyUriType uriType, TSR
 
     if (PRISTINE == _uriType) {
       if (TS_SUCCESS != TSHttpTxnPristineUrlGet(_txn, &_buf, &_url)) {
-        TSHandleMLocRelease(_buf, TS_NULL_MLOC, _hdrs);
+        TSHandleMLocRelease(_buf, nullptr, _hdrs);
         CacheKeyError("failed to get pristine URI handle");
         return;
       }
       CacheKeyDebug("using pristine uri '%s'", getUri(_buf, _url).c_str());
     } else {
       if (TS_SUCCESS != TSHttpHdrUrlGet(_buf, _hdrs, &_url)) {
-        TSHandleMLocRelease(_buf, TS_NULL_MLOC, _hdrs);
+        TSHandleMLocRelease(_buf, nullptr, _hdrs);
         CacheKeyError("failed to get URI handle");
         return;
       }
@@ -253,13 +253,13 @@ CacheKey::~CacheKey()
     if (_remap) {
       /* _buf and _hdrs are assigned from remap info - no need to release here. */
       if (PRISTINE == _uriType) {
-        if (TS_SUCCESS != TSHandleMLocRelease(_buf, TS_NULL_MLOC, _url)) {
+        if (TS_SUCCESS != TSHandleMLocRelease(_buf, nullptr, _url)) {
           CacheKeyError("failed to release pristine URI handle");
         }
       }
     } else {
-      if (TS_SUCCESS != TSHandleMLocRelease(_buf, TS_NULL_MLOC, _hdrs) &&
-          TS_SUCCESS != TSHandleMLocRelease(_buf, TS_NULL_MLOC, _url)) {
+      if (TS_SUCCESS != TSHandleMLocRelease(_buf, nullptr, _hdrs) &&
+          TS_SUCCESS != TSHandleMLocRelease(_buf, nullptr, _url)) {
         CacheKeyError("failed to release URI and headers handle");
       }
     }
@@ -459,7 +459,7 @@ CacheKey::appendHeaders(const ConfigHeaders &config)
   for (StringSet::iterator it = config.getInclude().begin(); it != config.getInclude().end(); ++it) {
     String name_s = *it;
 
-    for (field = TSMimeHdrFieldFind(_buf, _hdrs, name_s.c_str(), name_s.size()); field != TS_NULL_MLOC;
+    for (field = TSMimeHdrFieldFind(_buf, _hdrs, name_s.c_str(), name_s.size()); field != nullptr;
          field = ::nextDuplicate(_buf, _hdrs, field)) {
       const char *value;
       int vlen;
@@ -507,7 +507,7 @@ CacheKey::appendCookies(const ConfigCookies &config)
   TSMLoc field;
   StringSet cset; /* sort and uniquify the cookies list in the cache key */
 
-  for (field = TSMimeHdrFieldFind(_buf, _hdrs, TS_MIME_FIELD_COOKIE, TS_MIME_LEN_COOKIE); field != TS_NULL_MLOC;
+  for (field = TSMimeHdrFieldFind(_buf, _hdrs, TS_MIME_FIELD_COOKIE, TS_MIME_LEN_COOKIE); field != nullptr;
        field = ::nextDuplicate(_buf, _hdrs, field)) {
     int count = TSMimeHdrFieldValuesCount(_buf, _hdrs, field);
 
@@ -607,7 +607,7 @@ CacheKey::appendUaCaptures(Pattern &config)
   int len;
 
   field = TSMimeHdrFieldFind(_buf, _hdrs, TS_MIME_FIELD_USER_AGENT, TS_MIME_LEN_USER_AGENT);
-  if (field == TS_NULL_MLOC) {
+  if (field == nullptr) {
     CacheKeyDebug("missing %.*s header", TS_MIME_LEN_USER_AGENT, TS_MIME_FIELD_USER_AGENT);
     return;
   }

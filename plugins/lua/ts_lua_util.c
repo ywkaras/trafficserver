@@ -597,7 +597,7 @@ ts_lua_destroy_http_ctx(ts_lua_http_ctx *http_ctx)
 
   if (http_ctx->rri == NULL) {
     if (http_ctx->client_request_bufp) {
-      TSHandleMLocRelease(http_ctx->client_request_bufp, TS_NULL_MLOC, http_ctx->client_request_hdrp);
+      TSHandleMLocRelease(http_ctx->client_request_bufp, nullptr, http_ctx->client_request_hdrp);
     }
   }
 
@@ -606,20 +606,20 @@ ts_lua_destroy_http_ctx(ts_lua_http_ctx *http_ctx)
   }
 
   if (http_ctx->server_request_bufp) {
-    TSHandleMLocRelease(http_ctx->server_request_bufp, TS_NULL_MLOC, http_ctx->server_request_hdrp);
+    TSHandleMLocRelease(http_ctx->server_request_bufp, nullptr, http_ctx->server_request_hdrp);
   }
 
   if (http_ctx->server_response_bufp) {
-    TSHandleMLocRelease(http_ctx->server_response_bufp, TS_NULL_MLOC, http_ctx->server_response_hdrp);
+    TSHandleMLocRelease(http_ctx->server_response_bufp, nullptr, http_ctx->server_response_hdrp);
   }
 
   if (http_ctx->client_response_bufp) {
-    TSHandleMLocRelease(http_ctx->client_response_bufp, TS_NULL_MLOC, http_ctx->client_response_hdrp);
+    TSHandleMLocRelease(http_ctx->client_response_bufp, nullptr, http_ctx->client_response_hdrp);
   }
 
   if (http_ctx->cached_response_bufp) {
     TSMimeHdrDestroy(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp);
-    TSHandleMLocRelease(http_ctx->cached_response_bufp, TS_NULL_MLOC, http_ctx->cached_response_hdrp);
+    TSHandleMLocRelease(http_ctx->cached_response_bufp, nullptr, http_ctx->cached_response_hdrp);
     TSMBufferDestroy(http_ctx->cached_response_bufp);
   }
 
@@ -855,7 +855,7 @@ ts_lua_http_cont_handler(TSCont contp, TSEvent ev, void *edata)
     // (e.g. due to the follow redirect feature). So, clearing the pointers
     // to allow API(s) to fetch the pointers again when it re-enters the hook
     if (http_ctx->client_response_hdrp != NULL) {
-      TSHandleMLocRelease(http_ctx->client_response_bufp, TS_NULL_MLOC, http_ctx->client_response_hdrp);
+      TSHandleMLocRelease(http_ctx->client_response_bufp, nullptr, http_ctx->client_response_hdrp);
       http_ctx->client_response_hdrp = NULL;
     }
 

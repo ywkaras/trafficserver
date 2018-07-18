@@ -118,8 +118,8 @@ public:
   /**
    * Constructor for header_field_value_iterator, this shouldn't need to be used directly.
    * @param bufp the TSMBuffer associated with the headers
-   * @param mloc the TSMLoc associated with the headers.
-   * @param field_loc the TSMLoc assocated with the field.
+   * @param mloc the TSMimeHdrLoc associated with the headers.
+   * @param field_loc the TSMimeHdrFldLoc assocated with the field.
    * @param index the index of the value in the HeaderField
    * @warning This shouldn't need to be used directly!
    */
@@ -407,7 +407,7 @@ public:
   /**
    * Constructor for Headers, this shouldn't be used directly unless you're trying to mix the C++ and C apis.
    * @param bufp the TSMBuffer associated with the headers
-   * @param mloc the TSMLoc associated with the headers.
+   * @param mloc the TSHttpHdrLoc associated with the headers.
    * @warning This should only be used if you're mixing the C++ and C apis, it will be constructed automatically if using only the
    * C++ api.
    */
@@ -417,7 +417,7 @@ public:
    * Context Values are a way to share data between plugins, the key is always a string
    * and the value can be a std::shared_ptr to any type that extends ContextValue.
    * @param bufp the TSMBuffer associated with the headers
-   * @param mloc the TSMLoc associated with the headers.
+   * @param mloc the TSHttpHdrLoc associated with the headers.
    * @warning This should only be used if you're mixing the C++ and C apis.
    */
   void reset(void *bufp, void *mloc);

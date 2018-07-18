@@ -32,25 +32,25 @@ using std::string;
  */
 struct atscppapi::UrlState : noncopyable {
   TSMBuffer hdr_buf_;
-  TSMLoc url_loc_;
-  UrlState(TSMBuffer hdr_buf, TSMLoc url_loc) : hdr_buf_(hdr_buf), url_loc_(url_loc) {}
+  TSUrlHdrLoc url_loc_;
+  UrlState(TSMBuffer hdr_buf, TSUrlHdrLoc url_loc) : hdr_buf_(hdr_buf), url_loc_(url_loc) {}
 };
 
 Url::Url()
 {
-  state_ = new UrlState(static_cast<TSMBuffer>(nullptr), static_cast<TSMLoc>(nullptr));
+  state_ = new UrlState(static_cast<TSMBuffer>(nullptr), static_cast<TSUrlHdrLoc>(nullptr));
 }
 
 Url::Url(void *hdr_buf, void *url_loc)
 {
-  state_ = new UrlState(static_cast<TSMBuffer>(hdr_buf), static_cast<TSMLoc>(url_loc));
+  state_ = new UrlState(static_cast<TSMBuffer>(hdr_buf), static_cast<TSUrlHdrLoc>(url_loc));
 }
 
 void
 Url::init(void *hdr_buf, void *url_loc)
 {
   state_->hdr_buf_ = static_cast<TSMBuffer>(hdr_buf);
-  state_->url_loc_ = static_cast<TSMLoc>(url_loc);
+  state_->url_loc_ = static_cast<TSUrlHdrLoc>(url_loc);
 }
 
 Url::~Url()

@@ -33,7 +33,7 @@ namespace atscppapi
  */
 struct ResponseState : noncopyable {
   TSMBuffer hdr_buf_;
-  TSMLoc hdr_loc_;
+  TSHttpHdrLoc hdr_loc_;
   Headers headers_;
   ResponseState() : hdr_buf_(nullptr), hdr_loc_(nullptr) {}
 };
@@ -53,7 +53,7 @@ Response::init(void *hdr_buf, void *hdr_loc)
     return;
   }
   state_->hdr_buf_ = static_cast<TSMBuffer>(hdr_buf);
-  state_->hdr_loc_ = static_cast<TSMLoc>(hdr_loc);
+  state_->hdr_loc_ = static_cast<TSHttpHdrLoc>(hdr_loc);
   state_->headers_.reset(state_->hdr_buf_, state_->hdr_loc_);
   LOG_DEBUG("Initializing response %p with hdr_buf=%p and hdr_loc=%p", this, state_->hdr_buf_, state_->hdr_loc_);
 }

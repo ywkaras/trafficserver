@@ -60,7 +60,7 @@ add_header(TSHttpTxn txnp, TSCont contp ATS_UNUSED)
   }
 
   field_loc = TSMimeHdrFieldGet(hdr_bufp, hdr_loc, 0);
-  if (field_loc == TS_NULL_MLOC) {
+  if (field_loc == nullptr) {
     TSError("[%s] Unable to get field", PLUGIN_NAME);
     goto error;
   }

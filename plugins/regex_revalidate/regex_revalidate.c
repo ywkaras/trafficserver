@@ -392,11 +392,11 @@ get_date_from_cached_hdr(TSHttpTxn txn)
 
   if (TSHttpTxnCachedRespGet(txn, &buf, &hdr_loc) == TS_SUCCESS) {
     date_loc = TSMimeHdrFieldFind(buf, hdr_loc, TS_MIME_FIELD_DATE, TS_MIME_LEN_DATE);
-    if (date_loc != TS_NULL_MLOC) {
+    if (date_loc != nullptr) {
       date = TSMimeHdrFieldValueDateGet(buf, hdr_loc, date_loc);
       TSHandleMLocRelease(buf, hdr_loc, date_loc);
     }
-    TSHandleMLocRelease(buf, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(buf, nullptr, hdr_loc);
   }
 
   return date;

@@ -101,7 +101,7 @@ ts_lua_server_response_get_headers(lua_State *L)
 
   field_loc = TSMimeHdrFieldGet(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, 0);
 
-  while (field_loc != TS_NULL_MLOC) {
+  while (field_loc != nullptr) {
     name = TSMimeHdrFieldNameGet(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc, &name_len);
     if (name && name_len) {
       // retrieve the header name from table
@@ -174,15 +174,15 @@ ts_lua_server_response_header_get(lua_State *L)
 
   if (key && key_len) {
     field_loc = TSMimeHdrFieldFind(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, key, key_len);
-    if (field_loc != TS_NULL_MLOC) {
+    if (field_loc != nullptr) {
       count = 0;
-      while (field_loc != TS_NULL_MLOC) {
+      while (field_loc != nullptr) {
         val = TSMimeHdrFieldValueStringGet(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc, -1, &val_len);
         next_field_loc = TSMimeHdrFieldNextDup(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc);
         lua_pushlstring(L, val, val_len);
         count++;
         // multiple headers with the same name must be semantically the same as one value which is comma seperated
-        if (next_field_loc != TS_NULL_MLOC) {
+        if (next_field_loc != nullptr) {
           lua_pushlstring(L, ",", 1);
           count++;
         }
@@ -233,15 +233,15 @@ ts_lua_server_response_header_set(lua_State *L)
   field_loc = TSMimeHdrFieldFind(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, key, key_len);
 
   if (remove) {
-    while (field_loc != TS_NULL_MLOC) {
+    while (field_loc != nullptr) {
       tmp = TSMimeHdrFieldNextDup(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc);
       TSMimeHdrFieldDestroy(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc);
       TSHandleMLocRelease(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc);
       field_loc = tmp;
     }
-  } else if (field_loc != TS_NULL_MLOC) {
+  } else if (field_loc != nullptr) {
     first = 1;
-    while (field_loc != TS_NULL_MLOC) {
+    while (field_loc != nullptr) {
       tmp = TSMimeHdrFieldNextDup(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc);
       if (first) {
         first = 0;
@@ -262,7 +262,7 @@ ts_lua_server_response_header_set(lua_State *L)
     TSMimeHdrFieldAppend(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc);
   }
 
-  if (field_loc != TS_NULL_MLOC) {
+  if (field_loc != nullptr) {
     TSHandleMLocRelease(http_ctx->server_response_bufp, http_ctx->server_response_hdrp, field_loc);
   }
 

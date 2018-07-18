@@ -361,7 +361,7 @@ ts_lua_http_set_cache_lookup_status(lua_State *L)
 static int
 ts_lua_http_get_cache_lookup_url(lua_State *L)
 {
-  TSMLoc url = TS_NULL_MLOC;
+  TSMLoc url = nullptr;
   char *str  = NULL;
   int len;
 
@@ -384,8 +384,8 @@ ts_lua_http_get_cache_lookup_url(lua_State *L)
   lua_pushlstring(L, str, len >= TS_LUA_MAX_URL_LENGTH ? TS_LUA_MAX_URL_LENGTH - 1 : len);
 
 done:
-  if (url != TS_NULL_MLOC) {
-    TSHandleMLocRelease(http_ctx->client_request_bufp, TS_NULL_MLOC, url);
+  if (url != nullptr) {
+    TSHandleMLocRelease(http_ctx->client_request_bufp, nullptr, url);
   }
 
   if (str != NULL) {
@@ -473,7 +473,7 @@ ts_lua_http_set_parent_proxy(lua_State *L)
 static int
 ts_lua_http_get_parent_selection_url(lua_State *L)
 {
-  TSMLoc url = TS_NULL_MLOC;
+  TSMLoc url = nullptr;
   char *str  = NULL;
   int len;
 
@@ -496,8 +496,8 @@ ts_lua_http_get_parent_selection_url(lua_State *L)
   lua_pushlstring(L, str, len >= TS_LUA_MAX_URL_LENGTH ? TS_LUA_MAX_URL_LENGTH - 1 : len);
 
 done:
-  if (url != TS_NULL_MLOC) {
-    TSHandleMLocRelease(http_ctx->client_request_bufp, TS_NULL_MLOC, url);
+  if (url != nullptr) {
+    TSHandleMLocRelease(http_ctx->client_request_bufp, nullptr, url);
   }
 
   if (str != NULL) {
@@ -783,7 +783,7 @@ ts_lua_http_get_server_state(lua_State *L)
 static int
 ts_lua_http_get_remap_from_url(lua_State *L)
 {
-  TSMLoc url = TS_NULL_MLOC;
+  TSMLoc url = nullptr;
   char *str  = NULL;
   int len;
   ts_lua_http_ctx *http_ctx;
@@ -810,7 +810,7 @@ done:
 static int
 ts_lua_http_get_remap_to_url(lua_State *L)
 {
-  TSMLoc url = TS_NULL_MLOC;
+  TSMLoc url = nullptr;
   char *str  = NULL;
   int len;
   ts_lua_http_ctx *http_ctx;

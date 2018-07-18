@@ -236,7 +236,7 @@ read_request_hook(TSCont /* contp */, TSEvent /* event */, void *edata)
       hdr = next_hdr;
     }
 
-    TSHandleMLocRelease(hdr_bufp, TS_NULL_MLOC, req_hdrs);
+    TSHandleMLocRelease(hdr_bufp, nullptr, req_hdrs);
   }
 
   TSHttpTxnReenable(rh, TS_EVENT_HTTP_CONTINUE);

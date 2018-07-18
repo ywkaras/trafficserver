@@ -71,7 +71,7 @@ struct InterceptPlugin::State {
   bool hdr_parsed_         = false;
 
   TSMBuffer hdr_buf_     = nullptr;
-  TSMLoc hdr_loc_        = nullptr;
+  TSHttpHdrLoc hdr_loc_        = nullptr;
   int num_bytes_written_ = 0;
   std::shared_ptr<Mutex> plugin_mutex_;
   InterceptPlugin *plugin_ = nullptr;
@@ -94,7 +94,7 @@ struct InterceptPlugin::State {
   {
     TSHttpParserDestroy(http_parser_);
     if (hdr_loc_) {
-      TSHandleMLocRelease(hdr_buf_, TS_NULL_MLOC, hdr_loc_);
+      TSHandleMLocRelease(hdr_buf_, nullptr, hdr_loc_);
     }
     if (hdr_buf_) {
       TSMBufferDestroy(hdr_buf_);

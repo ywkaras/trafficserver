@@ -64,7 +64,7 @@ handleTransactionEvents(TSCont cont, TSEvent event, void *edata)
     transaction.getClientRequest().getUrl().reset();
     // This is here to force a refresh of the cached client request url
     TSMBuffer hdr_buf;
-    TSMLoc hdr_loc;
+    TSHttpHdrLoc hdr_loc;
     (void)TSHttpTxnClientReqGet(static_cast<TSHttpTxn>(transaction.getAtsHandle()), &hdr_buf, &hdr_loc);
     break;
   case TS_EVENT_HTTP_SEND_REQUEST_HDR:
@@ -233,7 +233,7 @@ void
 utils::internal::invokePluginForEvent(GlobalPlugin *plugin, TSHttpAltInfo altinfo_handle, TSEvent event)
 {
   TSMBuffer hdr_buf;
-  TSMLoc hdr_loc;
+  TSHttpHdrLoc hdr_loc;
 
   assert(event == TS_EVENT_HTTP_SELECT_ALT);
 
@@ -280,7 +280,7 @@ utils::internal::consumeFromTSIOBufferReader(TSIOBufferReader reader)
 }
 
 HttpVersion
-utils::internal::getHttpVersion(TSMBuffer hdr_buf, TSMLoc hdr_loc)
+utils::internal::getHttpVersion(TSMBuffer hdr_buf, TSHttpHdrLoc hdr_loc)
 {
   int version = TSHttpHdrVersionGet(hdr_buf, hdr_loc);
   if (version != TS_ERROR) {

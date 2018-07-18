@@ -257,7 +257,7 @@ transformable(TSHttpTxn txnp)
   if (TS_SUCCESS == TSHttpTxnServerRespGet(txnp, &bufp, &hdr_loc)) {
     resp_status = TSHttpHdrStatusGet(bufp, hdr_loc);
     retv        = (resp_status == TS_HTTP_STATUS_OK);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
   }
 
   TSDebug(PLUGIN_NAME, "Exiting transformable with return %d", retv);

@@ -87,7 +87,7 @@ add_redirect_header(TSMBuffer &bufp, TSMLoc &hdr_loc, const std::string &locatio
   // This is needed in case the response already contains a Location header
   TSMLoc field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, LOCATION_HEADER, strlen(LOCATION_HEADER));
 
-  if (field_loc == TS_NULL_MLOC) {
+  if (field_loc == nullptr) {
     TSMimeHdrFieldCreateNamed(bufp, hdr_loc, LOCATION_HEADER, strlen(LOCATION_HEADER), &field_loc);
   }
 
@@ -123,7 +123,7 @@ check_internal_message_hdr(TSHttpTxn &txnp)
     TSHandleMLocRelease(bufp, hdr_loc, header_loc);
   }
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 
   return found;
 }
@@ -183,7 +183,7 @@ on_immediate(RequestData *req, TSCont &contp)
   }
 
   add_redirect_header(bufp, hdr_loc, req->req_url);
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
   TSHttpTxnReenable(req->txnp, TS_EVENT_HTTP_CONTINUE);
   return TS_SUCCESS;
 }
@@ -211,7 +211,7 @@ on_send_response_header(RequestData *req, TSHttpTxn &txnp, TSCont &contp)
       req->wl_retry++;
       TSDebug(DEBUG_TAG, "delaying request, url@%p: {{%s}} on retry: %d time", txnp, req->req_url.c_str(), req->wl_retry);
       TSContSchedule(contp, OPEN_WRITE_FAIL_REQ_DELAY_TIMEOUT, TS_THREAD_POOL_TASK);
-      TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
       return TS_SUCCESS;
     }
   }
@@ -222,7 +222,7 @@ on_send_response_header(RequestData *req, TSHttpTxn &txnp, TSCont &contp)
     req->wl_retry = 0;
   }
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
   return TS_SUCCESS;
 }

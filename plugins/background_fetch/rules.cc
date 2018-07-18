@@ -98,7 +98,7 @@ BgFetchRule::check_field_configured(TSHttpTxn txnp) const
     if (TS_SUCCESS == TSHttpTxnServerRespGet(txnp, &hdr_bufp, &hdr_loc)) {
       TSMLoc loc = TSMimeHdrFieldFind(hdr_bufp, hdr_loc, _field, -1);
 
-      if (TS_NULL_MLOC != loc) {
+      if (nullptr != loc) {
         unsigned int content_len = TSMimeHdrFieldValueUintGet(hdr_bufp, hdr_loc, loc, 0 /* index */);
 
         if (check_content_length(content_len, _value)) {
@@ -109,7 +109,7 @@ BgFetchRule::check_field_configured(TSHttpTxn txnp) const
       } else {
         TSDebug(PLUGIN_NAME, "No content-length field in resp");
       }
-      TSHandleMLocRelease(hdr_bufp, TS_NULL_MLOC, hdr_loc);
+      TSHandleMLocRelease(hdr_bufp, nullptr, hdr_loc);
     } else {
       TSError("[%s] Failed to get resp headers", PLUGIN_NAME);
     }
@@ -120,7 +120,7 @@ BgFetchRule::check_field_configured(TSHttpTxn txnp) const
   if (TS_SUCCESS == TSHttpTxnClientReqGet(txnp, &hdr_bufp, &hdr_loc)) {
     TSMLoc loc = TSMimeHdrFieldFind(hdr_bufp, hdr_loc, _field, -1);
 
-    if (TS_NULL_MLOC != loc) {
+    if (nullptr != loc) {
       if (!strcmp(_value, "*")) {
         TSDebug(PLUGIN_NAME, "Found %s wild card", _field);
         hdr_found = true;
@@ -141,7 +141,7 @@ BgFetchRule::check_field_configured(TSHttpTxn txnp) const
     } else {
       TSDebug(PLUGIN_NAME, "no field %s in request header", _field);
     }
-    TSHandleMLocRelease(hdr_bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(hdr_bufp, nullptr, hdr_loc);
   } else {
     TSError("[%s] Failed to get resp headers", PLUGIN_NAME);
   }

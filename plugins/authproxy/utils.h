@@ -80,7 +80,7 @@ struct HttpHeader {
   {
     TSHttpHdrDestroy(this->buffer, this->header);
 
-    TSHandleMLocRelease(this->buffer, TS_NULL_MLOC, this->header);
+    TSHandleMLocRelease(this->buffer, nullptr, this->header);
     TSMBufferDestroy(this->buffer);
   }
 

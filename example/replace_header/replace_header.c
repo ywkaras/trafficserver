@@ -54,7 +54,7 @@ replace_header(TSHttpTxn txnp)
   }
 
   field_loc = TSMimeHdrFieldFind(resp_bufp, resp_loc, TS_MIME_FIELD_ACCEPT_RANGES, TS_MIME_LEN_ACCEPT_RANGES);
-  if (field_loc == TS_NULL_MLOC) {
+  if (field_loc == nullptr) {
     /* field was not found */
 
     /* create a new field in the header */
@@ -66,14 +66,14 @@ replace_header(TSHttpTxn txnp)
     /* insert it into the header */
     TSMimeHdrFieldAppend(resp_bufp, resp_loc, field_loc);
     TSHandleMLocRelease(resp_bufp, resp_loc, field_loc);
-    TSHandleMLocRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
+    TSHandleMLocRelease(resp_bufp, nullptr, resp_loc);
   } else {
     /* clear the field */
     TSMimeHdrFieldValuesClear(resp_bufp, resp_loc, field_loc);
     /* set the value to "none" */
     TSMimeHdrFieldValueStringInsert(resp_bufp, resp_loc, field_loc, -1, "none", 4);
     TSHandleMLocRelease(resp_bufp, resp_loc, field_loc);
-    TSHandleMLocRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
+    TSHandleMLocRelease(resp_bufp, nullptr, resp_loc);
   }
 
 done:

@@ -43,7 +43,7 @@ void
 Hdr_Remove_Field(TSMBuffer mbuf, TSMLoc hdr_loc, TextView field)
 {
   TSMLoc field_loc;
-  if (TS_NULL_MLOC != (field_loc = TSMimeHdrFieldFind(mbuf, hdr_loc, field.data(), field.size()))) {
+  if (nullptr != (field_loc = TSMimeHdrFieldFind(mbuf, hdr_loc, field.data(), field.size()))) {
     TSMimeHdrFieldDestroy(mbuf, hdr_loc, field_loc);
     TSHandleMLocRelease(mbuf, hdr_loc, field_loc);
   }
@@ -456,7 +456,7 @@ Bridge::update_ua_response()
     Hdr_Remove_Field(mbuf, hdr_loc, {TS_MIME_FIELD_TRANSFER_ENCODING, TS_MIME_LEN_TRANSFER_ENCODING});
     Hdr_Remove_Field(mbuf, hdr_loc, {TS_MIME_FIELD_AGE, TS_MIME_LEN_AGE});
     Hdr_Remove_Field(mbuf, hdr_loc, {TS_MIME_FIELD_PROXY_CONNECTION, TS_MIME_LEN_PROXY_CONNECTION});
-    TSHandleMLocRelease(mbuf, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(mbuf, nullptr, hdr_loc);
   } else {
     TSDebug(PLUGIN_TAG, "Failed to retrieve client response");
   }

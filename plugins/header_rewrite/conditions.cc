@@ -274,7 +274,7 @@ ConditionPath::append_value(std::string &s, const Resources &res)
       s.append(path, path_length);
     }
 
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, url_loc);
+    TSHandleMLocRelease(bufp, nullptr, url_loc);
   }
 }
 

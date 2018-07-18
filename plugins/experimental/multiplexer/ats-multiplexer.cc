@@ -139,7 +139,7 @@ DoRemap(const Instance &i, TSHttpTxn t)
     dispatch(requests, timeout);
   }
 
-  TSHandleMLocRelease(buffer, TS_NULL_MLOC, location);
+  TSHandleMLocRelease(buffer, nullptr, location);
 
   TSStatIntIncrement(statistics.requests, 1);
 }

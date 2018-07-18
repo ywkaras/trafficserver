@@ -33,8 +33,8 @@ using std::string;
  */
 struct atscppapi::RequestState : noncopyable {
   TSMBuffer hdr_buf_;
-  TSMLoc hdr_loc_;
-  TSMLoc url_loc_;
+  TSMHttpHdrLoc hdr_loc_;
+  TSUrlHdrLoc url_loc_;
   Url url_;
   Headers headers_;
   /* method and version are stored here for the case of an unbound request */
@@ -93,7 +93,7 @@ Request::init(void *hdr_buf, void *hdr_loc)
     return;
   }
   state_->hdr_buf_ = static_cast<TSMBuffer>(hdr_buf);
-  state_->hdr_loc_ = static_cast<TSMLoc>(hdr_loc);
+  state_->hdr_loc_ = static_cast<TSHttpHdrLoc>(hdr_loc);
   state_->headers_.reset(state_->hdr_buf_, state_->hdr_loc_);
   state_->url_loc_ = nullptr;
   TSReturnCode ret = TSHttpHdrUrlGet(state_->hdr_buf_, state_->hdr_loc_, &state_->url_loc_);
@@ -201,8 +201,7 @@ Request::~Request()
     if (state_->destroy_buf_) {
       // usually, hdr_loc is the parent of url_loc, but we created this url_loc "directly" in hdr_buf,
       // so we use null as parent loc in this case
-      TSMLoc null_parent_loc = nullptr;
-      TSHandleMLocRelease(state_->hdr_buf_, null_parent_loc, state_->url_loc_);
+      TSHandleMLocRelease(state_->hdr_buf_, nullptr, state_->url_loc_);
       TSMBufferDestroy(state_->hdr_buf_);
     } else {
       LOG_DEBUG("Destroying request object on hdr_buf=%p, hdr_loc=%p, url_loc=%p", state_->hdr_buf_, state_->hdr_loc_,

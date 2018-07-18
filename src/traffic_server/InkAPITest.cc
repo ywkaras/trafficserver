@@ -452,7 +452,7 @@ get_request_id_value(const char *name, TSMBuffer buf, TSMLoc hdr)
   TSMLoc field;
 
   field = TSMimeHdrFieldFind(buf, hdr, name, -1);
-  if (field != TS_NULL_MLOC) {
+  if (field != nullptr) {
     id = TSMimeHdrFieldValueIntGet(buf, hdr, field, 0);
   }
 

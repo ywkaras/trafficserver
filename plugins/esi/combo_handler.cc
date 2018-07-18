@@ -206,7 +206,7 @@ InterceptData::setupWrite()
 InterceptData::~InterceptData()
 {
   if (req_hdr_loc) {
-    TSHandleMLocRelease(req_hdr_bufp, TS_NULL_MLOC, req_hdr_loc);
+    TSHandleMLocRelease(req_hdr_bufp, nullptr, req_hdr_loc);
   }
   if (req_hdr_bufp) {
     TSMBufferDestroy(req_hdr_bufp);
@@ -228,7 +228,7 @@ CacheControlHeader::update(TSMBuffer bufp, TSMLoc hdr_loc)
 
   // Load each value from the Cache-Control header into the vector values
   TSMLoc field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, TS_MIME_FIELD_CACHE_CONTROL, TS_MIME_LEN_CACHE_CONTROL);
-  if (field_loc != TS_NULL_MLOC) {
+  if (field_loc != nullptr) {
     int n_values = TSMimeHdrFieldValuesCount(bufp, hdr_loc, field_loc);
     if ((n_values != TS_ERROR) && (n_values > 0)) {
       for (int i = 0; i < n_values; i++) {
@@ -474,7 +474,7 @@ handleReadRequestHeader(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edat
     } else {
       LOG_ERROR("Could not get request URL");
     }
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
   } else {
     LOG_ERROR("Could not get client request");
   }
@@ -525,7 +525,7 @@ getDefaultBucket(TSHttpTxn /* txnp ATS_UNUSED */, TSMBuffer bufp, TSMLoc hdr_obj
   bool defaultBucketFound = false;
 
   field_loc = TSMimeHdrFieldFind(bufp, hdr_obj, TS_MIME_FIELD_HOST, -1);
-  if (field_loc == TS_NULL_MLOC) {
+  if (field_loc == nullptr) {
     LOG_ERROR("Host field not found");
     return false;
   }
@@ -701,7 +701,7 @@ checkGzipAcceptance(TSMBuffer bufp, TSMLoc hdr_loc, ClientRequest &creq)
 {
   creq.gzip_accepted = false;
   TSMLoc field_loc   = TSMimeHdrFieldFind(bufp, hdr_loc, TS_MIME_FIELD_ACCEPT_ENCODING, TS_MIME_LEN_ACCEPT_ENCODING);
-  if (field_loc != TS_NULL_MLOC) {
+  if (field_loc != nullptr) {
     const char *value;
     int value_len;
     int n_values = TSMimeHdrFieldValuesCount(bufp, hdr_loc, field_loc);
@@ -959,7 +959,7 @@ prepareResponse(InterceptData &int_data, ByteBlockList &body_blocks, string &res
         cch.update(resp_data.bufp, resp_data.hdr_loc);
 
         field_loc = TSMimeHdrFieldFind(resp_data.bufp, resp_data.hdr_loc, TS_MIME_FIELD_EXPIRES, TS_MIME_LEN_EXPIRES);
-        if (field_loc != TS_NULL_MLOC) {
+        if (field_loc != nullptr) {
           time_t curr_field_expires_time;
           int n_values = TSMimeHdrFieldValuesCount(resp_data.bufp, resp_data.hdr_loc, field_loc);
           if ((n_values != TS_ERROR) && (n_values > 0)) {
@@ -982,7 +982,7 @@ prepareResponse(InterceptData &int_data, ByteBlockList &body_blocks, string &res
           const string &header = HEADER_WHITELIST[i];
 
           field_loc = TSMimeHdrFieldFind(resp_data.bufp, resp_data.hdr_loc, header.c_str(), header.size());
-          if (field_loc != TS_NULL_MLOC) {
+          if (field_loc != nullptr) {
             bool values_added = false;
             const char *value;
             int value_len;
@@ -1050,7 +1050,7 @@ getContentType(TSMBuffer bufp, TSMLoc hdr_loc, string &resp_header_fields)
 {
   bool retval      = false;
   TSMLoc field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, TS_MIME_FIELD_CONTENT_TYPE, TS_MIME_LEN_CONTENT_TYPE);
-  if (field_loc != TS_NULL_MLOC) {
+  if (field_loc != nullptr) {
     bool values_added = false;
     const char *value;
     int value_len;

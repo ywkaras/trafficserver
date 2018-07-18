@@ -103,7 +103,7 @@ handle_dns(TSHttpTxn txnp, TSCont contp)
 
   field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, TS_MIME_FIELD_PROXY_AUTHORIZATION, TS_MIME_LEN_PROXY_AUTHORIZATION);
   if (!field_loc) {
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     TSError("[%s] No Proxy-Authorization field", PLUGIN_NAME);
     goto done;
   }
@@ -112,7 +112,7 @@ handle_dns(TSHttpTxn txnp, TSCont contp)
   if (NULL == val) {
     TSError("[%s] No value in Proxy-Authorization field", PLUGIN_NAME);
     TSHandleMLocRelease(bufp, hdr_loc, field_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
@@ -120,7 +120,7 @@ handle_dns(TSHttpTxn txnp, TSCont contp)
   if (strncmp(ptr, "Basic", 5) != 0) {
     TSError("[%s] No Basic auth type in Proxy-Authorization", PLUGIN_NAME);
     TSHandleMLocRelease(bufp, hdr_loc, field_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
@@ -135,7 +135,7 @@ handle_dns(TSHttpTxn txnp, TSCont contp)
     TSError("[%s] No password in authorization information", PLUGIN_NAME);
     TSfree(user);
     TSHandleMLocRelease(bufp, hdr_loc, field_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
   *password = '\0';

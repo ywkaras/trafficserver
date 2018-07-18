@@ -416,7 +416,7 @@ TSRemapDoRemap(void *ih, TSHttpTxn rh, TSRemapRequestInfo *rri)
           has_error = true;
         }
       }
-      TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     } else {
       TSHttpTxnSetHttpRetStatus(rh, TS_HTTP_STATUS_BAD_REQUEST);
       has_error = true;

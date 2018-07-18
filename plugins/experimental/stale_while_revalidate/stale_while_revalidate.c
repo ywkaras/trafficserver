@@ -116,7 +116,7 @@ create_response_info(void)
 static void
 free_response_info(ResponseInfo *resp_info)
 {
-  TSHandleMLocRelease(resp_info->buf, TS_NULL_MLOC, resp_info->http_hdr_loc);
+  TSHandleMLocRelease(resp_info->buf, nullptr, resp_info->http_hdr_loc);
   TSMBufferDestroy(resp_info->buf);
   TSHttpParserDestroy(resp_info->parser);
   TSfree(resp_info);
@@ -143,7 +143,7 @@ create_request_info(TSHttpTxn txn)
 
     req_info->buf = TSMBufferCreate();
     TSHttpHdrClone(req_info->buf, buf, loc, &(req_info->http_hdr_loc));
-    TSHandleMLocRelease(buf, TS_NULL_MLOC, loc);
+    TSHandleMLocRelease(buf, nullptr, loc);
 
     sa = TSHttpTxnClientAddrGet(txn);
     switch (sa->sa_family) {
@@ -165,7 +165,7 @@ static void
 free_request_info(RequestInfo *req_info)
 {
   TSfree(req_info->effective_url);
-  TSHandleMLocRelease(req_info->buf, TS_NULL_MLOC, req_info->http_hdr_loc);
+  TSHandleMLocRelease(req_info->buf, nullptr, req_info->http_hdr_loc);
   TSMBufferDestroy(req_info->buf);
   TSfree(req_info);
 }
@@ -214,7 +214,7 @@ get_cached_header_info(TSHttpTxn txn)
 
   if (TSHttpTxnCachedRespGet(txn, &cr_buf, &cr_hdr_loc) == TS_SUCCESS) {
     cr_date_loc = TSMimeHdrFieldFind(cr_buf, cr_hdr_loc, TS_MIME_FIELD_DATE, TS_MIME_LEN_DATE);
-    if (cr_date_loc != TS_NULL_MLOC) {
+    if (cr_date_loc != nullptr) {
       TSDebug(PLUGIN_NAME, "Found a date");
       chi->date = TSMimeHdrFieldValueDateGet(cr_buf, cr_hdr_loc, cr_date_loc);
       TSHandleMLocRelease(cr_buf, cr_hdr_loc, cr_date_loc);
@@ -222,7 +222,7 @@ get_cached_header_info(TSHttpTxn txn)
 
     cr_cache_control_loc = TSMimeHdrFieldFind(cr_buf, cr_hdr_loc, TS_MIME_FIELD_CACHE_CONTROL, TS_MIME_LEN_CACHE_CONTROL);
 
-    while (cr_cache_control_loc != TS_NULL_MLOC) {
+    while (cr_cache_control_loc != nullptr) {
       TSDebug(PLUGIN_NAME, "Found cache-control");
       cr_cache_control_count = TSMimeHdrFieldValuesCount(cr_buf, cr_hdr_loc, cr_cache_control_loc);
 
@@ -264,7 +264,7 @@ get_cached_header_info(TSHttpTxn txn)
       TSHandleMLocRelease(cr_buf, cr_hdr_loc, cr_cache_control_loc);
       cr_cache_control_loc = cr_cache_control_dup_loc;
     }
-    TSHandleMLocRelease(cr_buf, TS_NULL_MLOC, cr_hdr_loc);
+    TSHandleMLocRelease(cr_buf, nullptr, cr_hdr_loc);
   }
 
   return chi;
@@ -453,7 +453,7 @@ fetch_resource(TSCont cont, TSEvent event ATS_UNUSED, void *edata ATS_UNUSED)
     connection_hdr_loc =
       TSMimeHdrFieldFind(state->req_info->buf, state->req_info->http_hdr_loc, TS_MIME_FIELD_CONNECTION, TS_MIME_LEN_CONNECTION);
 
-    while (connection_hdr_loc != TS_NULL_MLOC) {
+    while (connection_hdr_loc != nullptr) {
       TSDebug(PLUGIN_NAME, "Found old Connection hdr");
 
       connection_hdr_dup_loc = TSMimeHdrFieldNextDup(state->req_info->buf, state->req_info->http_hdr_loc, connection_hdr_loc);
@@ -661,7 +661,7 @@ main_plugin(TSCont cont, TSEvent event, void *edata)
         break;
       }
 
-      TSHandleMLocRelease(buf, TS_NULL_MLOC, loc);
+      TSHandleMLocRelease(buf, nullptr, loc);
     }
 
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
@@ -674,7 +674,7 @@ main_plugin(TSCont cont, TSEvent event, void *edata)
       TSMimeHdrFieldValueStringInsert(buf, loc, warn_loc, -1, HTTP_VALUE_STALE_WARNING, strlen(HTTP_VALUE_STALE_WARNING));
       TSMimeHdrFieldAppend(buf, loc, warn_loc);
       TSHandleMLocRelease(buf, loc, warn_loc);
-      TSHandleMLocRelease(buf, TS_NULL_MLOC, loc);
+      TSHandleMLocRelease(buf, nullptr, loc);
     } else {
       TSError("[%s] Error while getting response from txn", PLUGIN_NAME);
     }

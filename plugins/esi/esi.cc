@@ -376,7 +376,7 @@ ContData::getClientState()
     }
   }
 
-  TSHandleMLocRelease(req_bufp, TS_NULL_MLOC, req_hdr_loc);
+  TSHandleMLocRelease(req_bufp, nullptr, req_hdr_loc);
 }
 
 void
@@ -477,7 +477,7 @@ ContData::getServerState()
     fillPostHeader(bufp, hdr_loc);
   }
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 }
 
 ContData::~ContData()
@@ -572,7 +572,7 @@ removeCacheKey(TSHttpTxn txnp)
 
   TSHandleMLocRelease(req_bufp, req_hdr_loc, url_loc);
   if (req_hdr_loc != nullptr) {
-    TSHandleMLocRelease(req_bufp, TS_NULL_MLOC, req_hdr_loc);
+    TSHandleMLocRelease(req_bufp, nullptr, req_hdr_loc);
   }
 
   return result;
@@ -1147,7 +1147,7 @@ modifyResponseHeader(TSCont contp, TSEvent event, void *edata)
                          sizeof(HTTP_VALUE_PRIVATE_CC) - 1);
     }
 
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     TSDebug(DEBUG_TAG, "[%s] Inspected client-bound headers", __FUNCTION__);
     retval = 1;
   } else {
@@ -1253,7 +1253,7 @@ maskOsCacheHeaders(TSHttpTxn txnp)
       break;
     }
   } // end header iteration
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 }
 
 static bool
@@ -1277,7 +1277,7 @@ isTxnTransformable(TSHttpTxn txnp, bool is_cache_txn, bool *intercept_header, bo
   method = TSHttpHdrMethodGet(bufp, hdr_loc, &method_len);
   if (method == nullptr) {
     TSError("[esi][%s] Couldn't get method", __FUNCTION__);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     return false;
   }
 
@@ -1286,10 +1286,10 @@ isTxnTransformable(TSHttpTxn txnp, bool is_cache_txn, bool *intercept_header, bo
   } else if (!(((method_len >= TS_HTTP_LEN_POST && memcmp(method, TS_HTTP_METHOD_POST, TS_HTTP_LEN_POST) == 0)) ||
                ((method_len >= TS_HTTP_LEN_GET && memcmp(method, TS_HTTP_METHOD_GET, TS_HTTP_LEN_GET) == 0)))) {
     TSDebug(DEBUG_TAG, "[%s] method %.*s will be ignored", __FUNCTION__, method_len, method);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     return false;
   }
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 
   header_obtained = is_cache_txn ? TSHttpTxnCachedRespGet(txnp, &bufp, &hdr_loc) : TSHttpTxnServerRespGet(txnp, &bufp, &hdr_loc);
   if (header_obtained != TS_SUCCESS) {
@@ -1327,7 +1327,7 @@ isTxnTransformable(TSHttpTxn txnp, bool is_cache_txn, bool *intercept_header, bo
     retval = true;
   } while (false);
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
   return retval;
 }
 
@@ -1387,7 +1387,7 @@ isInterceptRequest(TSHttpTxn txnp)
   if (valid_request) {
     retval = checkHeaderValue(bufp, hdr_loc, SERVER_INTERCEPT_HEADER, SERVER_INTERCEPT_HEADER_LEN);
   }
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
   return retval;
 }
 

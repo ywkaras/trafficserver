@@ -146,7 +146,7 @@ release_url:
   }
 release_hdr:
   if (hdr_loc) {
-    TSHandleMLocRelease(reqp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(reqp, nullptr, hdr_loc);
   }
 
   return ret_val;

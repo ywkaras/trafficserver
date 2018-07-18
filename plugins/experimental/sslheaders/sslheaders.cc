@@ -62,7 +62,7 @@ SslHdrExpandRequestHook(TSCont cont, TSEvent event, void *edata)
   }
 
   SslHdrExpand((SSL *)ssl, hdr->expansions, mbuf, mhdr);
-  TSHandleMLocRelease(mbuf, TS_NULL_MLOC, mhdr);
+  TSHandleMLocRelease(mbuf, nullptr, mhdr);
 
 done:
   TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
@@ -76,7 +76,7 @@ SslHdrRemoveHeader(TSMBuffer mbuf, TSMLoc mhdr, const std::string &name)
   TSMLoc next;
 
   field = TSMimeHdrFieldFind(mbuf, mhdr, name.c_str(), name.size());
-  for (; field != TS_NULL_MLOC; field = next) {
+  for (; field != nullptr; field = next) {
     next = TSMimeHdrFieldNextDup(mbuf, mhdr, field);
     TSMimeHdrFieldDestroy(mbuf, mhdr, field);
     TSHandleMLocRelease(mbuf, mhdr, field);
@@ -95,7 +95,7 @@ SslHdrSetHeader(TSMBuffer mbuf, TSMLoc mhdr, const std::string &name, BIO *value
   SslHdrDebug("SSL header '%s'", name.c_str());
 
   field = TSMimeHdrFieldFind(mbuf, mhdr, name.c_str(), name.size());
-  if (field == TS_NULL_MLOC) {
+  if (field == nullptr) {
     TSMimeHdrFieldCreateNamed(mbuf, mhdr, name.c_str(), name.size(), &field);
     TSMimeHdrFieldValueStringSet(mbuf, mhdr, field, -1, vptr, vlen);
     TSMimeHdrFieldAppend(mbuf, mhdr, field);
@@ -108,7 +108,7 @@ SslHdrSetHeader(TSMBuffer mbuf, TSMLoc mhdr, const std::string &name, BIO *value
     next = TSMimeHdrFieldNextDup(mbuf, mhdr, field);
     TSHandleMLocRelease(mbuf, mhdr, field);
 
-    for (field = next; field != TS_NULL_MLOC; field = next) {
+    for (field = next; field != nullptr; field = next) {
       next = TSMimeHdrFieldNextDup(mbuf, mhdr, field);
       TSMimeHdrFieldDestroy(mbuf, mhdr, field);
       TSHandleMLocRelease(mbuf, mhdr, field);

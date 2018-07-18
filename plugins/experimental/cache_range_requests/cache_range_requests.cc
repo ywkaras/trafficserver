@@ -145,7 +145,7 @@ range_header_check(TSHttpTxn txnp, struct pluginconfig *pc)
 
   if (TS_SUCCESS == TSHttpTxnClientReqGet(txnp, &hdr_bufp, &req_hdrs)) {
     loc = TSMimeHdrFieldFind(hdr_bufp, req_hdrs, TS_MIME_FIELD_RANGE, TS_MIME_LEN_RANGE);
-    if (TS_NULL_MLOC != loc) {
+    if (nullptr != loc) {
       const char *hdr_value = TSMimeHdrFieldValueStringGet(hdr_bufp, req_hdrs, loc, 0, &length);
       if (!hdr_value || length <= 0) {
         DEBUG_LOG("Not a range request.");
@@ -181,7 +181,7 @@ range_header_check(TSHttpTxn txnp, struct pluginconfig *pc)
                   TS_PARSE_DONE == TSUrlParse(hdr_bufp, ps_loc, &start, end) && // This should always succeed.
                   TS_SUCCESS == TSHttpTxnParentSelectionUrlSet(txnp, hdr_bufp, ps_loc)) {
                 DEBUG_LOG("Set Parent Selection URL to cache_key_url: %s", cache_key_url);
-                TSHandleMLocRelease(hdr_bufp, TS_NULL_MLOC, ps_loc);
+                TSHandleMLocRelease(hdr_bufp, nullptr, ps_loc);
               }
             }
           }
@@ -202,7 +202,7 @@ range_header_check(TSHttpTxn txnp, struct pluginconfig *pc)
     } else {
       DEBUG_LOG("no range request header.");
     }
-    TSHandleMLocRelease(hdr_bufp, TS_NULL_MLOC, req_hdrs);
+    TSHandleMLocRelease(hdr_bufp, nullptr, req_hdrs);
   } else {
     DEBUG_LOG("failed to retrieve the server request");
   }
@@ -225,7 +225,7 @@ handle_send_origin_request(TSCont contp, TSHttpTxn txnp, struct txndata *txn_sta
       TSHttpTxnHookAdd(txnp, TS_HTTP_READ_RESPONSE_HDR_HOOK, contp);
     }
   }
-  TSHandleMLocRelease(hdr_bufp, TS_NULL_MLOC, req_hdrs);
+  TSHandleMLocRelease(hdr_bufp, nullptr, req_hdrs);
 }
 
 /**
@@ -269,8 +269,8 @@ handle_client_send_response(TSHttpTxn txnp, struct txndata *txn_state)
   } else {
     DEBUG_LOG("failed to get Request Headers");
   }
-  TSHandleMLocRelease(response, TS_NULL_MLOC, resp_hdr);
-  TSHandleMLocRelease(hdr_bufp, TS_NULL_MLOC, req_hdrs);
+  TSHandleMLocRelease(response, nullptr, resp_hdr);
+  TSHandleMLocRelease(hdr_bufp, nullptr, req_hdrs);
 }
 
 /**
@@ -302,7 +302,7 @@ handle_server_read_response(TSHttpTxn txnp, struct txndata *txn_state)
       }
     }
   }
-  TSHandleMLocRelease(response, TS_NULL_MLOC, resp_hdr);
+  TSHandleMLocRelease(response, nullptr, resp_hdr);
 }
 
 /**

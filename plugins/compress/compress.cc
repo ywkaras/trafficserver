@@ -293,7 +293,7 @@ compress_transform_init(TSCont contp, Data *data)
     data->downstream_vio    = TSVConnWrite(downstream_conn, contp, data->downstream_reader, INT64_MAX);
   }
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 }
 
 static void
@@ -656,13 +656,13 @@ transformable(TSHttpTxn txnp, bool server, HostConfiguration *host_configuration
   // and possibly the escalation feature of parent.config. See #2913.
   if (!host_configuration->is_status_code_compressible(resp_status)) {
     info("http response status [%d] is not compressible", resp_status);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     return 0;
   }
 
   if (TS_SUCCESS != TSHttpTxnClientReqGet(txnp, &cbuf, &chdr)) {
     info("cound not get client request");
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     return 0;
   }
 
@@ -672,13 +672,13 @@ transformable(TSHttpTxn txnp, bool server, HostConfiguration *host_configuration
 
   if (!(method_length == TS_HTTP_LEN_GET && memcmp(method, TS_HTTP_METHOD_GET, TS_HTTP_LEN_GET) == 0)) {
     debug("method is not GET, not compressible");
-    TSHandleMLocRelease(cbuf, TS_NULL_MLOC, chdr);
+    TSHandleMLocRelease(cbuf, nullptr, chdr);
     return 0;
   }
 
   *algorithms = host_configuration->compression_algorithms();
   cfield      = TSMimeHdrFieldFind(cbuf, chdr, TS_MIME_FIELD_ACCEPT_ENCODING, TS_MIME_LEN_ACCEPT_ENCODING);
-  if (cfield != TS_NULL_MLOC) {
+  if (cfield != nullptr) {
     compression_acceptable = 0;
     nvalues                = TSMimeHdrFieldValuesCount(cbuf, chdr, cfield);
     for (i = 0; i < nvalues; i++) {
@@ -706,18 +706,18 @@ transformable(TSHttpTxn txnp, bool server, HostConfiguration *host_configuration
     }
 
     TSHandleMLocRelease(cbuf, chdr, cfield);
-    TSHandleMLocRelease(cbuf, TS_NULL_MLOC, chdr);
+    TSHandleMLocRelease(cbuf, nullptr, chdr);
 
     if (!compression_acceptable) {
       info("no acceptable encoding match found in request header, not compressible");
-      TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
       return 0;
     }
   } else {
     info("no acceptable encoding found in request header, not compressible");
     TSHandleMLocRelease(cbuf, chdr, cfield);
-    TSHandleMLocRelease(cbuf, TS_NULL_MLOC, chdr);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(cbuf, nullptr, chdr);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     return 0;
   }
 
@@ -727,12 +727,12 @@ transformable(TSHttpTxn txnp, bool server, HostConfiguration *host_configuration
   if (field_loc) {
     info("response is already content encoded, not compressible");
     TSHandleMLocRelease(bufp, hdr_loc, field_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     return 0;
   }
 
   field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, TS_MIME_FIELD_CONTENT_LENGTH, TS_MIME_LEN_CONTENT_LENGTH);
-  if (field_loc != TS_NULL_MLOC) {
+  if (field_loc != nullptr) {
     unsigned int value = TSMimeHdrFieldValueUintGet(bufp, hdr_loc, field_loc, -1);
     TSHandleMLocRelease(bufp, hdr_loc, field_loc);
     if (value == 0) {
@@ -751,7 +751,7 @@ transformable(TSHttpTxn txnp, bool server, HostConfiguration *host_configuration
   field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, TS_MIME_FIELD_CONTENT_TYPE, -1);
   if (!field_loc) {
     info("no content type header found, not compressible");
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     return 0;
   }
 
@@ -764,7 +764,7 @@ transformable(TSHttpTxn txnp, bool server, HostConfiguration *host_configuration
   }
 
   TSHandleMLocRelease(bufp, hdr_loc, field_loc);
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 
   return rv;
 }
@@ -835,7 +835,7 @@ transform_plugin(TSCont contp, TSEvent event, void *edata)
 
         if (TSHttpTxnServerReqGet(txnp, &req_buf, &req_loc) == TS_SUCCESS) {
           restore_accept_encoding(txnp, req_buf, req_loc, global_hidden_header_name);
-          TSHandleMLocRelease(req_buf, TS_NULL_MLOC, req_loc);
+          TSHandleMLocRelease(req_buf, nullptr, req_loc);
         }
       }
 
@@ -854,7 +854,7 @@ transform_plugin(TSCont contp, TSEvent event, void *edata)
 
         if (TSHttpTxnServerReqGet(txnp, &req_buf, &req_loc) == TS_SUCCESS) {
           hide_accept_encoding(txnp, req_buf, req_loc, global_hidden_header_name);
-          TSHandleMLocRelease(req_buf, TS_NULL_MLOC, req_loc);
+          TSHandleMLocRelease(req_buf, nullptr, req_loc);
         }
       }
       TSHttpTxnHookAdd(txnp, TS_HTTP_READ_RESPONSE_HDR_HOOK, contp);
@@ -939,7 +939,7 @@ handle_request(TSHttpTxn txnp, Configuration *config)
     } else {
       hc->release(); // No longer need this configuration, release it.
     }
-    TSHandleMLocRelease(req_buf, TS_NULL_MLOC, req_loc);
+    TSHandleMLocRelease(req_buf, nullptr, req_loc);
   }
 }
 

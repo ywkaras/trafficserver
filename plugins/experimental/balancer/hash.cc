@@ -117,7 +117,7 @@ HashTxnUrl(TSHttpTxn txn, TSRemapRequestInfo *, MD5_CTX *ctx)
 void
 HashTxnKey(TSHttpTxn txn, TSRemapRequestInfo *rri, MD5_CTX *ctx)
 {
-  TSMLoc url = TS_NULL_MLOC;
+  TSMLoc url = nullptr;
   char *str  = nullptr;
   int len;
 
@@ -137,8 +137,8 @@ HashTxnKey(TSHttpTxn txn, TSRemapRequestInfo *rri, MD5_CTX *ctx)
   }
 
 done:
-  if (url != TS_NULL_MLOC) {
-    TSHandleMLocRelease(rri->requestBufp, TS_NULL_MLOC, url);
+  if (url != nullptr) {
+    TSHandleMLocRelease(rri->requestBufp, nullptr, url);
   }
 
   TSfree(str);

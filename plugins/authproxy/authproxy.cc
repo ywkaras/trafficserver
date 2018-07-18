@@ -259,7 +259,7 @@ AuthRequestGetMethod(TSHttpTxn txn)
   TSReleaseAssert(TSHttpTxnClientReqGet(txn, &mbuf, &mhdr) == TS_SUCCESS);
 
   method = TSHttpHdrMethodGet(mbuf, mhdr, &len);
-  TSHandleMLocRelease(mbuf, TS_NULL_MLOC, mhdr);
+  TSHandleMLocRelease(mbuf, nullptr, mhdr);
 
   return method;
 }
@@ -306,7 +306,7 @@ AuthWriteHeadRequest(AuthRequestContext *auth)
   // content).
   auth->read_body = false;
 
-  TSHandleMLocRelease(mbuf, TS_NULL_MLOC, mhdr);
+  TSHandleMLocRelease(mbuf, nullptr, mhdr);
   return true;
 }
 
@@ -343,7 +343,7 @@ AuthWriteRangeRequest(AuthRequestContext *auth)
   // body, since we'are asking for a zero length Range.
   auth->read_body = false;
 
-  TSHandleMLocRelease(mbuf, TS_NULL_MLOC, mhdr);
+  TSHandleMLocRelease(mbuf, nullptr, mhdr);
   return true;
 }
 
@@ -391,7 +391,7 @@ AuthWriteRedirectedRequest(AuthRequestContext *auth)
   // Serialize the HTTP request to the write IO buffer.
   TSHttpHdrPrint(rq.buffer, rq.header, auth->iobuf.buffer);
 
-  TSHandleMLocRelease(mbuf, TS_NULL_MLOC, mhdr);
+  TSHandleMLocRelease(mbuf, nullptr, mhdr);
   TSHandleMLocRelease(rq.buffer, rq.header, murl);
   return true;
 }
@@ -490,7 +490,7 @@ StateAuthProxySendResponse(AuthRequestContext *auth, void * /* edata ATS_UNUSED 
 
   AuthLogDebug("sending auth proxy response for status %d", status);
 
-  TSHandleMLocRelease(mbuf, TS_NULL_MLOC, mhdr);
+  TSHandleMLocRelease(mbuf, nullptr, mhdr);
   TSHttpTxnReenable(auth->txn, TS_EVENT_HTTP_CONTINUE);
 
   return TS_EVENT_CONTINUE;

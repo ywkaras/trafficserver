@@ -102,12 +102,12 @@ HeaderFieldName::operator!=(const std::string &field_name)
  */
 struct HeaderFieldValueIteratorState : noncopyable {
   TSMBuffer hdr_buf_;
-  TSMLoc hdr_loc_;
-  TSMLoc field_loc_;
+  TSMimeHdrLoc hdr_loc_;
+  TSMimeHdrFldLoc field_loc_;
   int index_;
   HeaderFieldValueIteratorState() : hdr_buf_(nullptr), hdr_loc_(nullptr), field_loc_(nullptr), index_(0) {}
   void
-  reset(TSMBuffer bufp, TSMLoc hdr_loc, TSMLoc field_loc, int index)
+  reset(TSMBuffer bufp, TSMimeHdrLoc hdr_loc, TSMimeHdrFldLoc field_loc, int index)
   {
     hdr_buf_   = bufp;
     hdr_loc_   = hdr_loc;
@@ -119,7 +119,7 @@ struct HeaderFieldValueIteratorState : noncopyable {
 header_field_value_iterator::header_field_value_iterator(void *bufp, void *hdr_loc, void *field_loc, int index)
 {
   state_ = new HeaderFieldValueIteratorState();
-  state_->reset(static_cast<TSMBuffer>(bufp), static_cast<TSMLoc>(hdr_loc), static_cast<TSMLoc>(field_loc), index);
+  state_->reset(static_cast<TSMBuffer>(bufp), static_cast<TSMimeHdrLoc>(hdr_loc), static_cast<TSMimeHdrFldLoc>(field_loc), index);
 }
 
 header_field_value_iterator::header_field_value_iterator(const header_field_value_iterator &it)
@@ -178,12 +178,12 @@ header_field_value_iterator::operator!=(const header_field_value_iterator &rhs) 
  */
 struct MLocContainer {
   TSMBuffer hdr_buf_;
-  TSMLoc hdr_loc_;
-  TSMLoc field_loc_;
-  MLocContainer(TSMBuffer bufp, TSMLoc hdr_loc, TSMLoc field_loc) : hdr_buf_(bufp), hdr_loc_(hdr_loc), field_loc_(field_loc) {}
+  TSMimeHdrLoc hdr_loc_;
+  TSMimdHdrFldLoc field_loc_;
+  MLocContainer(TSMBuffer bufp, TSMimeHdrLoc hdr_loc, TSMimeHdrFldLoc field_loc) : hdr_buf_(bufp), hdr_loc_(hdr_loc), field_loc_(field_loc) {}
   ~MLocContainer()
   {
-    if (field_loc_ != TS_NULL_MLOC) {
+    if (field_loc_ != nullptr) {
       TSHandleMLocRelease(hdr_buf_, hdr_loc_, field_loc_);
     }
   }
@@ -194,7 +194,7 @@ struct MLocContainer {
  */
 struct HeaderFieldIteratorState {
   std::shared_ptr<MLocContainer> mloc_container_;
-  HeaderFieldIteratorState(TSMBuffer bufp, TSMLoc hdr_loc, TSMLoc field_loc)
+  HeaderFieldIteratorState(TSMBuffer bufp, TSMimeHdrLoc hdr_loc, TSMimeHdrFldLoc field_loc)
     : mloc_container_(new MLocContainer(bufp, hdr_loc, field_loc))
   {
   }
@@ -393,7 +393,8 @@ operator<<(std::ostream &os, HeaderField &obj)
 
 header_field_iterator::header_field_iterator(void *hdr_buf, void *hdr_loc, void *field_loc)
   : state_(
-      new HeaderFieldIteratorState(static_cast<TSMBuffer>(hdr_buf), static_cast<TSMLoc>(hdr_loc), static_cast<TSMLoc>(field_loc)))
+      new HeaderFieldIteratorState(static_cast<TSMBuffer>(hdr_buf), static_cast<TSMimeHdrLoc>(hdr_loc),
+static_cast<TSMimeHdrFldLoc>(field_loc)))
 {
 }
 
@@ -416,12 +417,12 @@ header_field_iterator::~header_field_iterator()
 
 // utility function to use to advance iterators using different functions
 HeaderFieldIteratorState *
-advanceIterator(HeaderFieldIteratorState *state, TSMLoc (*getNextField)(TSMBuffer, TSMLoc, TSMLoc))
+advanceIterator(HeaderFieldIteratorState *state, TSMimeHdrFldLoc (*getNextField)(TSMBuffer, TSMimeHdrLoc, TSMimeHdrFldLoc))
 {
-  if (state->mloc_container_->field_loc_ != TS_NULL_MLOC) {
+  if (state->mloc_container_->field_loc_ != nullptr) {
     TSMBuffer hdr_buf     = state->mloc_container_->hdr_buf_;
-    TSMLoc hdr_loc        = state->mloc_container_->hdr_loc_;
-    TSMLoc next_field_loc = getNextField(hdr_buf, hdr_loc, state->mloc_container_->field_loc_);
+    TSMimeHdrLoc hdr_loc        = state->mloc_container_->hdr_loc_;
+    TSMimeHdrFldLoc next_field_loc = getNextField(hdr_buf, hdr_loc, state->mloc_container_->field_loc_);
     delete state;
     state = new HeaderFieldIteratorState(hdr_buf, hdr_loc, next_field_loc);
   }
@@ -474,7 +475,7 @@ HeaderField header_field_iterator::operator*()
  */
 struct HeadersState : noncopyable {
   TSMBuffer hdr_buf_;
-  TSMLoc hdr_loc_;
+  TSHttpHdrLoc hdr_loc_;
   bool self_created_structures_;
   HeadersState()
   {
@@ -483,10 +484,10 @@ struct HeadersState : noncopyable {
     self_created_structures_ = true;
   }
   void
-  reset(TSMBuffer bufp, TSMLoc hdr_loc)
+  reset(TSMBuffer bufp, TSHttpHdrLoc hdr_loc)
   {
     if (self_created_structures_) {
-      TSHandleMLocRelease(hdr_buf_, TS_NULL_MLOC /* no parent */, hdr_loc_);
+      TSHandleMLocRelease(hdr_buf_, nullptr /* no parent */, hdr_loc_);
       TSMBufferDestroy(hdr_buf_);
       self_created_structures_ = false;
     }
@@ -510,7 +511,7 @@ Headers::Headers(void *bufp, void *mloc)
 void
 Headers::reset(void *bufp, void *mloc)
 {
-  state_->reset(static_cast<TSMBuffer>(bufp), static_cast<TSMLoc>(mloc));
+  state_->reset(static_cast<TSMBuffer>(bufp), static_cast<TSHttpHdrLoc>(mloc));
 }
 
 Headers::~Headers()
@@ -551,7 +552,7 @@ Headers::begin()
 header_field_iterator
 Headers::end()
 {
-  return header_field_iterator(state_->hdr_buf_, state_->hdr_loc_, TS_NULL_MLOC);
+  return header_field_iterator(state_->hdr_buf_, state_->hdr_loc_, nullptr);
 }
 
 bool
@@ -640,8 +641,8 @@ Headers::find(const std::string &key)
 header_field_iterator
 Headers::find(const char *key, int length)
 {
-  TSMLoc field_loc = TSMimeHdrFieldFind(state_->hdr_buf_, state_->hdr_loc_, key, length);
-  if (field_loc != TS_NULL_MLOC) {
+  TSMimeHdrFldLoc field_loc = TSMimeHdrFieldFind(state_->hdr_buf_, state_->hdr_loc_, key, length);
+  if (field_loc != nullptr) {
     return header_field_iterator(state_->hdr_buf_, state_->hdr_loc_, field_loc);
   }
 
@@ -651,7 +652,7 @@ Headers::find(const char *key, int length)
 Headers::iterator
 Headers::append(const std::string &key, const std::string &value)
 {
-  TSMLoc field_loc = TS_NULL_MLOC;
+  TSMimeHdrFldLoc field_loc = nullptr;
 
   if (TSMimeHdrFieldCreate(state_->hdr_buf_, state_->hdr_loc_, &field_loc) == TS_SUCCESS) {
     TSMimeHdrFieldNameSet(state_->hdr_buf_, state_->hdr_loc_, field_loc, key.c_str(), key.length());

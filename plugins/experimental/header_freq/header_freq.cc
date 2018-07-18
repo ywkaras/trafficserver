@@ -139,7 +139,7 @@ count_all_headers(TSMBuffer &bufp, TSMLoc &hdr_loc, std::map<std::string, unsign
     hdr = next_hdr;
   }
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 }
 
 /**

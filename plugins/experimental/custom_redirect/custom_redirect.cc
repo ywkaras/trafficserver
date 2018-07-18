@@ -79,10 +79,10 @@ handle_response(TSHttpTxn txnp, TSCont /* contp ATS_UNUSED */)
           }
         }
         // TSHandleStringRelease(req_bufp, req_loc, method);
-        TSHandleMLocRelease(req_bufp, TS_NULL_MLOC, req_loc);
+        TSHandleMLocRelease(req_bufp, nullptr, req_loc);
       }
     }
-    TSHandleMLocRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
+    TSHandleMLocRelease(resp_bufp, nullptr, resp_loc);
   }
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
 }

@@ -540,7 +540,7 @@ updateOrRemoveHashEntry(CcTxnData *txn_data)
 static uint32_t
 getCacheUrlHashKey(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc /* hdr_loc ATS_UNUSED */)
 {
-  TSMLoc url_loc = TS_NULL_MLOC;
+  TSMLoc url_loc = nullptr;
   int url_len;
   char *url         = nullptr;
   uint32_t hash_key = 0;
@@ -560,7 +560,7 @@ getCacheUrlHashKey(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc /* hdr_loc ATS_UNUSED 
   MurmurHash3_x86_32(url, url_len, c_hashSeed, &hash_key);
   TSDebug(PLUGIN_NAME, "CacheLookupUrl = %s, hash_key = %u", url, hash_key);
   TSfree(url);
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, url_loc);
+  TSHandleMLocRelease(bufp, nullptr, url_loc);
 
   return hash_key;
 }
@@ -581,7 +581,7 @@ isResponseCacheable(TSMBuffer bufp, TSMLoc hdr_loc)
   bool found_public = false;
   bool found_maxage = false;
   bool found_expire = false;
-  TSMLoc field_loc  = TS_NULL_MLOC;
+  TSMLoc field_loc  = nullptr;
 
   if (nullptr != (field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, TS_MIME_FIELD_EXPIRES, TS_MIME_LEN_EXPIRES))) {
     found_expire = true;
@@ -740,7 +740,7 @@ lookupAndTryLockCacheUrl(CcTxnData *txn_data, TSEvent event)
   if (0 == txn_data->hash_key) {
     // New request, check is GET method and gen hash_key
     TSMBuffer bufp = (TSMBuffer) nullptr;
-    TSMLoc hdr_loc = TS_NULL_MLOC;
+    TSMLoc hdr_loc = nullptr;
     int method_len;
     const char *method = nullptr;
 
@@ -755,7 +755,7 @@ lookupAndTryLockCacheUrl(CcTxnData *txn_data, TSEvent event)
         TSMimeHdrFieldFind(bufp, hdr_loc, txn_data->config->required_header, txn_data->config->required_header_len);
       if (!field_loc) {
         TSDebug(PLUGIN_NAME, "%s header not found, ignore it", txn_data->config->required_header);
-        TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+        TSHandleMLocRelease(bufp, nullptr, hdr_loc);
         freeCcTxnData(txn_data);
         return TS_SUCCESS;
       }
@@ -765,13 +765,13 @@ lookupAndTryLockCacheUrl(CcTxnData *txn_data, TSEvent event)
     method = TSHttpHdrMethodGet(bufp, hdr_loc, &method_len);
     if (TS_HTTP_LEN_GET != method_len || 0 != memcmp(method, TS_HTTP_METHOD_GET, TS_HTTP_LEN_GET)) {
       TSDebug(PLUGIN_NAME, "method is not GET, ignore it");
-      TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
       freeCcTxnData(txn_data);
       return TS_SUCCESS;
     }
 
     txn_data->hash_key = getCacheUrlHashKey(txn_data->txnp, bufp, hdr_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     if (0 == txn_data->hash_key) {
       freeCcTxnData(txn_data);
       return TS_ERROR;
@@ -822,7 +822,7 @@ static TSReturnCode
 testResponseCacheable(CcTxnData *txn_data)
 {
   TSMBuffer bufp = (TSMBuffer) nullptr;
-  TSMLoc hdr_loc = TS_NULL_MLOC;
+  TSMLoc hdr_loc = nullptr;
   TSHttpStatus resp_status;
 
   if (0 == txn_data->hash_key) {
@@ -849,7 +849,7 @@ testResponseCacheable(CcTxnData *txn_data)
       txn_data->cc_state = CC_REMOVE;
     }
   }
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 
   if (CC_PASS == txn_data->cc_state || CC_REMOVE == txn_data->cc_state) {
     if (TS_SUCCESS != updateOrRemoveHashEntry(txn_data)) {

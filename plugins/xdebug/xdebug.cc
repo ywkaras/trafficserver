@@ -61,7 +61,7 @@ FindOrMakeHdrField(TSMBuffer buffer, TSMLoc hdr, const char *name, unsigned len)
   TSMLoc field;
 
   field = TSMimeHdrFieldFind(buffer, hdr, name, len);
-  if (field == TS_NULL_MLOC) {
+  if (field == nullptr) {
     if (TSMimeHdrFieldCreateNamed(buffer, hdr, name, len, &field) == TS_SUCCESS) {
       TSReleaseAssert(TSMimeHdrFieldAppend(buffer, hdr, field) == TS_SUCCESS);
     }
@@ -74,16 +74,16 @@ static void
 InjectGenerationHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 {
   TSMgmtInt value;
-  TSMLoc dst = TS_NULL_MLOC;
+  TSMLoc dst = nullptr;
 
   if (TSHttpTxnConfigIntGet(txn, TS_CONFIG_HTTP_CACHE_GENERATION, &value) == TS_SUCCESS) {
     dst = FindOrMakeHdrField(buffer, hdr, "X-Cache-Generation", lengthof("X-Cache-Generation"));
-    if (dst != TS_NULL_MLOC) {
+    if (dst != nullptr) {
       TSReleaseAssert(TSMimeHdrFieldValueInt64Set(buffer, hdr, dst, -1 /* idx */, value) == TS_SUCCESS);
     }
   }
 
-  if (dst != TS_NULL_MLOC) {
+  if (dst != nullptr) {
     TSHandleMLocRelease(buffer, hdr, dst);
   }
 }
@@ -91,8 +91,8 @@ InjectGenerationHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 static void
 InjectCacheKeyHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 {
-  TSMLoc url = TS_NULL_MLOC;
-  TSMLoc dst = TS_NULL_MLOC;
+  TSMLoc url = nullptr;
+  TSMLoc dst = nullptr;
 
   struct {
     char *ptr;
@@ -116,7 +116,7 @@ InjectCacheKeyHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 
   // Create a new response header field.
   dst = FindOrMakeHdrField(buffer, hdr, "X-Cache-Key", lengthof("X-Cache-Key"));
-  if (dst == TS_NULL_MLOC) {
+  if (dst == nullptr) {
     goto done;
   }
 
@@ -124,12 +124,12 @@ InjectCacheKeyHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
   TSReleaseAssert(TSMimeHdrFieldValueStringInsert(buffer, hdr, dst, 0 /* idx */, strval.ptr, strval.len) == TS_SUCCESS);
 
 done:
-  if (dst != TS_NULL_MLOC) {
+  if (dst != nullptr) {
     TSHandleMLocRelease(buffer, hdr, dst);
   }
 
-  if (url != TS_NULL_MLOC) {
-    TSHandleMLocRelease(buffer, TS_NULL_MLOC, url);
+  if (url != nullptr) {
+    TSHandleMLocRelease(buffer, nullptr, url);
   }
 
   TSfree(strval.ptr);
@@ -138,7 +138,7 @@ done:
 static void
 InjectCacheHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 {
-  TSMLoc dst = TS_NULL_MLOC;
+  TSMLoc dst = nullptr;
   int status;
 
   static const char *names[] = {
@@ -152,7 +152,7 @@ InjectCacheHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 
   // Create a new response header field.
   dst = FindOrMakeHdrField(buffer, hdr, "X-Cache", lengthof("X-Cache"));
-  if (dst == TS_NULL_MLOC) {
+  if (dst == nullptr) {
     goto done;
   }
 
@@ -166,7 +166,7 @@ InjectCacheHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
   }
 
 done:
-  if (dst != TS_NULL_MLOC) {
+  if (dst != nullptr) {
     TSHandleMLocRelease(buffer, hdr, dst);
   }
 }
@@ -207,7 +207,7 @@ InjectMilestonesHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
     {TS_MILESTONE_PLUGIN_TOTAL, "PLUGIN-TOTAL"},
   };
 
-  TSMLoc dst = TS_NULL_MLOC;
+  TSMLoc dst = nullptr;
   TSHRTime epoch;
 
   // TS_MILESTONE_SM_START is stamped when the HTTP transaction is born. The slow
@@ -217,7 +217,7 @@ InjectMilestonesHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 
   // Create a new response header field.
   dst = FindOrMakeHdrField(buffer, hdr, "X-Milestones", lengthof("X-Milestones"));
-  if (dst == TS_NULL_MLOC) {
+  if (dst == nullptr) {
     goto done;
   }
 
@@ -238,7 +238,7 @@ InjectMilestonesHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
   }
 
 done:
-  if (dst != TS_NULL_MLOC) {
+  if (dst != nullptr) {
     TSHandleMLocRelease(buffer, hdr, dst);
   }
 }
@@ -280,7 +280,7 @@ InjectRemapHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 {
   TSMLoc dst = FindOrMakeHdrField(buffer, hdr, "X-Remap", lengthof("X-Remap"));
 
-  if (TS_NULL_MLOC != dst) {
+  if (nullptr != dst) {
     int fromUrlStrLen, toUrlStrLen;
     const char *fromUrlStr = getRemapUrlStr(txn, TSRemapFromUrlGet, fromUrlStrLen);
     const char *toUrlStr   = getRemapUrlStr(txn, TSRemapToUrlGet, toUrlStrLen);
@@ -305,7 +305,7 @@ InjectTxnUuidHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 {
   TSMLoc dst = FindOrMakeHdrField(buffer, hdr, "X-Transaction-ID", lengthof("X-Transaction-ID"));
 
-  if (TS_NULL_MLOC != dst) {
+  if (nullptr != dst) {
     char buf[TS_UUID_STRING_LEN + 22]; // Padded for int64_t (20) + 1 ('-') + 1 ('\0')
     TSUuid uuid = TSProcessUuidGet();
     int len     = snprintf(buf, sizeof(buf), "%s-%" PRIu64 "", TSUuidStringGet(uuid), TSHttpTxnIdGet(txn));
@@ -430,7 +430,7 @@ XScanRequestHeaders(TSCont /* contp */, TSEvent event, void *edata)
 
   // Walk the X-Debug header values and determine what to inject into the response.
   field = TSMimeHdrFieldFind(buffer, hdr, xDebugHeader.str, xDebugHeader.len);
-  while (field != TS_NULL_MLOC) {
+  while (field != nullptr) {
     int count = TSMimeHdrFieldValuesCount(buffer, hdr, field);
 
     for (int i = 0; i < count; ++i) {
@@ -474,7 +474,7 @@ XScanRequestHeaders(TSCont /* contp */, TSEvent event, void *edata)
           if (TSHttpTxnServerReqGet(txn, &buffer, &hdr) == TS_SUCCESS) {
             // re-add header "X-Debug: log-headers", but only once
             TSMLoc dst = TSMimeHdrFieldFind(buffer, hdr, xDebugHeader.str, xDebugHeader.len);
-            if (dst == TS_NULL_MLOC) {
+            if (dst == nullptr) {
               if (TSMimeHdrFieldCreateNamed(buffer, hdr, xDebugHeader.str, xDebugHeader.len, &dst) == TS_SUCCESS) {
                 TSReleaseAssert(TSMimeHdrFieldAppend(buffer, hdr, dst) == TS_SUCCESS);
                 TSReleaseAssert(TSMimeHdrFieldValueStringInsert(buffer, hdr, dst, 0 /* idx */, "log-headers",

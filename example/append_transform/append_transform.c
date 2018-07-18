@@ -262,19 +262,19 @@ transformable(TSHttpTxn txnp)
          content type of "text/html". */
       field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, "Content-Type", 12);
       if (!field_loc) {
-        ASSERT_SUCCESS(TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc));
+        ASSERT_SUCCESS(TSHandleMLocRelease(bufp, nullptr, hdr_loc));
         return 0;
       }
 
       value = TSMimeHdrFieldValueStringGet(bufp, hdr_loc, field_loc, -1, &val_length);
       if (value && (strncasecmp(value, "text/html", sizeof("text/html") - 1) == 0)) {
         ASSERT_SUCCESS(TSHandleMLocRelease(bufp, hdr_loc, field_loc));
-        ASSERT_SUCCESS(TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc));
+        ASSERT_SUCCESS(TSHandleMLocRelease(bufp, nullptr, hdr_loc));
 
         return 1;
       } else {
         ASSERT_SUCCESS(TSHandleMLocRelease(bufp, hdr_loc, field_loc));
-        ASSERT_SUCCESS(TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc));
+        ASSERT_SUCCESS(TSHandleMLocRelease(bufp, nullptr, hdr_loc));
         return 0;
       }
     }

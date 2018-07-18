@@ -106,7 +106,7 @@ handle_client_lookup(TSHttpTxn txnp, TSCont contp)
 
   if (TSHttpHdrUrlGet(bufp, hdr_loc, &url_loc) != TS_SUCCESS) {
     TSError("[%s] Couldn't retrieve request url", PLUGIN_NAME);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
@@ -114,7 +114,7 @@ handle_client_lookup(TSHttpTxn txnp, TSCont contp)
   if (!host) {
     TSError("[%s] Couldn't retrieve request hostname", PLUGIN_NAME);
     TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
@@ -123,7 +123,7 @@ handle_client_lookup(TSHttpTxn txnp, TSCont contp)
    */
   if (strncmp(host, url_redirect, host_length) == 0) {
     TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
@@ -134,7 +134,7 @@ handle_client_lookup(TSHttpTxn txnp, TSCont contp)
     update_redirected_method_stats(bufp, hdr_loc);
 
     TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 
     /*
      *   Increment the local redirect stat and do global update:
@@ -181,7 +181,7 @@ handle_response(TSHttpTxn txnp)
   tmp_body = TSstrdup(errormsg_body);
   TSHttpTxnErrorBodySet(txnp, tmp_body, strlen(tmp_body), NULL);
   TSHandleMLocRelease(bufp, hdr_loc, newfield_loc);
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
 
 done:
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);

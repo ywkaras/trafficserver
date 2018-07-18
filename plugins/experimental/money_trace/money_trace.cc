@@ -117,7 +117,7 @@ mt_check_request_header(TSHttpTxn txnp)
   // check for a money trace header.  If there is one, schedule appropriate continuations.
   if (TS_SUCCESS == TSHttpTxnClientReqGet(txnp, &bufp, &hdr_loc)) {
     field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, MIME_FIELD_MONEY_TRACE, MIME_LEN_MONEY_TRACE);
-    if (TS_NULL_MLOC != field_loc) {
+    if (nullptr != field_loc) {
       const char *hdr_value = TSMimeHdrFieldValueStringGet(bufp, hdr_loc, field_loc, 0, &length);
       if (!hdr_value || length <= 0) {
         LOG_DEBUG("ignoring, corrupt money trace header.");
@@ -201,7 +201,7 @@ mt_send_server_request(TSHttpTxn txnp, struct txndata *txn_data)
 
   if (TS_SUCCESS == TSHttpTxnServerReqGet(txnp, &bufp, &hdr_loc)) {
     field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, MIME_FIELD_MONEY_TRACE, MIME_LEN_MONEY_TRACE);
-    if (TS_NULL_MLOC != field_loc) {
+    if (nullptr != field_loc) {
       if (TS_SUCCESS == TSMimeHdrFieldValueStringSet(bufp, hdr_loc, field_loc, -1, txn_data->new_span_mt_header,
                                                      strlen(txn_data->new_span_mt_header))) {
         LOG_DEBUG("server request header updated: %s: %s", MIME_FIELD_MONEY_TRACE, txn_data->new_span_mt_header);

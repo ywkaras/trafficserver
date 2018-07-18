@@ -121,8 +121,8 @@ private:
 // during the time we fetch from origin.
 struct BgFetchData {
   BgFetchData()
-    : hdr_loc(TS_NULL_MLOC),
-      url_loc(TS_NULL_MLOC),
+    : hdr_loc(nullptr),
+      url_loc(nullptr),
       vc(nullptr),
       req_io_buf(nullptr),
       resp_io_buf(nullptr),
@@ -139,8 +139,8 @@ struct BgFetchData {
 
   ~BgFetchData()
   {
-    TSHandleMLocRelease(mbuf, TS_NULL_MLOC, hdr_loc);
-    TSHandleMLocRelease(mbuf, TS_NULL_MLOC, url_loc);
+    TSHandleMLocRelease(mbuf, nullptr, hdr_loc);
+    TSHandleMLocRelease(mbuf, nullptr, url_loc);
 
     TSMBufferDestroy(mbuf);
 
@@ -222,8 +222,8 @@ BgFetchData::initialize(TSMBuffer request, TSMLoc req_hdr, TSHttpTxn txnp)
   struct sockaddr const *ip = TSHttpTxnClientAddrGet(txnp);
   bool ret                  = false;
 
-  TSAssert(TS_NULL_MLOC == hdr_loc);
-  TSAssert(TS_NULL_MLOC == url_loc);
+  TSAssert(nullptr == hdr_loc);
+  TSAssert(nullptr == url_loc);
 
   if (ip) {
     if (ip->sa_family == AF_INET) {
@@ -245,7 +245,7 @@ BgFetchData::initialize(TSMBuffer request, TSMLoc req_hdr, TSHttpTxn txnp)
     // Now copy the pristine request URL into our MBuf
     if (TS_SUCCESS == TSHttpTxnPristineUrlGet(txnp, &request, &p_url)) {
       if (TS_SUCCESS == TSUrlClone(mbuf, request, p_url, &url_loc)) {
-        TSMLoc c_url = TS_NULL_MLOC;
+        TSMLoc c_url = nullptr;
         int len;
         char *url = nullptr;
 
@@ -254,7 +254,7 @@ BgFetchData::initialize(TSMBuffer request, TSMLoc req_hdr, TSHttpTxn txnp)
         if (TS_SUCCESS == TSUrlCreate(request, &c_url)) {
           if (TS_SUCCESS == TSHttpTxnCacheLookupUrlGet(txnp, request, c_url)) {
             url = TSUrlStringGet(request, c_url, &len);
-            TSHandleMLocRelease(request, TS_NULL_MLOC, c_url);
+            TSHandleMLocRelease(request, nullptr, c_url);
             TSDebug(PLUGIN_NAME, "Cache URL is %.*s", len, url);
           }
         }
@@ -280,7 +280,7 @@ BgFetchData::initialize(TSMBuffer request, TSMLoc req_hdr, TSHttpTxn txnp)
           }
         }
       }
-      TSHandleMLocRelease(request, TS_NULL_MLOC, p_url);
+      TSHandleMLocRelease(request, nullptr, p_url);
     }
   }
 
@@ -472,10 +472,10 @@ cont_check_cacheable(TSCont contp, TSEvent /* event ATS_UNUSED */, void *edata)
         }
       }
       // Release the request MLoc
-      TSHandleMLocRelease(request, TS_NULL_MLOC, req_hdr);
+      TSHandleMLocRelease(request, nullptr, req_hdr);
     }
     // Release the response MLoc
-    TSHandleMLocRelease(response, TS_NULL_MLOC, resp_hdr);
+    TSHandleMLocRelease(response, nullptr, resp_hdr);
   }
 
   // Reenable and continue with the state machine.
@@ -526,7 +526,7 @@ cont_handle_response(TSCont contp, TSEvent event, void *edata)
             TSHttpTxnHookAdd(txnp, TS_HTTP_SEND_RESPONSE_HDR_HOOK, contp);
           }
           // Release the response MLoc
-          TSHandleMLocRelease(response, TS_NULL_MLOC, resp_hdr);
+          TSHandleMLocRelease(response, nullptr, resp_hdr);
         }
       }
       break;
@@ -670,7 +670,7 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo * /* rri */)
       TSDebug(PLUGIN_NAME, "background fetch TSRemapDoRemap");
       TSHandleMLocRelease(bufp, req_hdrs, field_loc);
     }
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, req_hdrs);
+    TSHandleMLocRelease(bufp, nullptr, req_hdrs);
   }
 
   return TSREMAP_NO_REMAP;

@@ -28,7 +28,7 @@
 class HeaderIterator
 {
 public:
-  HeaderIterator() : _bufp(nullptr), _hdrs(TS_NULL_MLOC), _field(TS_NULL_MLOC) {}
+  HeaderIterator() : _bufp(nullptr), _hdrs(nullptr), _field(nullptr) {}
   HeaderIterator(TSMBuffer bufp, TSMLoc hdrs, TSMLoc field) : _bufp(bufp), _hdrs(hdrs), _field(field) {}
   HeaderIterator(const HeaderIterator &it)
   {
@@ -120,7 +120,7 @@ public:
   HeaderIterator
   headerEnd() override
   {
-    return HeaderIterator(_bufp, _hdrs, TS_NULL_MLOC);
+    return HeaderIterator(_bufp, _hdrs, nullptr);
   }
   TSMBuffer _bufp;
   TSMLoc _hdrs;

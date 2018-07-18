@@ -250,17 +250,17 @@ public:
     TSMLoc req_hdr;
 
     if (TS_SUCCESS == TSHttpTxnClientReqGet(txnp, &request, &req_hdr)) {
-      TSMLoc c_url = TS_NULL_MLOC;
+      TSMLoc c_url = nullptr;
 
       // Get the cache key URL (for now), since this has better lookup behavior when using
       // e.g. the cachekey plugin.
       if (TS_SUCCESS == TSUrlCreate(request, &c_url)) {
         if (TS_SUCCESS == TSHttpTxnCacheLookupUrlGet(txnp, request, c_url)) {
           url = TSUrlStringGet(request, c_url, &url_len);
-          TSHandleMLocRelease(request, TS_NULL_MLOC, c_url);
+          TSHandleMLocRelease(request, nullptr, c_url);
         }
       }
-      TSHandleMLocRelease(request, TS_NULL_MLOC, req_hdr);
+      TSHandleMLocRelease(request, nullptr, req_hdr);
     }
 
     // Generally shouldn't happen ...

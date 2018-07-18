@@ -46,7 +46,7 @@ struct atscppapi::AsyncHttpFetchState : noncopyable {
   const void *body_;
   size_t body_size_;
   TSMBuffer hdr_buf_;
-  TSMLoc hdr_loc_;
+  TSHTTPHdrLoc hdr_loc_;
   std::shared_ptr<AsyncDispatchControllerBase> dispatch_controller_;
   AsyncHttpFetch::StreamingFlag streaming_flag_;
   TSFetchSM fetch_sm_;
@@ -74,8 +74,7 @@ struct atscppapi::AsyncHttpFetchState : noncopyable {
   ~AsyncHttpFetchState()
   {
     if (hdr_loc_) {
-      TSMLoc null_parent_loc = nullptr;
-      TSHandleMLocRelease(hdr_buf_, null_parent_loc, hdr_loc_);
+      TSHandleMLocRelease(hdr_buf_, nullptr, hdr_loc_);
     }
     if (hdr_buf_) {
       TSMBufferDestroy(hdr_buf_);

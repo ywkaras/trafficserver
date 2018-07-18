@@ -88,10 +88,10 @@ is_post_request(TSHttpTxn txnp)
   int method_len     = 0;
   const char *method = TSHttpHdrMethodGet(req_bufp, req_loc, &method_len);
   if (method_len != (int)strlen(TS_HTTP_METHOD_POST) || strncasecmp(method, TS_HTTP_METHOD_POST, method_len) != 0) {
-    TSHandleMLocRelease(req_bufp, TS_NULL_MLOC, req_loc);
+    TSHandleMLocRelease(req_bufp, nullptr, req_loc);
     return false;
   }
-  TSHandleMLocRelease(req_bufp, TS_NULL_MLOC, req_loc);
+  TSHandleMLocRelease(req_bufp, nullptr, req_loc);
   return true;
 }
 

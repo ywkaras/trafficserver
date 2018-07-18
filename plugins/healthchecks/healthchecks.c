@@ -546,7 +546,7 @@ cleanup:
     TSHandleMLocRelease(reqp, hdr_loc, url_loc);
   }
   if (hdr_loc) {
-    TSHandleMLocRelease(reqp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(reqp, nullptr, hdr_loc);
   }
 
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);

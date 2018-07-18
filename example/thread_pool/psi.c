@@ -860,21 +860,21 @@ transformable(TSHttpTxn txnp)
   if (TS_SUCCESS == TSHttpTxnServerRespGet(txnp, &bufp, &hdr_loc)) {
     resp_status = TSHttpHdrStatusGet(bufp, hdr_loc);
     if (resp_status != TS_HTTP_STATUS_OK) {
-      TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
       return 0;
     }
 
     field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, TS_MIME_FIELD_CONTENT_TYPE, -1);
-    if (field_loc == TS_NULL_MLOC) {
+    if (field_loc == nullptr) {
       TSError("[%s] Unable to search Content-Type field", PLUGIN_NAME);
-      TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
       return 0;
     }
 
     value = TSMimeHdrFieldValueStringGet(bufp, hdr_loc, field_loc, -1, NULL);
     if ((value == NULL) || (strncasecmp(value, "text/", sizeof("text/") - 1) != 0)) {
       TSHandleMLocRelease(bufp, hdr_loc, field_loc);
-      TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
       return 0;
     }
 
@@ -883,7 +883,7 @@ transformable(TSHttpTxn txnp)
     field_loc = TSMimeHdrFieldFind(bufp, hdr_loc, MIME_FIELD_XPSI, -1);
 
     TSHandleMLocRelease(bufp, hdr_loc, field_loc);
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
   }
 
   return 1;

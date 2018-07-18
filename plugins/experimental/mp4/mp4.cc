@@ -226,7 +226,7 @@ mp4_cache_lookup_complete(Mp4Context *mc, TSHttpTxn txnp)
 
 release:
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdrp);
+  TSHandleMLocRelease(bufp, nullptr, hdrp);
 }
 
 static void
@@ -264,7 +264,7 @@ mp4_read_response(Mp4Context *mc, TSHttpTxn txnp)
 
 release:
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdrp);
+  TSHandleMLocRelease(bufp, nullptr, hdrp);
 }
 
 static void

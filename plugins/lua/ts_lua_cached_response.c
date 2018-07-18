@@ -29,7 +29,7 @@
       http_ctx->cached_response_bufp = TSMBufferCreate();                                        \
       http_ctx->cached_response_hdrp = TSHttpHdrCreate(http_ctx->cached_response_bufp);          \
       TSHttpHdrCopy(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, bufp, hdrp); \
-      TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdrp);                                             \
+      TSHandleMLocRelease(bufp, nullptr, hdrp);                                             \
     }                                                                                            \
   } while (0)
 
@@ -156,15 +156,15 @@ ts_lua_cached_response_header_get(lua_State *L)
   if (key && key_len) {
     field_loc = TSMimeHdrFieldFind(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, key, key_len);
 
-    if (field_loc != TS_NULL_MLOC) {
+    if (field_loc != nullptr) {
       count = 0;
-      while (field_loc != TS_NULL_MLOC) {
+      while (field_loc != nullptr) {
         val = TSMimeHdrFieldValueStringGet(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, field_loc, -1, &val_len);
         next_field_loc = TSMimeHdrFieldNextDup(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, field_loc);
         lua_pushlstring(L, val, val_len);
         count++;
         // multiple headers with the same name must be semantically the same as one value which is comma seperated
-        if (next_field_loc != TS_NULL_MLOC) {
+        if (next_field_loc != nullptr) {
           lua_pushlstring(L, ",", 1);
           count++;
         }
@@ -210,7 +210,7 @@ ts_lua_cached_response_get_headers(lua_State *L)
 
   field_loc = TSMimeHdrFieldGet(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, 0);
 
-  while (field_loc != TS_NULL_MLOC) {
+  while (field_loc != nullptr) {
     name = TSMimeHdrFieldNameGet(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, field_loc, &name_len);
     if (name && name_len) {
       // retrieve the header name from table

@@ -93,7 +93,7 @@ struct SContData {
     TSDebug(DEBUG_TAG, "[%s] Destroying continuation data", __FUNCTION__);
     TSHttpParserDestroy(http_parser);
     if (req_hdr_loc) {
-      TSHandleMLocRelease(req_hdr_bufp, TS_NULL_MLOC, req_hdr_loc);
+      TSHandleMLocRelease(req_hdr_bufp, nullptr, req_hdr_loc);
     }
     if (req_hdr_bufp) {
       TSMBufferDestroy(req_hdr_bufp);

@@ -148,7 +148,7 @@ on_send_response_header(TSHttpTxn txnp, TSCont contp, PurgeInstance *purge)
     TSHttpHdrReasonSet(bufp, hdr_loc, "OK", 2);
     TSHttpTxnErrorBodySet(txnp, TSstrdup(response), len >= (int)sizeof(response) ? (int)sizeof(response) - 1 : len, NULL);
 
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
     TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
   } else {
     TSHttpTxnReenable(txnp, TS_EVENT_HTTP_ERROR);
@@ -231,7 +231,7 @@ handle_purge(TSHttpTxn txnp, PurgeInstance *purge)
         }
       }
     }
-    TSHandleMLocRelease(reqp, TS_NULL_MLOC, hdr_loc);
+    TSHandleMLocRelease(reqp, nullptr, hdr_loc);
   }
 
   /* Setup the continuation to handle this request if appropriate, if not, set the GenID if needed */

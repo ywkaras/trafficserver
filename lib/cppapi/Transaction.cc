@@ -45,26 +45,26 @@ struct atscppapi::TransactionState : noncopyable {
   TSEvent event_; ///< Current event being dispatched.
   std::list<TransactionPlugin *> plugins_;
   TSMBuffer client_request_hdr_buf_;
-  TSMLoc client_request_hdr_loc_;
+  TSHttpHdrLoc client_request_hdr_loc_;
   ClientRequest client_request_;
   TSMBuffer server_request_hdr_buf_;
-  TSMLoc server_request_hdr_loc_;
+  TSHttpHdrLoc server_request_hdr_loc_;
   Request server_request_;
   TSMBuffer server_response_hdr_buf_;
-  TSMLoc server_response_hdr_loc_;
+  TSHttpHdrLoc server_response_hdr_loc_;
   Response server_response_;
   TSMBuffer client_response_hdr_buf_;
-  TSMLoc client_response_hdr_loc_;
+  TSHttpHdrLoc client_response_hdr_loc_;
   Response client_response_;
   TSMBuffer cached_response_hdr_buf_;
-  TSMLoc cached_response_hdr_loc_;
+  TSHttpHdrLoc cached_response_hdr_loc_;
   Response cached_response_;
   TSMBuffer cached_request_hdr_buf_;
-  TSMLoc cached_request_hdr_loc_;
+  TSHttpHdrLoc cached_request_hdr_loc_;
   Request cached_request_;
   map<string, std::shared_ptr<Transaction::ContextValue>> context_values_;
 
-  TransactionState(TSHttpTxn txn, TSMBuffer client_request_hdr_buf, TSMLoc client_request_hdr_loc)
+  TransactionState(TSHttpTxn txn, TSMBuffer client_request_hdr_buf, TSHttpHdrLoc client_request_hdr_loc)
     : txn_(txn),
       event_(TS_EVENT_NONE),
       client_request_hdr_buf_(client_request_hdr_buf),
@@ -86,7 +86,7 @@ Transaction::Transaction(void *raw_txn)
 {
   TSHttpTxn txn = static_cast<TSHttpTxn>(raw_txn);
   TSMBuffer hdr_buf;
-  TSMLoc hdr_loc;
+  TSHttpHdrLoc hdr_loc;
   (void)TSHttpTxnClientReqGet(txn, &hdr_buf, &hdr_loc);
   if (!hdr_buf || !hdr_loc) {
     LOG_ERROR("TSHttpTxnClientReqGet tshttptxn=%p returned a null hdr_buf=%p or hdr_loc=%p.", txn, hdr_buf, hdr_loc);
@@ -406,7 +406,7 @@ namespace
 {
 /**
  * initializeHandles is a convenience functor that takes a pointer to a TS Function that
- * will return the TSMBuffer and TSMLoc for a given server request/response or client/request response
+ * will return the TSMBuffer and TSHttpHdrLoc for a given server request/response or client/request response
  *
  * @param constructor takes a function pointer of type GetterFunction
  * @param txn a TSHttpTxn
@@ -417,10 +417,10 @@ namespace
 class initializeHandles
 {
 public:
-  using GetterFunction = TSReturnCode (*)(TSHttpTxn, TSMBuffer *, TSMLoc *);
+  using GetterFunction = TSReturnCode (*)(TSHttpTxn, TSMBuffer *, TSHttpHdrLoc *);
   initializeHandles(GetterFunction getter) : getter_(getter) {}
   bool
-  operator()(TSHttpTxn txn, TSMBuffer &hdr_buf, TSMLoc &hdr_loc, const char *handles_name)
+  operator()(TSHttpTxn txn, TSMBuffer &hdr_buf, TSHttpHdrLoc &hdr_loc, const char *handles_name)
   {
     hdr_buf = nullptr;
     hdr_loc = nullptr;

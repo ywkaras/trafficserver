@@ -51,7 +51,7 @@ struct HttpParser {
 
   ~HttpParser()
   {
-    TSHandleMLocRelease(buffer_, TS_NULL_MLOC, location_);
+    TSHandleMLocRelease(buffer_, nullptr, location_);
     TSMBufferDestroy(buffer_);
     destroyParser();
   }

@@ -57,7 +57,7 @@ should_push(TSHttpTxn txnp)
   int len;
   TSUrlHttpQueryGet(mbuf, url, &len);
   TSHandleMLocRelease(mbuf, hdr, url);
-  TSHandleMLocRelease(mbuf, TS_NULL_MLOC, hdr);
+  TSHandleMLocRelease(mbuf, nullptr, hdr);
   if (len > 0) {
     return true;
   } else {

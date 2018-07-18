@@ -535,11 +535,11 @@ ConfigCache::get(const char *fname)
 class S3Request
 {
 public:
-  S3Request(TSHttpTxn txnp) : _txnp(txnp), _bufp(nullptr), _hdr_loc(TS_NULL_MLOC), _url_loc(TS_NULL_MLOC) {}
+  S3Request(TSHttpTxn txnp) : _txnp(txnp), _bufp(nullptr), _hdr_loc(nullptr), _url_loc(nullptr) {}
   ~S3Request()
   {
     TSHandleMLocRelease(_bufp, _hdr_loc, _url_loc);
-    TSHandleMLocRelease(_bufp, TS_NULL_MLOC, _hdr_loc);
+    TSHandleMLocRelease(_bufp, nullptr, _hdr_loc);
   }
 
   bool
@@ -699,7 +699,7 @@ TSHttpStatus
 S3Request::authorizeV2(S3Config *s3)
 {
   TSHttpStatus status = TS_HTTP_STATUS_INTERNAL_SERVER_ERROR;
-  TSMLoc host_loc = TS_NULL_MLOC, md5_loc = TS_NULL_MLOC, contype_loc = TS_NULL_MLOC;
+  TSMLoc host_loc = nullptr, md5_loc = nullptr, contype_loc = nullptr;
   int method_len = 0, path_len = 0, param_len = 0, host_len = 0, con_md5_len = 0, con_type_len = 0, date_len = 0;
   const char *method = nullptr, *path = nullptr, *param = nullptr, *host = nullptr, *con_md5 = nullptr, *con_type = nullptr,
              *host_endp = nullptr;
