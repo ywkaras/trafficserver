@@ -112,7 +112,7 @@ get_effective_host(TSHttpTxn txn)
   TSfree(effective_url);
   host = TSUrlHostGet(buf, url_loc, &len);
   tmp  = TSstrndup(host, len);
-  TSHandleMLocRelease(buf, nullptr, url_loc);
+  TSMimeHdrFldRelease(buf, nullptr, url_loc);
   TSMBufferDestroy(buf);
   return tmp;
 }
@@ -202,7 +202,7 @@ handle_txn_close(TSCont cont, TSEvent event ATS_UNUSED, void *edata)
 
       if (TSHttpTxnClientRespGet(txn, &buf, &hdr_loc) == TS_SUCCESS) {
         status_code = (int)TSHttpHdrStatusGet(buf, hdr_loc);
-        TSHandleMLocRelease(buf, nullptr, hdr_loc);
+        TSMimeHdrFldRelease(buf, nullptr, hdr_loc);
 
         if (status_code < 200) {
           CREATE_STAT_NAME(stat_name, remap, "status_other");

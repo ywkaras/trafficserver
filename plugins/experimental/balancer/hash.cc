@@ -138,7 +138,7 @@ HashTxnKey(TSHttpTxn txn, TSRemapRequestInfo *rri, MD5_CTX *ctx)
 
 done:
   if (url != nullptr) {
-    TSHandleMLocRelease(rri->requestBufp, nullptr, url);
+    TSMimeHdrFldRelease(rri->requestBufp, nullptr, url);
   }
 
   TSfree(str);

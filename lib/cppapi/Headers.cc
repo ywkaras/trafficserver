@@ -184,7 +184,7 @@ struct MLocContainer {
   ~MLocContainer()
   {
     if (field_loc_ != nullptr) {
-      TSHandleMLocRelease(hdr_buf_, hdr_loc_, field_loc_);
+      TSMimeHdrFldRelease(hdr_buf_, hdr_loc_, field_loc_);
     }
   }
 };
@@ -487,7 +487,7 @@ struct HeadersState : noncopyable {
   reset(TSMBuffer bufp, TSHttpHdrLoc hdr_loc)
   {
     if (self_created_structures_) {
-      TSHandleMLocRelease(hdr_buf_, nullptr /* no parent */, hdr_loc_);
+      TSMimeHdrFldRelease(hdr_buf_, nullptr /* no parent */, hdr_loc_);
       TSMBufferDestroy(hdr_buf_);
       self_created_structures_ = false;
     }

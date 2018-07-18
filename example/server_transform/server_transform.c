@@ -585,12 +585,12 @@ server_response_ok(TSHttpTxn txnp)
 
   resp_status = TSHttpHdrStatusGet(bufp, hdr_loc);
   if (TS_HTTP_STATUS_OK == resp_status) {
-    if (TSHandleMLocRelease(bufp, nullptr, hdr_loc) != TS_SUCCESS) {
+    if (TSMimeHdrFldRelease(bufp, nullptr, hdr_loc) != TS_SUCCESS) {
       TSError("[%s] Unable to release handle to server request", PLUGIN_NAME);
     }
     return 1;
   } else {
-    if (TSHandleMLocRelease(bufp, nullptr, hdr_loc) != TS_SUCCESS) {
+    if (TSMimeHdrFldRelease(bufp, nullptr, hdr_loc) != TS_SUCCESS) {
       TSError("[%s] Unable to release handle to server request", PLUGIN_NAME);
     }
     return 0;

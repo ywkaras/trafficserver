@@ -139,8 +139,8 @@ struct BgFetchData {
 
   ~BgFetchData()
   {
-    TSHandleMLocRelease(mbuf, nullptr, hdr_loc);
-    TSHandleMLocRelease(mbuf, nullptr, url_loc);
+    TSMimeHdrFldRelease(mbuf, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(mbuf, nullptr, url_loc);
 
     TSMBufferDestroy(mbuf);
 
@@ -254,7 +254,7 @@ BgFetchData::initialize(TSMBuffer request, TSMLoc req_hdr, TSHttpTxn txnp)
         if (TS_SUCCESS == TSUrlCreate(request, &c_url)) {
           if (TS_SUCCESS == TSHttpTxnCacheLookupUrlGet(txnp, request, c_url)) {
             url = TSUrlStringGet(request, c_url, &len);
-            TSHandleMLocRelease(request, nullptr, c_url);
+            TSMimeHdrFldRelease(request, nullptr, c_url);
             TSDebug(PLUGIN_NAME, "Cache URL is %.*s", len, url);
           }
         }
@@ -280,7 +280,7 @@ BgFetchData::initialize(TSMBuffer request, TSMLoc req_hdr, TSHttpTxn txnp)
           }
         }
       }
-      TSHandleMLocRelease(request, nullptr, p_url);
+      TSMimeHdrFldRelease(request, nullptr, p_url);
     }
   }
 
@@ -472,10 +472,10 @@ cont_check_cacheable(TSCont contp, TSEvent /* event ATS_UNUSED */, void *edata)
         }
       }
       // Release the request MLoc
-      TSHandleMLocRelease(request, nullptr, req_hdr);
+      TSMimeHdrFldRelease(request, nullptr, req_hdr);
     }
     // Release the response MLoc
-    TSHandleMLocRelease(response, nullptr, resp_hdr);
+    TSMimeHdrFldRelease(response, nullptr, resp_hdr);
   }
 
   // Reenable and continue with the state machine.
@@ -526,7 +526,7 @@ cont_handle_response(TSCont contp, TSEvent event, void *edata)
             TSHttpTxnHookAdd(txnp, TS_HTTP_SEND_RESPONSE_HDR_HOOK, contp);
           }
           // Release the response MLoc
-          TSHandleMLocRelease(response, nullptr, resp_hdr);
+          TSMimeHdrFldRelease(response, nullptr, resp_hdr);
         }
       }
       break;
@@ -668,9 +668,9 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo * /* rri */)
       TSHttpTxnHookAdd(txnp, TS_HTTP_TXN_CLOSE_HOOK, config->getCont());
 
       TSDebug(PLUGIN_NAME, "background fetch TSRemapDoRemap");
-      TSHandleMLocRelease(bufp, req_hdrs, field_loc);
+      TSMimeHdrFldRelease(bufp, req_hdrs, field_loc);
     }
-    TSHandleMLocRelease(bufp, nullptr, req_hdrs);
+    TSMimeHdrFldRelease(bufp, nullptr, req_hdrs);
   }
 
   return TSREMAP_NO_REMAP;

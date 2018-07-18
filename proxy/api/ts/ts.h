@@ -1092,8 +1092,8 @@ tsapi TSReturnCode TSHttpHdrVersionSet(TSMBuffer bufp, TSHttpHdrLoc offset, int 
 tsapi const char *TSHttpHdrMethodGet(TSMBuffer bufp, TSHttpHdrLoc offset, int *length);
 tsapi TSReturnCode TSHttpHdrMethodSet(TSMBuffer bufp, TSHttpHdrLoc offset, const char *value, int length);
 tsapi const char *TSHttpHdrHostGet(TSMBuffer bufp, TSHttpHdrLoc offset, int *length);
-tsapi TSReturnCode TSHttpHdrUrlGet(TSMBuffer bufp, TSUrlHdrLoc offset, TSUrlHdrLoc *locp);
-tsapi TSReturnCode TSHttpHdrUrlSet(TSMBuffer bufp, TSUrlHdrLoc offset, TSUrlHdrLoc url);
+tsapi TSReturnCode TSHttpHdrUrlGet(TSMBuffer bufp, TSHttpHdrLoc offset, TSUrlHdrLoc *locp);
+tsapi TSReturnCode TSHttpHdrUrlSet(TSMBuffer bufp, TSHttpHdrLoc offset, TSUrlHdrLoc url);
 
 tsapi TSHttpStatus TSHttpHdrStatusGet(TSMBuffer bufp, TSHttpHdrLoc offset);
 tsapi TSReturnCode TSHttpHdrStatusSet(TSMBuffer bufp, TSHttpHdrLoc offset, TSHttpStatus status);

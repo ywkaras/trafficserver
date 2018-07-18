@@ -134,7 +134,7 @@ cache_open_write(TSCont contp, void *edata)
 
     TSfree(data);
 
-    TSHandleMLocRelease(req_bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(req_bufp, nullptr, hdr_loc);
 
     return 0;
   }
@@ -146,14 +146,14 @@ cache_open_write(TSCont contp, void *edata)
 
     TSfree(data);
 
-    TSHandleMLocRelease(req_bufp, hdr_loc, url_loc);
-    TSHandleMLocRelease(req_bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(req_bufp, hdr_loc, url_loc);
+    TSMimeHdrFldRelease(req_bufp, nullptr, hdr_loc);
 
     return 0;
   }
 
-  TSHandleMLocRelease(req_bufp, hdr_loc, url_loc);
-  TSHandleMLocRelease(req_bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(req_bufp, hdr_loc, url_loc);
+  TSMimeHdrFldRelease(req_bufp, nullptr, hdr_loc);
 
   /* Store the request URL */
 
@@ -548,9 +548,9 @@ cache_open_read_failed(TSCont contp, void * /* edata ATS_UNUSED */)
 
   TSCacheKeyDestroy(data->key);
 
-  TSHandleMLocRelease(data->resp_bufp, nullptr, data->url_loc);
-  TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
-  TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->url_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
   TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
   TSfree(data);
@@ -588,8 +588,8 @@ rewrite_handler(TSCont contp, TSEvent event, void * /* edata ATS_UNUSED */)
 
   TSIOBufferDestroy(data->cache_bufp);
 
-  TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
-  TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
   TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
   TSfree(data);
@@ -622,9 +622,9 @@ vconn_read_ready(TSCont contp, void * /* edata ATS_UNUSED */)
 
     TSCacheKeyDestroy(data->key);
 
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->url_loc);
-    TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->url_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
     TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
     TSfree(data);
@@ -637,9 +637,9 @@ vconn_read_ready(TSCont contp, void * /* edata ATS_UNUSED */)
 
     TSCacheKeyDestroy(data->key);
 
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->url_loc);
-    TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->url_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
     TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
     TSfree(data);
@@ -647,7 +647,7 @@ vconn_read_ready(TSCont contp, void * /* edata ATS_UNUSED */)
     return 0;
   }
 
-  TSHandleMLocRelease(data->resp_bufp, nullptr, data->url_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->url_loc);
 
   /* Check if the URL stored at the digest is cached */
 
@@ -716,7 +716,7 @@ location_handler(TSCont contp, TSEvent event, void * /* edata ATS_UNUSED */)
       break;
     }
 
-    TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->digest_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->digest_loc);
 
     /* Check if the digest already exists in the cache */
 
@@ -732,13 +732,13 @@ location_handler(TSCont contp, TSEvent event, void * /* edata ATS_UNUSED */)
     TSAssert(!"Unexpected event");
   }
 
-  TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->digest_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->digest_loc);
 
   TSCacheKeyDestroy(data->key);
 
-  TSHandleMLocRelease(data->resp_bufp, nullptr, data->url_loc);
-  TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
-  TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->url_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
   TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
   TSfree(data);
@@ -786,7 +786,7 @@ http_send_response_hdr(TSCont contp, void *edata)
   /* If the response has a Location header */
   data->location_loc = TSMimeHdrFieldFind(data->resp_bufp, data->hdr_loc, TS_MIME_FIELD_LOCATION, TS_MIME_LEN_LOCATION);
   if (!data->location_loc) {
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
     TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
     TSfree(data);
@@ -803,9 +803,9 @@ http_send_response_hdr(TSCont contp, void *edata)
   /* No allocation, freed with data->resp_bufp? */
   value = TSMimeHdrFieldValueStringGet(data->resp_bufp, data->hdr_loc, data->location_loc, -1, &length);
   if (TSUrlParse(data->resp_bufp, data->url_loc, &value, value + length) != TS_PARSE_DONE) {
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->url_loc);
-    TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->url_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
     TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
     TSfree(data);
@@ -817,9 +817,9 @@ http_send_response_hdr(TSCont contp, void *edata)
   if (TSCacheKeyDigestFromUrlSet(data->key, data->url_loc) != TS_SUCCESS) {
     TSCacheKeyDestroy(data->key);
 
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->url_loc);
-    TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
-    TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->url_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
     TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
     TSfree(data);
@@ -851,7 +851,7 @@ http_send_response_hdr(TSCont contp, void *edata)
 
     TSMLoc next_loc = TSMimeHdrFieldNextDup(data->resp_bufp, data->hdr_loc, data->digest_loc);
 
-    TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->digest_loc);
+    TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->digest_loc);
 
     data->digest_loc = next_loc;
   }
@@ -860,9 +860,9 @@ http_send_response_hdr(TSCont contp, void *edata)
 
   TSCacheKeyDestroy(data->key);
 
-  TSHandleMLocRelease(data->resp_bufp, nullptr, data->url_loc);
-  TSHandleMLocRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
-  TSHandleMLocRelease(data->resp_bufp, nullptr, data->hdr_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->url_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, data->hdr_loc, data->location_loc);
+  TSMimeHdrFldRelease(data->resp_bufp, nullptr, data->hdr_loc);
 
   TSHttpTxnReenable(data->txnp, TS_EVENT_HTTP_CONTINUE);
   TSfree(data);

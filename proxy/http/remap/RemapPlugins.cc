@@ -40,12 +40,12 @@ RemapPlugins::run_plugin(remap_plugin_info *plugin)
   // This is the equivalent of TSHttpTxnClientReqGet(), which every remap plugin would
   // have to call.
   rri.requestBufp = reinterpret_cast<TSMBuffer>(_request_header);
-  rri.requestHdrp = reinterpret_cast<TSMLoc>(_request_header->m_http);
+  rri.requestHdrp = reinterpret_cast<TSHttpHdrLoc>(_request_header->m_http);
 
-  // Read-only URL's (TSMLoc's to the SDK)
-  rri.mapFromUrl = reinterpret_cast<TSMLoc>(map_from->m_url_impl);
-  rri.mapToUrl   = reinterpret_cast<TSMLoc>(map_to->m_url_impl);
-  rri.requestUrl = reinterpret_cast<TSMLoc>(_request_url->m_url_impl);
+  // Read-only URL's (TSUrlHdrLoc's to the SDK)
+  rri.mapFromUrl = reinterpret_cast<TSUrlHdrLoc>(map_from->m_url_impl);
+  rri.mapToUrl   = reinterpret_cast<TSUrlHdrLoc>(map_to->m_url_impl);
+  rri.requestUrl = reinterpret_cast<TSUrlHdrLoc>(_request_url->m_url_impl);
 
   rri.redirect = 0;
 

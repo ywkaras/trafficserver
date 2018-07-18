@@ -84,8 +84,8 @@ OriginalRequest::~OriginalRequest()
     xMultiplexerHeader(original.xMultiplexerHeader);
   }
 
-  TSHandleMLocRelease(buffer_, location_, hostHeader_);
-  TSHandleMLocRelease(buffer_, location_, url_);
+  TSMimeHdrFldRelease(buffer_, location_, hostHeader_);
+  TSMimeHdrFldRelease(buffer_, location_, url_);
 }
 
 void

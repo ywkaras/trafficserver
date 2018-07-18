@@ -181,7 +181,7 @@ range_header_check(TSHttpTxn txnp, struct pluginconfig *pc)
                   TS_PARSE_DONE == TSUrlParse(hdr_bufp, ps_loc, &start, end) && // This should always succeed.
                   TS_SUCCESS == TSHttpTxnParentSelectionUrlSet(txnp, hdr_bufp, ps_loc)) {
                 DEBUG_LOG("Set Parent Selection URL to cache_key_url: %s", cache_key_url);
-                TSHandleMLocRelease(hdr_bufp, nullptr, ps_loc);
+                TSMimeHdrFldRelease(hdr_bufp, nullptr, ps_loc);
               }
             }
           }
@@ -198,11 +198,11 @@ range_header_check(TSHttpTxn txnp, struct pluginconfig *pc)
           DEBUG_LOG("Added TS_HTTP_SEND_REQUEST_HDR_HOOK, TS_HTTP_SEND_RESPONSE_HDR_HOOK, and TS_HTTP_TXN_CLOSE_HOOK");
         }
       }
-      TSHandleMLocRelease(hdr_bufp, req_hdrs, loc);
+      TSMimeHdrFldRelease(hdr_bufp, req_hdrs, loc);
     } else {
       DEBUG_LOG("no range request header.");
     }
-    TSHandleMLocRelease(hdr_bufp, nullptr, req_hdrs);
+    TSMimeHdrFldRelease(hdr_bufp, nullptr, req_hdrs);
   } else {
     DEBUG_LOG("failed to retrieve the server request");
   }
@@ -225,7 +225,7 @@ handle_send_origin_request(TSCont contp, TSHttpTxn txnp, struct txndata *txn_sta
       TSHttpTxnHookAdd(txnp, TS_HTTP_READ_RESPONSE_HDR_HOOK, contp);
     }
   }
-  TSHandleMLocRelease(hdr_bufp, nullptr, req_hdrs);
+  TSMimeHdrFldRelease(hdr_bufp, nullptr, req_hdrs);
 }
 
 /**
@@ -269,8 +269,8 @@ handle_client_send_response(TSHttpTxn txnp, struct txndata *txn_state)
   } else {
     DEBUG_LOG("failed to get Request Headers");
   }
-  TSHandleMLocRelease(response, nullptr, resp_hdr);
-  TSHandleMLocRelease(hdr_bufp, nullptr, req_hdrs);
+  TSMimeHdrFldRelease(response, nullptr, resp_hdr);
+  TSMimeHdrFldRelease(hdr_bufp, nullptr, req_hdrs);
 }
 
 /**
@@ -302,7 +302,7 @@ handle_server_read_response(TSHttpTxn txnp, struct txndata *txn_state)
       }
     }
   }
-  TSHandleMLocRelease(response, nullptr, resp_hdr);
+  TSMimeHdrFldRelease(response, nullptr, resp_hdr);
 }
 
 /**
@@ -322,7 +322,7 @@ remove_header(TSMBuffer bufp, TSMLoc hdr_loc, const char *header, int len)
 
     ++cnt;
     TSMimeHdrFieldDestroy(bufp, hdr_loc, field);
-    TSHandleMLocRelease(bufp, hdr_loc, field);
+    TSMimeHdrFldRelease(bufp, hdr_loc, field);
     field = tmp;
   }
 
@@ -354,7 +354,7 @@ set_header(TSMBuffer bufp, TSMLoc hdr_loc, const char *header, int len, const ch
         TSMimeHdrFieldAppend(bufp, hdr_loc, field_loc);
         ret = true;
       }
-      TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
     }
   } else {
     TSMLoc tmp = nullptr;
@@ -370,7 +370,7 @@ set_header(TSMBuffer bufp, TSMLoc hdr_loc, const char *header, int len, const ch
         TSMimeHdrFieldDestroy(bufp, hdr_loc, field_loc);
       }
       tmp = TSMimeHdrFieldNextDup(bufp, hdr_loc, field_loc);
-      TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
       field_loc = tmp;
     }
   }

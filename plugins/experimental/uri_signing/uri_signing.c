@@ -120,9 +120,9 @@ add_cookie(TSCont cont, TSEvent event, void *edata)
   PluginDebug("Added cookie to request: %s", cookie);
 
 fail_field:
-  TSHandleMLocRelease(buffer, hdr, field);
+  TSMimeHdrFldRelease(buffer, hdr, field);
 fail_hdr:
-  TSHandleMLocRelease(buffer, nullptr, hdr);
+  TSMimeHdrFldRelease(buffer, nullptr, hdr);
 fail:
   free(cookie);
   TSContDestroy(cont);
@@ -169,7 +169,7 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
   }
   url = TSUrlStringGet(mbuf, ul, &url_ct);
 
-  TSHandleMLocRelease(mbuf, nullptr, ul);
+  TSMimeHdrFldRelease(mbuf, nullptr, ul);
 
   PluginDebug("Processing request for %.*s.", url_ct, url);
   if (cpi < max_cpi) {
@@ -194,7 +194,7 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
 
     field = TSMimeHdrFieldFind(buffer, hdr, "Cookie", 6);
     if (field == nullptr) {
-      TSHandleMLocRelease(buffer, nullptr, hdr);
+      TSMimeHdrFldRelease(buffer, nullptr, hdr);
       goto fail;
     }
 
@@ -202,8 +202,8 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
     int client_cookie_ct;
     client_cookie = TSMimeHdrFieldValueStringGet(buffer, hdr, field, 0, &client_cookie_ct);
 
-    TSHandleMLocRelease(buffer, hdr, field);
-    TSHandleMLocRelease(buffer, nullptr, hdr);
+    TSMimeHdrFldRelease(buffer, hdr, field);
+    TSMimeHdrFldRelease(buffer, nullptr, hdr);
 
     if (!client_cookie || !client_cookie_ct) {
       goto fail;

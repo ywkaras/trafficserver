@@ -33,7 +33,7 @@ using std::string;
  */
 struct atscppapi::RequestState : noncopyable {
   TSMBuffer hdr_buf_;
-  TSMHttpHdrLoc hdr_loc_;
+  TSHttpHdrLoc hdr_loc_;
   TSUrlHdrLoc url_loc_;
   Url url_;
   Headers headers_;
@@ -199,14 +199,7 @@ Request::~Request()
 {
   if (state_->url_loc_) {
     if (state_->destroy_buf_) {
-      // usually, hdr_loc is the parent of url_loc, but we created this url_loc "directly" in hdr_buf,
-      // so we use null as parent loc in this case
-      TSHandleMLocRelease(state_->hdr_buf_, nullptr, state_->url_loc_);
       TSMBufferDestroy(state_->hdr_buf_);
-    } else {
-      LOG_DEBUG("Destroying request object on hdr_buf=%p, hdr_loc=%p, url_loc=%p", state_->hdr_buf_, state_->hdr_loc_,
-                state_->url_loc_);
-      TSHandleMLocRelease(state_->hdr_buf_, state_->hdr_loc_, state_->url_loc_);
     }
   }
   delete state_;

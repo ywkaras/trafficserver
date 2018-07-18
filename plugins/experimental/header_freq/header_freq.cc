@@ -135,11 +135,11 @@ count_all_headers(TSMBuffer &bufp, TSMLoc &hdr_loc, std::map<std::string, unsign
     ++map[str];
 
     next_hdr = TSMimeHdrFieldNext(bufp, hdr_loc, hdr);
-    TSHandleMLocRelease(bufp, hdr_loc, hdr);
+    TSMimeHdrFldRelease(bufp, hdr_loc, hdr);
     hdr = next_hdr;
   }
 
-  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
 }
 
 /**

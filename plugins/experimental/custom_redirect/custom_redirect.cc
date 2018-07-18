@@ -75,14 +75,14 @@ handle_response(TSHttpTxn txnp, TSCont /* contp ATS_UNUSED */)
                 TSHttpTxnRedirectUrlSet(txnp, url, redirect_url_length);
               }
             }
-            TSHandleMLocRelease(resp_bufp, resp_loc, redirect_url_loc);
+            TSMimeHdrFldRelease(resp_bufp, resp_loc, redirect_url_loc);
           }
         }
         // TSHandleStringRelease(req_bufp, req_loc, method);
-        TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+        TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
       }
     }
-    TSHandleMLocRelease(resp_bufp, nullptr, resp_loc);
+    TSMimeHdrFldRelease(resp_bufp, nullptr, resp_loc);
   }
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
 }

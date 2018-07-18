@@ -385,7 +385,7 @@ ts_lua_http_get_cache_lookup_url(lua_State *L)
 
 done:
   if (url != nullptr) {
-    TSHandleMLocRelease(http_ctx->client_request_bufp, nullptr, url);
+    TSMimeHdrFldRelease(http_ctx->client_request_bufp, nullptr, url);
   }
 
   if (str != NULL) {
@@ -497,7 +497,7 @@ ts_lua_http_get_parent_selection_url(lua_State *L)
 
 done:
   if (url != nullptr) {
-    TSHandleMLocRelease(http_ctx->client_request_bufp, nullptr, url);
+    TSMimeHdrFldRelease(http_ctx->client_request_bufp, nullptr, url);
   }
 
   if (str != NULL) {

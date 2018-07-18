@@ -65,7 +65,7 @@ local_handler(TSCont contp, TSEvent event, void *edata)
     if (TSHttpHdrUrlGet(bufp, hdr_loc, &url_loc) != TS_SUCCESS) {
       TSError("[%s] Couldn't retrieve request url", PLUGIN_NAME);
       TSDebug(PLUGIN_NAME, "Couldn't retrieve request url");
-      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
       goto done;
     }
     TSDebug(PLUGIN_NAME, "got client request url");
@@ -74,8 +74,8 @@ local_handler(TSCont contp, TSEvent event, void *edata)
     if (!host) {
       TSError("[%s] Couldn't retrieve request hostname", PLUGIN_NAME);
       TSDebug(PLUGIN_NAME, "Couldn't retrieve request hostname");
-      TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+      TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
       goto done;
     }
     TSDebug(PLUGIN_NAME, "request's host was retrieved");
@@ -83,8 +83,8 @@ local_handler(TSCont contp, TSEvent event, void *edata)
     if (strncmp(host, test_host, strlen(test_host)) == 0) {
       TSDebug(PLUGIN_NAME, "host matches, hook TS_HTTP_SEND_RESPONSE_HDR_HOOK");
       TSHttpTxnHookAdd(txnp, TS_HTTP_SEND_RESPONSE_HDR_HOOK, contp);
-      TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+      TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
       TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
       return 0;
     }
@@ -107,8 +107,8 @@ local_handler(TSCont contp, TSEvent event, void *edata)
   }
 
 done:
-  TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+  TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
   return 1;
 }

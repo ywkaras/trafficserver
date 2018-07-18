@@ -465,7 +465,7 @@ ts_lua_fill_one_result(lua_State *L, ts_lua_fetch_info *fi)
     lua_rawset(L, -3);
 
     next_field_loc = TSMimeHdrFieldNext(bufp, hdrp, field_loc);
-    TSHandleMLocRelease(bufp, hdrp, field_loc);
+    TSMimeHdrFldRelease(bufp, hdrp, field_loc);
     field_loc = next_field_loc;
   }
   lua_rawset(L, -3);

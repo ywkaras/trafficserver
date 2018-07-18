@@ -257,10 +257,10 @@ public:
       if (TS_SUCCESS == TSUrlCreate(request, &c_url)) {
         if (TS_SUCCESS == TSHttpTxnCacheLookupUrlGet(txnp, request, c_url)) {
           url = TSUrlStringGet(request, c_url, &url_len);
-          TSHandleMLocRelease(request, nullptr, c_url);
+          TSMimeHdrFldRelease(request, nullptr, c_url);
         }
       }
-      TSHandleMLocRelease(request, nullptr, req_hdr);
+      TSMimeHdrFldRelease(request, nullptr, req_hdr);
     }
 
     // Generally shouldn't happen ...

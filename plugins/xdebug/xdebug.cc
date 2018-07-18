@@ -84,7 +84,7 @@ InjectGenerationHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
   }
 
   if (dst != nullptr) {
-    TSHandleMLocRelease(buffer, hdr, dst);
+    TSMimeHdrFldRelease(buffer, hdr, dst);
   }
 }
 
@@ -125,11 +125,11 @@ InjectCacheKeyHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 
 done:
   if (dst != nullptr) {
-    TSHandleMLocRelease(buffer, hdr, dst);
+    TSMimeHdrFldRelease(buffer, hdr, dst);
   }
 
   if (url != nullptr) {
-    TSHandleMLocRelease(buffer, nullptr, url);
+    TSMimeHdrFldRelease(buffer, nullptr, url);
   }
 
   TSfree(strval.ptr);
@@ -167,7 +167,7 @@ InjectCacheHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 
 done:
   if (dst != nullptr) {
-    TSHandleMLocRelease(buffer, hdr, dst);
+    TSMimeHdrFldRelease(buffer, hdr, dst);
   }
 }
 
@@ -239,7 +239,7 @@ InjectMilestonesHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
 
 done:
   if (dst != nullptr) {
-    TSHandleMLocRelease(buffer, hdr, dst);
+    TSMimeHdrFldRelease(buffer, hdr, dst);
   }
 }
 
@@ -296,7 +296,7 @@ InjectRemapHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
     }
 
     TSReleaseAssert(TSMimeHdrFieldValueStringInsert(buffer, hdr, dst, 0 /* idx */, buf, len) == TS_SUCCESS);
-    TSHandleMLocRelease(buffer, hdr, dst);
+    TSMimeHdrFldRelease(buffer, hdr, dst);
   }
 }
 
@@ -311,7 +311,7 @@ InjectTxnUuidHeader(TSHttpTxn txn, TSMBuffer buffer, TSMLoc hdr)
     int len     = snprintf(buf, sizeof(buf), "%s-%" PRIu64 "", TSUuidStringGet(uuid), TSHttpTxnIdGet(txn));
 
     TSReleaseAssert(TSMimeHdrFieldValueStringInsert(buffer, hdr, dst, 0 /* idx */, buf, len) == TS_SUCCESS);
-    TSHandleMLocRelease(buffer, hdr, dst);
+    TSMimeHdrFldRelease(buffer, hdr, dst);
   }
 }
 
@@ -515,7 +515,7 @@ XScanRequestHeaders(TSCont /* contp */, TSEvent event, void *edata)
     TSMimeHdrFieldDestroy(buffer, hdr, field);
 
     // Now release our reference.
-    TSHandleMLocRelease(buffer, hdr, field);
+    TSMimeHdrFldRelease(buffer, hdr, field);
 
     // And go to the next field.
     field = next;

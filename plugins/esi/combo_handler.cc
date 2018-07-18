@@ -206,7 +206,7 @@ InterceptData::setupWrite()
 InterceptData::~InterceptData()
 {
   if (req_hdr_loc) {
-    TSHandleMLocRelease(req_hdr_bufp, nullptr, req_hdr_loc);
+    TSMimeHdrFldRelease(req_hdr_bufp, nullptr, req_hdr_loc);
   }
   if (req_hdr_bufp) {
     TSMBufferDestroy(req_hdr_bufp);
@@ -260,7 +260,7 @@ CacheControlHeader::update(TSMBuffer bufp, TSMLoc hdr_loc)
         }
       }
     }
-    TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+    TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
   }
 
   if (!found_immutable) {
@@ -470,11 +470,11 @@ handleReadRequestHeader(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edat
           LOG_DEBUG("Setup server intercept to handle client request");
         }
       }
-      TSHandleMLocRelease(bufp, hdr_loc, url_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
     } else {
       LOG_ERROR("Could not get request URL");
     }
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
   } else {
     LOG_ERROR("Could not get client request");
   }
@@ -533,7 +533,7 @@ getDefaultBucket(TSHttpTxn /* txnp ATS_UNUSED */, TSMBuffer bufp, TSMLoc hdr_obj
   host = TSMimeHdrFieldValueStringGet(bufp, hdr_obj, field_loc, -1, &host_len);
   if (!host || host_len <= 0) {
     LOG_ERROR("Error Extracting Host Header");
-    TSHandleMLocRelease(bufp, hdr_obj, field_loc);
+    TSMimeHdrFldRelease(bufp, hdr_obj, field_loc);
     return false;
   }
 
@@ -553,7 +553,7 @@ getDefaultBucket(TSHttpTxn /* txnp ATS_UNUSED */, TSMBuffer bufp, TSMLoc hdr_obj
     }
   */
 
-  TSHandleMLocRelease(bufp, hdr_obj, field_loc);
+  TSMimeHdrFldRelease(bufp, hdr_obj, field_loc);
 
   LOG_DEBUG("defaultBucket: %s", creq.defaultBucket.data());
   return defaultBucketFound;
@@ -719,7 +719,7 @@ checkGzipAcceptance(TSMBuffer bufp, TSMLoc hdr_loc, ClientRequest &creq)
         break;
       }
     }
-    TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+    TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
   }
   LOG_DEBUG("Client %s gzip encoding", (creq.gzip_accepted ? "accepts" : "does not accept"));
 }
@@ -971,7 +971,7 @@ prepareResponse(InterceptData &int_data, ByteBlockList &body_blocks, string &res
               expires_time = curr_field_expires_time;
             }
           }
-          TSHandleMLocRelease(resp_data.bufp, resp_data.hdr_loc, field_loc);
+          TSMimeHdrFldRelease(resp_data.bufp, resp_data.hdr_loc, field_loc);
         }
 
         for (int i = 0; i < num_headers; i++) {
@@ -1003,7 +1003,7 @@ prepareResponse(InterceptData &int_data, ByteBlockList &body_blocks, string &res
                 flags_list[i] = 1;
               }
             }
-            TSHandleMLocRelease(resp_data.bufp, resp_data.hdr_loc, field_loc);
+            TSMimeHdrFldRelease(resp_data.bufp, resp_data.hdr_loc, field_loc);
           }
         }
 
@@ -1065,7 +1065,7 @@ getContentType(TSMBuffer bufp, TSMLoc hdr_loc, string &resp_header_fields)
       }
       resp_header_fields.append(value, value_len);
     }
-    TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+    TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
     if (values_added) {
       resp_header_fields.append("\r\n");
       retval = true;

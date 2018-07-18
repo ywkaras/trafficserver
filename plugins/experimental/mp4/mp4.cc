@@ -129,14 +129,14 @@ TSRemapDoRemap(void * /* ih ATS_UNUSED */, TSHttpTxn rh, TSRemapRequestInfo *rri
   ae_field = TSMimeHdrFieldFind(rri->requestBufp, rri->requestHdrp, TS_MIME_FIELD_ACCEPT_ENCODING, TS_MIME_LEN_ACCEPT_ENCODING);
   if (ae_field) {
     TSMimeHdrFieldDestroy(rri->requestBufp, rri->requestHdrp, ae_field);
-    TSHandleMLocRelease(rri->requestBufp, rri->requestHdrp, ae_field);
+    TSMimeHdrFldRelease(rri->requestBufp, rri->requestHdrp, ae_field);
   }
 
   // remove Range
   range_field = TSMimeHdrFieldFind(rri->requestBufp, rri->requestHdrp, TS_MIME_FIELD_RANGE, TS_MIME_LEN_RANGE);
   if (range_field) {
     TSMimeHdrFieldDestroy(rri->requestBufp, rri->requestHdrp, range_field);
-    TSHandleMLocRelease(rri->requestBufp, rri->requestHdrp, range_field);
+    TSMimeHdrFldRelease(rri->requestBufp, rri->requestHdrp, range_field);
   }
 
   mc    = new Mp4Context(start);
@@ -214,7 +214,7 @@ mp4_cache_lookup_complete(Mp4Context *mc, TSHttpTxn txnp)
   cl_field = TSMimeHdrFieldFind(bufp, hdrp, TS_MIME_FIELD_CONTENT_LENGTH, TS_MIME_LEN_CONTENT_LENGTH);
   if (cl_field) {
     n = TSMimeHdrFieldValueInt64Get(bufp, hdrp, cl_field, -1);
-    TSHandleMLocRelease(bufp, hdrp, cl_field);
+    TSMimeHdrFldRelease(bufp, hdrp, cl_field);
   }
 
   if (n <= 0) {
@@ -226,7 +226,7 @@ mp4_cache_lookup_complete(Mp4Context *mc, TSHttpTxn txnp)
 
 release:
 
-  TSHandleMLocRelease(bufp, nullptr, hdrp);
+  TSMimeHdrFldRelease(bufp, nullptr, hdrp);
 }
 
 static void
@@ -252,7 +252,7 @@ mp4_read_response(Mp4Context *mc, TSHttpTxn txnp)
   cl_field = TSMimeHdrFieldFind(bufp, hdrp, TS_MIME_FIELD_CONTENT_LENGTH, TS_MIME_LEN_CONTENT_LENGTH);
   if (cl_field) {
     n = TSMimeHdrFieldValueInt64Get(bufp, hdrp, cl_field, -1);
-    TSHandleMLocRelease(bufp, hdrp, cl_field);
+    TSMimeHdrFldRelease(bufp, hdrp, cl_field);
   }
 
   if (n <= 0) {
@@ -264,7 +264,7 @@ mp4_read_response(Mp4Context *mc, TSHttpTxn txnp)
 
 release:
 
-  TSHandleMLocRelease(bufp, nullptr, hdrp);
+  TSMimeHdrFldRelease(bufp, nullptr, hdrp);
 }
 
 static void

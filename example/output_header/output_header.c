@@ -71,7 +71,7 @@ handle_dns(TSHttpTxn txnp, TSCont contp ATS_UNUSED)
   TSDebug(PLUGIN_NAME, "Printing the hdrs ... ");
   TSMimeHdrPrint(bufp, hdr_loc, output_buffer);
 
-  if (TSHandleMLocRelease(bufp, nullptr, hdr_loc) == TS_ERROR) {
+  if (TSMimeHdrFldRelease(bufp, nullptr, hdr_loc) == TS_ERROR) {
     TSDebug(PLUGIN_NAME, "non-fatal: error releasing MLoc");
     TSError("[%s] non-fatal: Couldn't release MLoc", PLUGIN_NAME);
   }

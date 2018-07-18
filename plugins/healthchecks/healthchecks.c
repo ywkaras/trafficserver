@@ -543,10 +543,10 @@ health_check_origin(TSCont contp ATS_UNUSED, TSEvent event ATS_UNUSED, void *eda
 
 cleanup:
   if (url_loc) {
-    TSHandleMLocRelease(reqp, hdr_loc, url_loc);
+    TSMimeHdrFldRelease(reqp, hdr_loc, url_loc);
   }
   if (hdr_loc) {
-    TSHandleMLocRelease(reqp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(reqp, nullptr, hdr_loc);
   }
 
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);

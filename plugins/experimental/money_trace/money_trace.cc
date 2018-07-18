@@ -140,7 +140,7 @@ mt_check_request_header(TSHttpTxn txnp)
   } else {
     LOG_DEBUG("failed to retrieve the client request.");
   }
-  TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
 }
 
 /**
@@ -177,7 +177,7 @@ mt_send_client_response(TSHttpTxn txnp, struct txndata *txn_data)
       LOG_DEBUG("failed to create money trace response header.");
     }
   }
-  TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
 
   return;
 }
@@ -211,7 +211,7 @@ mt_send_server_request(TSHttpTxn txnp, struct txndata *txn_data)
       return;
     }
   }
-  TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
 
   return;
 }

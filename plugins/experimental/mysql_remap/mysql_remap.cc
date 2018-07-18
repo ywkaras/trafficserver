@@ -138,15 +138,15 @@ not_found:
 #endif
 release_field:
   if (field_loc) {
-    TSHandleMLocRelease(reqp, hdr_loc, field_loc);
+    TSMimeHdrFldRelease(reqp, hdr_loc, field_loc);
   }
 release_url:
   if (url_loc) {
-    TSHandleMLocRelease(reqp, hdr_loc, url_loc);
+    TSMimeHdrFldRelease(reqp, hdr_loc, url_loc);
   }
 release_hdr:
   if (hdr_loc) {
-    TSHandleMLocRelease(reqp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(reqp, nullptr, hdr_loc);
   }
 
   return ret_val;

@@ -76,7 +76,7 @@ normalize_accept_encoding(TSHttpTxn /* txnp ATS_UNUSED */, TSMBuffer reqp, TSMLo
 
     tmp = TSMimeHdrFieldNextDup(reqp, hdr_loc, field);
     TSMimeHdrFieldDestroy(reqp, hdr_loc, field); // catch retval?
-    TSHandleMLocRelease(reqp, hdr_loc, field);
+    TSMimeHdrFldRelease(reqp, hdr_loc, field);
     field = tmp;
   }
 
@@ -97,7 +97,7 @@ normalize_accept_encoding(TSHttpTxn /* txnp ATS_UNUSED */, TSMBuffer reqp, TSMLo
     }
 
     TSMimeHdrFieldAppend(reqp, hdr_loc, field);
-    TSHandleMLocRelease(reqp, hdr_loc, field);
+    TSMimeHdrFldRelease(reqp, hdr_loc, field);
   }
 }
 
@@ -109,7 +109,7 @@ hide_accept_encoding(TSHttpTxn /* txnp ATS_UNUSED */, TSMBuffer reqp, TSMLoc hdr
     TSMLoc tmp;
     tmp = TSMimeHdrFieldNextDup(reqp, hdr_loc, field);
     TSMimeHdrFieldNameSet(reqp, hdr_loc, field, hidden_header_name, -1);
-    TSHandleMLocRelease(reqp, hdr_loc, field);
+    TSMimeHdrFldRelease(reqp, hdr_loc, field);
     field = tmp;
   }
 }
@@ -123,7 +123,7 @@ restore_accept_encoding(TSHttpTxn /* txnp ATS_UNUSED */, TSMBuffer reqp, TSMLoc 
     TSMLoc tmp;
     tmp = TSMimeHdrFieldNextDup(reqp, hdr_loc, field);
     TSMimeHdrFieldNameSet(reqp, hdr_loc, field, TS_MIME_FIELD_ACCEPT_ENCODING, TS_MIME_LEN_ACCEPT_ENCODING);
-    TSHandleMLocRelease(reqp, hdr_loc, field);
+    TSMimeHdrFldRelease(reqp, hdr_loc, field);
     field = tmp;
   }
 }

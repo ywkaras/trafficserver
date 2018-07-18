@@ -30,7 +30,7 @@ namespace ts
 {
 // The destructor of this class calls the function object passed to its constructor, with the given arguments.
 // For example:
-//   ts::PostScript g(TSHandleMLocRelease, bufp, parent, hdr);
+//   ts::PostScript g(TSMimeHdrFldRelease, bufp, parent, hdr);
 //
 // The release() member will prevent the call to the function upon destruction.
 //

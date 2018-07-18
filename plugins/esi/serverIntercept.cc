@@ -93,7 +93,7 @@ struct SContData {
     TSDebug(DEBUG_TAG, "[%s] Destroying continuation data", __FUNCTION__);
     TSHttpParserDestroy(http_parser);
     if (req_hdr_loc) {
-      TSHandleMLocRelease(req_hdr_bufp, nullptr, req_hdr_loc);
+      TSMimeHdrFldRelease(req_hdr_bufp, nullptr, req_hdr_loc);
     }
     if (req_hdr_bufp) {
       TSMBufferDestroy(req_hdr_bufp);
@@ -165,7 +165,7 @@ handleRead(SContData *cont_data, bool &read_complete)
           }
           cont_data->req_content_len =
             TSMimeHdrFieldValueIntGet(cont_data->req_hdr_bufp, cont_data->req_hdr_loc, content_len_loc, 0);
-          TSHandleMLocRelease(cont_data->req_hdr_bufp, cont_data->req_hdr_loc, content_len_loc);
+          TSMimeHdrFldRelease(cont_data->req_hdr_bufp, cont_data->req_hdr_loc, content_len_loc);
           TSDebug(DEBUG_TAG, "[%s] Got content length as %d", __FUNCTION__, cont_data->req_content_len);
           if (cont_data->req_content_len <= 0) {
             TSError("[server_intercept][%s] Invalid content length [%d]", __FUNCTION__, cont_data->req_content_len);
@@ -245,7 +245,7 @@ processRequest(SContData *cont_data)
       }
     }
     next_field_loc = TSMimeHdrFieldNext(cont_data->req_hdr_bufp, cont_data->req_hdr_loc, field_loc);
-    TSHandleMLocRelease(cont_data->req_hdr_bufp, cont_data->req_hdr_loc, field_loc);
+    TSMimeHdrFldRelease(cont_data->req_hdr_bufp, cont_data->req_hdr_loc, field_loc);
     field_loc = next_field_loc;
   }
 

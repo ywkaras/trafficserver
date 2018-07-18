@@ -60,10 +60,10 @@ struct in_addr;
 tsapi TSReturnCode TSCacheBufferInfoGet(TSCacheTxn txnp, uint64_t *length, uint64_t *offset);
 
 tsapi TSCacheHttpInfo TSCacheHttpInfoCreate();
-tsapi void TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *obj);
-tsapi void TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *obj);
-tsapi void TSCacheHttpInfoReqSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj);
-tsapi void TSCacheHttpInfoRespSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj);
+tsapi void TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSHttpHdrLoc *obj);
+tsapi void TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSHttpHdrLoc *obj);
+tsapi void TSCacheHttpInfoReqSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSHttpHdrLoc obj);
+tsapi void TSCacheHttpInfoRespSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSHttpHdrLoc obj);
 tsapi void TSCacheHttpInfoKeySet(TSCacheHttpInfo infop, TSCacheKey key);
 tsapi void TSCacheHttpInfoSizeSet(TSCacheHttpInfo infop, int64_t size);
 tsapi int TSCacheHttpInfoVector(TSCacheHttpInfo infop, void *data, int length);
@@ -72,7 +72,7 @@ tsapi time_t TSCacheHttpInfoRespReceivedTimeGet(TSCacheHttpInfo infop);
 int64_t TSCacheHttpInfoSizeGet(TSCacheHttpInfo infop);
 
 /* Do not edit these apis, used internally */
-tsapi int TSMimeHdrFieldEqual(TSMBuffer bufp, TSMLoc hdr_obj, TSMLoc field1, TSMLoc field2);
+tsapi int TSMimeHdrFieldEqual(TSMBuffer bufp, TSMimeHdrLoc hdr_obj, TSMimeHdrFldLoc field1, TSMimeHdrFldLoc field2);
 tsapi TSReturnCode TSHttpTxnHookRegisteredFor(TSHttpTxn txnp, TSHttpHookID id, TSEventFunc funcp);
 
 /* Various HTTP "control" modes */
@@ -173,8 +173,8 @@ tsapi TSHRTime TShrtime(void);
 /* =====  CacheHttpInfo =====  */
 
 tsapi TSCacheHttpInfo TSCacheHttpInfoCopy(TSCacheHttpInfo infop);
-tsapi void TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *offset);
-tsapi void TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *offset);
+tsapi void TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSHttpHdrLoc *offset);
+tsapi void TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSHttpHdrLoc *offset);
 tsapi void TSCacheHttpInfoDestroy(TSCacheHttpInfo infop);
 
 /* Get Arbitrary Txn info such as cache lookup details etc as defined in TSHttpTxnInfoKey */
@@ -195,7 +195,7 @@ tsapi TSReturnCode TSHttpTxnInfoIntGet(TSHttpTxn txnp, TSHttpTxnInfoKey key, TSM
  *  Return: TS_SUCESS/TS_ERROR
  ****************************************************************************/
 tsapi TSReturnCode TSHttpTxnCacheLookupCountGet(TSHttpTxn txnp, int *lookup_count);
-tsapi TSReturnCode TSHttpTxnRedirectRequest(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc url_loc);
+tsapi TSReturnCode TSHttpTxnRedirectRequest(TSHttpTxn txnp, TSMBuffer bufp, TSHttpHdrLoc url_loc);
 tsapi TSReturnCode TSHttpTxnServerRespIgnore(TSHttpTxn txnp);
 tsapi TSReturnCode TSHttpTxnShutDown(TSHttpTxn txnp, TSEvent event);
 tsapi TSReturnCode TSHttpTxnCloseAfterResponse(TSHttpTxn txnp, int should_close);
@@ -424,7 +424,7 @@ tsapi TSMBuffer TSFetchRespHdrMBufGet(TSFetchSM fetch_sm);
 /*
  * Get client response hdr mloc
  */
-tsapi TSMLoc TSFetchRespHdrMLocGet(TSFetchSM fetch_sm);
+tsapi TSHttpHdrLoc TSFetchRespHdrMLocGet(TSFetchSM fetch_sm);
 
 #ifdef __cplusplus
 }

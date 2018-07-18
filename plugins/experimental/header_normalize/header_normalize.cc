@@ -204,7 +204,7 @@ read_request_hook(TSCont /* contp */, TSEvent /* event */, void *edata)
       if (islower(old_hdr_name[0])) {
         TSDebug(PLUGIN_NAME, "*** non MIME Hdr %s, leaving it for now", old_hdr_name);
 
-        TSHandleMLocRelease(hdr_bufp, req_hdrs, hdr);
+        TSMimeHdrFldRelease(hdr_bufp, req_hdrs, hdr);
         hdr = next_hdr;
         continue;
       }
@@ -224,7 +224,7 @@ read_request_hook(TSCont /* contp */, TSEvent /* event */, void *edata)
           TSDebug(PLUGIN_NAME, "*** hdr convert %s to %s", old_hdr_name, new_hdr_name);
           TSMimeHdrFieldValueStringSet(hdr_bufp, req_hdrs, new_hdr_loc, -1, hdr_value, hdr_value_len);
           TSMimeHdrFieldAppend(hdr_bufp, req_hdrs, new_hdr_loc);
-          TSHandleMLocRelease(hdr_bufp, req_hdrs, new_hdr_loc);
+          TSMimeHdrFldRelease(hdr_bufp, req_hdrs, new_hdr_loc);
         }
 
         TSMimeHdrFieldDestroy(hdr_bufp, req_hdrs, hdr);
@@ -232,11 +232,11 @@ read_request_hook(TSCont /* contp */, TSEvent /* event */, void *edata)
         TSDebug(PLUGIN_NAME, "*** can't find hdr %s in hdrMap", old_hdr_name);
       }
 
-      TSHandleMLocRelease(hdr_bufp, req_hdrs, hdr);
+      TSMimeHdrFldRelease(hdr_bufp, req_hdrs, hdr);
       hdr = next_hdr;
     }
 
-    TSHandleMLocRelease(hdr_bufp, nullptr, req_hdrs);
+    TSMimeHdrFldRelease(hdr_bufp, nullptr, req_hdrs);
   }
 
   TSHttpTxnReenable(rh, TS_EVENT_HTTP_CONTINUE);

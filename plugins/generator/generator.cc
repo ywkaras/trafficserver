@@ -157,7 +157,7 @@ struct GeneratorHttpHeader {
     }
 
     TSHttpHdrDestroy(this->buffer, this->header);
-    TSHandleMLocRelease(this->buffer, nullptr, this->header);
+    TSMimeHdrFldRelease(this->buffer, nullptr, this->header);
     TSMBufferDestroy(this->buffer);
   }
 };
@@ -245,7 +245,7 @@ HeaderFieldDateSet(GeneratorHttpHeader &http, const char *field_name, int64_t fi
   TSMimeHdrFieldCreateNamed(http.buffer, http.header, field_name, field_len, &field);
   TSMimeHdrFieldValueDateSet(http.buffer, http.header, field, value);
   TSMimeHdrFieldAppend(http.buffer, http.header, field);
-  TSHandleMLocRelease(http.buffer, http.header, field);
+  TSMimeHdrFldRelease(http.buffer, http.header, field);
 }
 
 static void
@@ -256,7 +256,7 @@ HeaderFieldIntSet(GeneratorHttpHeader &http, const char *field_name, int64_t fie
   TSMimeHdrFieldCreateNamed(http.buffer, http.header, field_name, field_len, &field);
   TSMimeHdrFieldValueInt64Set(http.buffer, http.header, field, -1, value);
   TSMimeHdrFieldAppend(http.buffer, http.header, field);
-  TSHandleMLocRelease(http.buffer, http.header, field);
+  TSMimeHdrFldRelease(http.buffer, http.header, field);
 }
 
 static void
@@ -267,7 +267,7 @@ HeaderFieldStringSet(GeneratorHttpHeader &http, const char *field_name, int64_t 
   TSMimeHdrFieldCreateNamed(http.buffer, http.header, field_name, field_len, &field);
   TSMimeHdrFieldValueStringSet(http.buffer, http.header, field, -1, value, -1);
   TSMimeHdrFieldAppend(http.buffer, http.header, field);
-  TSHandleMLocRelease(http.buffer, http.header, field);
+  TSMimeHdrFldRelease(http.buffer, http.header, field);
 }
 
 static int64_t
@@ -280,7 +280,7 @@ GeneratorGetRequestHeader(GeneratorHttpHeader &request, const char *field_name, 
     default_value = TSMimeHdrFieldValueInt64Get(request.buffer, request.header, field, -1);
   }
 
-  TSHandleMLocRelease(request.buffer, request.header, field);
+  TSMimeHdrFldRelease(request.buffer, request.header, field);
   return default_value;
 }
 
@@ -384,7 +384,7 @@ GeneratorParseRequest(GeneratorRequest *grq)
         VDEBUG("generator byte count is %lld", (long long)grq->nbytes);
         if (grq->nbytes >= 0) {
           // We don't care about any other path components.
-          TSHandleMLocRelease(grq->rqheader.buffer, grq->rqheader.header, url);
+          TSMimeHdrFldRelease(grq->rqheader.buffer, grq->rqheader.header, url);
           return true;
         }
 
@@ -398,7 +398,7 @@ GeneratorParseRequest(GeneratorRequest *grq)
   }
 
 fail:
-  TSHandleMLocRelease(grq->rqheader.buffer, grq->rqheader.header, url);
+  TSMimeHdrFldRelease(grq->rqheader.buffer, grq->rqheader.header, url);
   return false;
 }
 

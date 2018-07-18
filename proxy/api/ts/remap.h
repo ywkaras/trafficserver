@@ -41,19 +41,19 @@ typedef struct _tsremap_api_info {
 } TSRemapInterface;
 
 typedef struct _tm_remap_request_info {
-  /* Important: You should *not* release these buf pointers or TSMLocs from your plugin! */
+  /* Important: You should *not* release these TS pointers from your plugin! */
 
   /* these URL mloc's are read only, use normal ts/ts.h APIs for accesing  */
-  TSMLoc mapFromUrl;
-  TSMLoc mapToUrl;
+  TSUrlHdrLoc mapFromUrl;
+  TSUrlHdrLoc mapToUrl;
 
   /* the request URL mloc and buffer pointers are read-write. You can read and modify the
    requestUrl using normal ts/ts.h APIs, which is how you change the destination URL. */
-  TSMLoc requestUrl;
+  TSUrlHdrLoc requestUrl;
 
   /* requestBufp and requestHdrp are the equivalent of calling TSHttpTxnClientReqGet(). */
   TSMBuffer requestBufp;
-  TSMLoc requestHdrp;
+  TSHttpHdrLoc requestHdrp;
 
   /* 0 - don't redirect, 1 - use the (new)request URL as a redirect */
   int redirect;

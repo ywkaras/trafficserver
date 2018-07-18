@@ -74,7 +74,7 @@ VariableExpander::expand(const Resources &res)
         } else {
           resolved_variable.assign("");
         }
-        TSHandleMLocRelease(bufp, nullptr, url_loc);
+        TSMimeHdrFldRelease(bufp, nullptr, url_loc);
       }
     } else if (variable == "%<port>") {
       // Original port of the incoming request
@@ -83,9 +83,9 @@ VariableExpander::expand(const Resources &res)
           std::stringstream out;
           out << TSUrlPortGet(bufp, url_loc);
           resolved_variable = out.str();
-          TSHandleMLocRelease(bufp, hdr_loc, url_loc);
+          TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
         }
-        TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+        TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
       }
     } else if (variable == "%<chi>") {
       // IP address of the client's host machine
@@ -112,7 +112,7 @@ VariableExpander::expand(const Resources &res)
         if (path && path_len) {
           resolved_variable.assign(path, path_len);
         }
-        TSHandleMLocRelease(bufp, nullptr, url_loc);
+        TSMimeHdrFldRelease(bufp, nullptr, url_loc);
       }
     } else if (variable == "%<cque>") {
       // The client request effective URL.

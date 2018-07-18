@@ -138,15 +138,15 @@ handle_scan(TSCont contp, TSEvent event, void *edata)
       cstate->total_bytes += TSIOBufferWrite(cstate->resp_buffer, s2, sizeof(s2) - 1);
 
       TSfree(url);
-      TSHandleMLocRelease(req_bufp, req_hdr_loc, url_loc);
-      TSHandleMLocRelease(req_bufp, nullptr, req_hdr_loc);
+      TSMimeHdrFldRelease(req_bufp, req_hdr_loc, url_loc);
+      TSMimeHdrFldRelease(req_bufp, nullptr, req_hdr_loc);
     }
 
     // print the response headers
     TSCacheHttpInfoRespGet(cache_infop, &resp_bufp, &resp_hdr_loc);
     cstate->total_bytes += TSMimeHdrLengthGet(resp_bufp, resp_hdr_loc);
     TSMimeHdrPrint(resp_bufp, resp_hdr_loc, cstate->resp_buffer);
-    TSHandleMLocRelease(resp_bufp, nullptr, resp_hdr_loc);
+    TSMimeHdrFldRelease(resp_bufp, nullptr, resp_hdr_loc);
 
     cstate->total_bytes += TSIOBufferWrite(cstate->resp_buffer, s2, sizeof(s2) - 1);
     if (!cstate->write_pending) {
@@ -400,7 +400,7 @@ setup_request(TSCont contp, TSHttpTxn txnp)
 
   if (TSHttpHdrUrlGet(bufp, hdr_loc, &url_loc) != TS_SUCCESS) {
     TSError("[%s] Couldn't retrieve request url", PLUGIN_NAME);
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
     return TS_SUCCESS;
   }
@@ -408,8 +408,8 @@ setup_request(TSCont contp, TSHttpTxn txnp)
   path = TSUrlPathGet(bufp, url_loc, &path_len);
   if (!path) {
     TSError("[%s] Couldn't retrieve request path", PLUGIN_NAME);
-    TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
     return TS_SUCCESS;
   }
@@ -451,11 +451,11 @@ setup_request(TSCont contp, TSHttpTxn txnp)
             TSError("[%s] CacheKeyDigestFromUrlSet failed", PLUGIN_NAME);
             TSCacheKeyDestroy(cstate->key_to_delete);
             TSfree(cstate);
-            TSHandleMLocRelease(urlBuf, nullptr, urlLoc);
+            TSMimeHdrFldRelease(urlBuf, nullptr, urlLoc);
             TSMBufferDestroy(urlBuf);
             goto Ldone;
           }
-          TSHandleMLocRelease(urlBuf, nullptr, urlLoc);
+          TSMimeHdrFldRelease(urlBuf, nullptr, urlLoc);
         } else {
           TSError("[%s] TSUrlCreate failed", PLUGIN_NAME);
         }
@@ -470,8 +470,8 @@ setup_request(TSCont contp, TSHttpTxn txnp)
   }
 
 Ldone:
-  TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+  TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
   return TS_SUCCESS;
 }

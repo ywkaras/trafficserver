@@ -193,7 +193,7 @@ ts_lua_server_request_header_get(lua_State *L)
           lua_pushlstring(L, ",", 1);
           count++;
         }
-        TSHandleMLocRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
+        TSMimeHdrFldRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
         field_loc = next_field_loc;
       }
       lua_concat(L, count);
@@ -247,7 +247,7 @@ ts_lua_server_request_header_set(lua_State *L)
     while (field_loc != nullptr) {
       tmp = TSMimeHdrFieldNextDup(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       TSMimeHdrFieldDestroy(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
-      TSHandleMLocRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
+      TSMimeHdrFldRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       field_loc = tmp;
     }
   } else if (field_loc != nullptr) {
@@ -260,7 +260,7 @@ ts_lua_server_request_header_set(lua_State *L)
       } else {
         TSMimeHdrFieldDestroy(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       }
-      TSHandleMLocRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
+      TSMimeHdrFldRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       field_loc = tmp;
     }
   } else if (TSMimeHdrFieldCreateNamed(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, key, key_len, &field_loc) !=
@@ -484,13 +484,13 @@ ts_lua_server_request_get_url_host(lua_State *L)
     field_loc = TSMimeHdrFieldFind(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, key, key_len);
     if (field_loc) {
       host = TSMimeHdrFieldValueStringGet(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc, -1, &len);
-      TSHandleMLocRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
+      TSMimeHdrFldRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
 
     } else {
       field_loc = TSMimeHdrFieldFind(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, l_key, key_len);
       if (field_loc) {
         host = TSMimeHdrFieldValueStringGet(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc, -1, &len);
-        TSHandleMLocRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
+        TSMimeHdrFldRelease(http_ctx->server_request_bufp, http_ctx->server_request_hdrp, field_loc);
       }
     }
   }

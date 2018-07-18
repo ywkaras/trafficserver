@@ -194,7 +194,7 @@ public:
       ret = match(p);
     }
     TSfree(url);
-    TSHandleMLocRelease(bufp, nullptr, offset);
+    TSMimeHdrFldRelease(bufp, nullptr, offset);
     // TSMBufferDestroy(bufp);
     return ret;
   }

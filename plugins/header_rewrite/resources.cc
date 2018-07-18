@@ -111,13 +111,13 @@ Resources::destroy()
 {
   if (bufp) {
     if (hdr_loc) {
-      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     }
   }
 
   if (client_bufp && (client_bufp != bufp)) {
     if (client_hdr_loc && (client_hdr_loc != hdr_loc)) { // TODO: Is this check really necessary?
-      TSHandleMLocRelease(client_bufp, nullptr, client_hdr_loc);
+      TSMimeHdrFldRelease(client_bufp, nullptr, client_hdr_loc);
     }
   }
 

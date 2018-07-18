@@ -38,7 +38,7 @@ HttpDataFetcherImpl::_release(RequestData &req_data)
 {
   if (req_data.bufp) {
     if (req_data.hdr_loc) {
-      TSHandleMLocRelease(req_data.bufp, nullptr, req_data.hdr_loc);
+      TSMimeHdrFldRelease(req_data.bufp, nullptr, req_data.hdr_loc);
       req_data.hdr_loc = nullptr;
     }
     TSMBufferDestroy(req_data.bufp);
@@ -244,7 +244,7 @@ HttpDataFetcherImpl::_checkHeaderValue(TSMBuffer bufp, TSMLoc hdr_loc, const cha
   } else { // only presence required
     retval = true;
   }
-  TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
   return retval;
 }
 

@@ -96,7 +96,7 @@ add_redirect_header(TSMBuffer &bufp, TSMLoc &hdr_loc, const std::string &locatio
     TSMimeHdrFieldAppend(bufp, hdr_loc, field_loc);
   }
 
-  TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
 
   TSHttpHdrStatusSet(bufp, hdr_loc, TS_HTTP_STATUS_SEE_OTHER);
   TSHttpHdrReasonSet(bufp, hdr_loc, REDIRECT_REASON, strlen(REDIRECT_REASON));
@@ -120,10 +120,10 @@ check_internal_message_hdr(TSHttpTxn &txnp)
     found = true;
     // found the header, remove it now..
     TSMimeHdrFieldDestroy(bufp, hdr_loc, header_loc);
-    TSHandleMLocRelease(bufp, hdr_loc, header_loc);
+    TSMimeHdrFldRelease(bufp, hdr_loc, header_loc);
   }
 
-  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
 
   return found;
 }
@@ -183,7 +183,7 @@ on_immediate(RequestData *req, TSCont &contp)
   }
 
   add_redirect_header(bufp, hdr_loc, req->req_url);
-  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
   TSHttpTxnReenable(req->txnp, TS_EVENT_HTTP_CONTINUE);
   return TS_SUCCESS;
 }
@@ -211,7 +211,7 @@ on_send_response_header(RequestData *req, TSHttpTxn &txnp, TSCont &contp)
       req->wl_retry++;
       TSDebug(DEBUG_TAG, "delaying request, url@%p: {{%s}} on retry: %d time", txnp, req->req_url.c_str(), req->wl_retry);
       TSContSchedule(contp, OPEN_WRITE_FAIL_REQ_DELAY_TIMEOUT, TS_THREAD_POOL_TASK);
-      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
       return TS_SUCCESS;
     }
   }
@@ -222,7 +222,7 @@ on_send_response_header(RequestData *req, TSHttpTxn &txnp, TSCont &contp)
     req->wl_retry = 0;
   }
 
-  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
   return TS_SUCCESS;
 }

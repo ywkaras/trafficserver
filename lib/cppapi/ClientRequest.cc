@@ -49,7 +49,6 @@ atscppapi::ClientRequest::~ClientRequest()
   if (state_->pristine_url_loc_ && state_->pristine_hdr_buf_) {
     LOG_DEBUG("Releasing pristine url loc for transaction %p; hdr_buf %p, url_loc %p", state_->txn_, state_->pristine_hdr_buf_,
               state_->pristine_url_loc_);
-    TSHandleMLocRelease(state_->pristine_hdr_buf_, nullptr, state_->pristine_url_loc_);
   }
 
   delete state_;

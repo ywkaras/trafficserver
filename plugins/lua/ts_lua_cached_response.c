@@ -29,7 +29,7 @@
       http_ctx->cached_response_bufp = TSMBufferCreate();                                        \
       http_ctx->cached_response_hdrp = TSHttpHdrCreate(http_ctx->cached_response_bufp);          \
       TSHttpHdrCopy(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, bufp, hdrp); \
-      TSHandleMLocRelease(bufp, nullptr, hdrp);                                             \
+      TSMimeHdrFldRelease(bufp, nullptr, hdrp);                                             \
     }                                                                                            \
   } while (0)
 
@@ -168,7 +168,7 @@ ts_lua_cached_response_header_get(lua_State *L)
           lua_pushlstring(L, ",", 1);
           count++;
         }
-        TSHandleMLocRelease(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, field_loc);
+        TSMimeHdrFldRelease(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, field_loc);
         field_loc = next_field_loc;
       }
       lua_concat(L, count);
@@ -240,7 +240,7 @@ ts_lua_cached_response_get_headers(lua_State *L)
     }
 
     next_field_loc = TSMimeHdrFieldNext(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, field_loc);
-    TSHandleMLocRelease(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, field_loc);
+    TSMimeHdrFldRelease(http_ctx->cached_response_bufp, http_ctx->cached_response_hdrp, field_loc);
     field_loc = next_field_loc;
   }
 

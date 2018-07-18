@@ -151,11 +151,11 @@ transformable(TSHttpTxn txnp)
         returnValue = strncasecmp(content, "text/html", 9) == 0;
       }
 
-      TSHandleMLocRelease(buffer, location, field);
+      TSMimeHdrFldRelease(buffer, location, field);
     }
   }
 
-  CHECK(TSHandleMLocRelease(buffer, nullptr, location));
+  CHECK(TSMimeHdrFldRelease(buffer, nullptr, location));
 
   returnValue &= !TSHttpTxnIsInternal(txnp);
   return returnValue;

@@ -56,8 +56,8 @@ should_push(TSHttpTxn txnp)
   }
   int len;
   TSUrlHttpQueryGet(mbuf, url, &len);
-  TSHandleMLocRelease(mbuf, hdr, url);
-  TSHandleMLocRelease(mbuf, nullptr, hdr);
+  TSMimeHdrFldRelease(mbuf, hdr, url);
+  TSMimeHdrFldRelease(mbuf, nullptr, hdr);
   if (len > 0) {
     return true;
   } else {

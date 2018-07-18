@@ -51,7 +51,7 @@ struct HttpParser {
 
   ~HttpParser()
   {
-    TSHandleMLocRelease(buffer_, nullptr, location_);
+    TSMimeHdrFldRelease(buffer_, nullptr, location_);
     TSMBufferDestroy(buffer_);
     destroyParser();
   }
@@ -167,7 +167,7 @@ template <class T> struct HttpTransaction {
       if (value != nullptr && length == TS_HTTP_LEN_CHUNKED) {
         result = strncasecmp(value, TS_HTTP_VALUE_CHUNKED, TS_HTTP_LEN_CHUNKED) == 0;
       }
-      TSHandleMLocRelease(b, l, field);
+      TSMimeHdrFldRelease(b, l, field);
     }
     return result;
   }

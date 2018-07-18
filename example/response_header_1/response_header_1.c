@@ -117,8 +117,8 @@ modify_header(TSHttpTxn txnp)
     recvd_time = time(NULL);
     TSMimeHdrFieldValueDateInsert(resp_bufp, resp_loc, new_field_loc, recvd_time);
 
-    TSHandleMLocRelease(resp_bufp, resp_loc, new_field_loc);
-    TSHandleMLocRelease(resp_bufp, nullptr, resp_loc);
+    TSMimeHdrFldRelease(resp_bufp, resp_loc, new_field_loc);
+    TSMimeHdrFldRelease(resp_bufp, nullptr, resp_loc);
 
   } else if (TS_HTTP_STATUS_NOT_MODIFIED == resp_status) {
     TSDebug(PLUGIN_NAME, "Processing 304 Not Modified");
@@ -129,7 +129,7 @@ modify_header(TSHttpTxn txnp)
     if (TSHttpTxnCachedRespGet(txnp, &cached_bufp, &cached_loc) != TS_SUCCESS) {
       TSError("[%s] STATUS 304, TSHttpTxnCachedRespGet():", PLUGIN_NAME);
       TSError("[%s] Couldn't retrieve cached response header", PLUGIN_NAME);
-      TSHandleMLocRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
+      TSMimeHdrFldRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
       return; /* Caller reenables */
     }
 
@@ -137,8 +137,8 @@ modify_header(TSHttpTxn txnp)
     cached_field_loc = TSMimeHdrFieldFind(cached_bufp, cached_loc, (const char *)mimehdr1_name, strlen(mimehdr1_name));
     if (TS_NULL_MLOC == cached_field_loc) {
       TSError("[%s] Can't find header %s in cached document", PLUGIN_NAME, mimehdr1_name);
-      TSHandleMLocRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
-      TSHandleMLocRelease(cached_bufp, TS_NULL_MLOC, cached_loc);
+      TSMimeHdrFldRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
+      TSMimeHdrFldRelease(cached_bufp, TS_NULL_MLOC, cached_loc);
       return; /* Caller reenables */
     }
 
@@ -146,9 +146,9 @@ modify_header(TSHttpTxn txnp)
     chkptr = TSMimeHdrFieldValueStringGet(cached_bufp, cached_loc, cached_field_loc, -1, &chklength);
     if (NULL == chkptr || !chklength) {
       TSError("[%s] Could not find value for cached MIME field name %s", PLUGIN_NAME, mimehdr1_name);
-      TSHandleMLocRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
-      TSHandleMLocRelease(cached_bufp, TS_NULL_MLOC, cached_loc);
-      TSHandleMLocRelease(cached_bufp, cached_loc, cached_field_loc);
+      TSMimeHdrFldRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
+      TSMimeHdrFldRelease(cached_bufp, TS_NULL_MLOC, cached_loc);
+      TSMimeHdrFldRelease(cached_bufp, cached_loc, cached_field_loc);
       return; /* Caller reenables */
     }
     TSDebug(PLUGIN_NAME, "Header field value is %s, with length %d", chkptr, chklength);
@@ -182,10 +182,10 @@ modify_header(TSHttpTxn txnp)
 
     TSMimeHdrFieldValueUintInsert(resp_bufp, resp_loc, new_field_loc, -1, num_refreshes);
 
-    TSHandleMLocRelease(resp_bufp, resp_loc, new_field_loc);
-    TSHandleMLocRelease(cached_bufp, cached_loc, cached_field_loc);
-    TSHandleMLocRelease(cached_bufp, TS_NULL_MLOC, cached_loc);
-    TSHandleMLocRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
+    TSMimeHdrFldRelease(resp_bufp, resp_loc, new_field_loc);
+    TSMimeHdrFldRelease(cached_bufp, cached_loc, cached_field_loc);
+    TSMimeHdrFldRelease(cached_bufp, TS_NULL_MLOC, cached_loc);
+    TSMimeHdrFldRelease(resp_bufp, TS_NULL_MLOC, resp_loc);
 
   } else {
     TSDebug(PLUGIN_NAME, "other response code %d", resp_status);

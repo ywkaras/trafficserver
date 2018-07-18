@@ -82,15 +82,15 @@ handle_dns(TSHttpTxn txnp, TSCont contp)
 
   if (TSHttpHdrUrlGet(bufp, hdr_loc, &url_loc) != TS_SUCCESS) {
     TSError("[%s] Couldn't retrieve request url", PLUGIN_NAME);
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
   host = TSUrlHostGet(bufp, url_loc, &host_length);
   if (!host) {
     TSError("[%s] Couldn't retrieve request hostname", PLUGIN_NAME);
-    TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
@@ -98,8 +98,8 @@ handle_dns(TSHttpTxn txnp, TSCont contp)
      protecting the global list of all blacklisted sites. */
   if (TSMutexLockTry(sites_mutex) != TS_SUCCESS) {
     TSDebug(PLUGIN_NAME, "Unable to get lock. Will retry after some time");
-    TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     TSContSchedule(contp, RETRY_TIME, TS_THREAD_POOL_DEFAULT);
     return;
   }
@@ -112,8 +112,8 @@ handle_dns(TSHttpTxn txnp, TSCont contp)
         TSDebug(PLUGIN_NAME, "blacklisting site: %s", sites[i]);
       }
       TSHttpTxnHookAdd(txnp, TS_HTTP_SEND_RESPONSE_HDR_HOOK, contp);
-      TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+      TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
       TSHttpTxnReenable(txnp, TS_EVENT_HTTP_ERROR);
       TSMutexUnlock(sites_mutex);
       return;
@@ -121,8 +121,8 @@ handle_dns(TSHttpTxn txnp, TSCont contp)
   }
 
   TSMutexUnlock(sites_mutex);
-  TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+  TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
 
 done:
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
@@ -149,13 +149,13 @@ handle_response(TSHttpTxn txnp, TSCont contp ATS_UNUSED)
 
   if (TSHttpTxnClientReqGet(txnp, &bufp, &hdr_loc) != TS_SUCCESS) {
     TSError("[%s] Couldn't retrieve client request header", PLUGIN_NAME);
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
   if (TSHttpHdrUrlGet(bufp, hdr_loc, &url_loc) != TS_SUCCESS) {
     TSError("[%s] Couldn't retrieve request url", PLUGIN_NAME);
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     goto done;
   }
 
@@ -164,8 +164,8 @@ handle_response(TSHttpTxn txnp, TSCont contp ATS_UNUSED)
   url_str = TSUrlStringGet(bufp, url_loc, &url_length);
   sprintf(buf, "You are forbidden from accessing \"%s\"\n", url_str);
   TSfree(url_str);
-  TSHandleMLocRelease(bufp, hdr_loc, url_loc);
-  TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, url_loc);
+  TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
 
   TSHttpTxnErrorBodySet(txnp, buf, strlen(buf), NULL);
 

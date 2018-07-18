@@ -40,7 +40,7 @@ remove_header(TSMBuffer bufp, TSMLoc hdr_loc, const char *header, int len)
 
     ++cnt;
     TSMimeHdrFieldDestroy(bufp, hdr_loc, field);
-    TSHandleMLocRelease(bufp, hdr_loc, field);
+    TSMimeHdrFldRelease(bufp, hdr_loc, field);
     field = tmp;
   }
 
@@ -68,7 +68,7 @@ set_header(TSMBuffer bufp, TSMLoc hdr_loc, const char *header, int len, const ch
         TSMimeHdrFieldAppend(bufp, hdr_loc, field_loc);
         ret = true;
       }
-      TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
     }
   } else {
     TSMLoc tmp = nullptr;
@@ -84,7 +84,7 @@ set_header(TSMBuffer bufp, TSMLoc hdr_loc, const char *header, int len, const ch
         TSMimeHdrFieldDestroy(bufp, hdr_loc, field_loc);
       }
       tmp = TSMimeHdrFieldNextDup(bufp, hdr_loc, field_loc);
-      TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
       field_loc = tmp;
     }
   }

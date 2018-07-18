@@ -59,7 +59,7 @@ getHeader(TSMBuffer buffer, TSMLoc location, const std::string &name, std::strin
       value  = std::string(content, length);
       result = true;
     }
-    TSHandleMLocRelease(buffer, location, field);
+    TSMimeHdrFldRelease(buffer, location, field);
   }
   return result;
 }

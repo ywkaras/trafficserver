@@ -538,8 +538,8 @@ public:
   S3Request(TSHttpTxn txnp) : _txnp(txnp), _bufp(nullptr), _hdr_loc(nullptr), _url_loc(nullptr) {}
   ~S3Request()
   {
-    TSHandleMLocRelease(_bufp, _hdr_loc, _url_loc);
-    TSHandleMLocRelease(_bufp, nullptr, _hdr_loc);
+    TSMimeHdrFldRelease(_bufp, _hdr_loc, _url_loc);
+    TSMimeHdrFldRelease(_bufp, nullptr, _hdr_loc);
   }
 
   bool
@@ -587,7 +587,7 @@ S3Request::set_header(const char *header, int header_len, const char *val, int v
         TSMimeHdrFieldAppend(_bufp, _hdr_loc, field_loc);
         ret = true;
       }
-      TSHandleMLocRelease(_bufp, _hdr_loc, field_loc);
+      TSMimeHdrFldRelease(_bufp, _hdr_loc, field_loc);
     }
   } else {
     TSMLoc tmp = nullptr;
@@ -603,7 +603,7 @@ S3Request::set_header(const char *header, int header_len, const char *val, int v
         TSMimeHdrFieldDestroy(_bufp, _hdr_loc, field_loc);
       }
       tmp = TSMimeHdrFieldNextDup(_bufp, _hdr_loc, field_loc);
-      TSHandleMLocRelease(_bufp, _hdr_loc, field_loc);
+      TSMimeHdrFldRelease(_bufp, _hdr_loc, field_loc);
       field_loc = tmp;
     }
   }
@@ -845,9 +845,9 @@ S3Request::authorizeV2(S3Config *s3)
   }
 
   // Cleanup
-  TSHandleMLocRelease(_bufp, _hdr_loc, contype_loc);
-  TSHandleMLocRelease(_bufp, _hdr_loc, md5_loc);
-  TSHandleMLocRelease(_bufp, _hdr_loc, host_loc);
+  TSMimeHdrFldRelease(_bufp, _hdr_loc, contype_loc);
+  TSMimeHdrFldRelease(_bufp, _hdr_loc, md5_loc);
+  TSMimeHdrFldRelease(_bufp, _hdr_loc, host_loc);
 
   return status;
 }

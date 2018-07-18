@@ -133,7 +133,7 @@ static TSMLoc
 nextDuplicate(TSMBuffer buffer, TSMLoc hdr, TSMLoc field)
 {
   TSMLoc next = TSMimeHdrFieldNextDup(buffer, hdr, field);
-  TSHandleMLocRelease(buffer, hdr, field);
+  TSMimeHdrFldRelease(buffer, hdr, field);
   return next;
 }
 
@@ -168,7 +168,7 @@ classifyUserAgent(const Classifier &c, TSMBuffer buf, TSMLoc hdrs, String &class
     field = ::nextDuplicate(buf, hdrs, field);
   }
 
-  TSHandleMLocRelease(buf, hdrs, field);
+  TSMimeHdrFldRelease(buf, hdrs, field);
   return matched;
 }
 
@@ -229,14 +229,14 @@ CacheKey::CacheKey(TSHttpTxn txn, String separator, CacheKeyUriType uriType, TSR
 
     if (PRISTINE == _uriType) {
       if (TS_SUCCESS != TSHttpTxnPristineUrlGet(_txn, &_buf, &_url)) {
-        TSHandleMLocRelease(_buf, nullptr, _hdrs);
+        TSMimeHdrFldRelease(_buf, nullptr, _hdrs);
         CacheKeyError("failed to get pristine URI handle");
         return;
       }
       CacheKeyDebug("using pristine uri '%s'", getUri(_buf, _url).c_str());
     } else {
       if (TS_SUCCESS != TSHttpHdrUrlGet(_buf, _hdrs, &_url)) {
-        TSHandleMLocRelease(_buf, nullptr, _hdrs);
+        TSMimeHdrFldRelease(_buf, nullptr, _hdrs);
         CacheKeyError("failed to get URI handle");
         return;
       }
@@ -253,13 +253,13 @@ CacheKey::~CacheKey()
     if (_remap) {
       /* _buf and _hdrs are assigned from remap info - no need to release here. */
       if (PRISTINE == _uriType) {
-        if (TS_SUCCESS != TSHandleMLocRelease(_buf, nullptr, _url)) {
+        if (TS_SUCCESS != TSMimeHdrFldRelease(_buf, nullptr, _url)) {
           CacheKeyError("failed to release pristine URI handle");
         }
       }
     } else {
-      if (TS_SUCCESS != TSHandleMLocRelease(_buf, nullptr, _hdrs) &&
-          TS_SUCCESS != TSHandleMLocRelease(_buf, nullptr, _url)) {
+      if (TS_SUCCESS != TSMimeHdrFldRelease(_buf, nullptr, _hdrs) &&
+          TS_SUCCESS != TSMimeHdrFldRelease(_buf, nullptr, _url)) {
         CacheKeyError("failed to release URI and headers handle");
       }
     }
@@ -628,7 +628,7 @@ CacheKey::appendUaCaptures(Pattern &config)
     }
   }
 
-  TSHandleMLocRelease(_buf, _hdrs, field);
+  TSMimeHdrFldRelease(_buf, _hdrs, field);
 }
 
 /**

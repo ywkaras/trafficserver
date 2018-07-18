@@ -93,9 +93,6 @@ struct InterceptPlugin::State {
   ~State()
   {
     TSHttpParserDestroy(http_parser_);
-    if (hdr_loc_) {
-      TSHandleMLocRelease(hdr_buf_, nullptr, hdr_loc_);
-    }
     if (hdr_buf_) {
       TSMBufferDestroy(hdr_buf_);
     }

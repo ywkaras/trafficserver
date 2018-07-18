@@ -105,11 +105,11 @@ BgFetchRule::check_field_configured(TSHttpTxn txnp) const
           TSDebug(PLUGIN_NAME, "Found content-length match");
           hdr_found = true;
         }
-        TSHandleMLocRelease(hdr_bufp, hdr_loc, loc);
+        TSMimeHdrFldRelease(hdr_bufp, hdr_loc, loc);
       } else {
         TSDebug(PLUGIN_NAME, "No content-length field in resp");
       }
-      TSHandleMLocRelease(hdr_bufp, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(hdr_bufp, nullptr, hdr_loc);
     } else {
       TSError("[%s] Failed to get resp headers", PLUGIN_NAME);
     }
@@ -137,11 +137,11 @@ BgFetchRule::check_field_configured(TSHttpTxn txnp) const
           }
         }
       }
-      TSHandleMLocRelease(hdr_bufp, hdr_loc, loc);
+      TSMimeHdrFldRelease(hdr_bufp, hdr_loc, loc);
     } else {
       TSDebug(PLUGIN_NAME, "no field %s in request header", _field);
     }
-    TSHandleMLocRelease(hdr_bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(hdr_bufp, nullptr, hdr_loc);
   } else {
     TSError("[%s] Failed to get resp headers", PLUGIN_NAME);
   }

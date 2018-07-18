@@ -246,7 +246,7 @@ collect_headers(TSMBuffer &buffer, TSMLoc &hdr_loc, int64_t body_bytes)
     cp = TSUrlStringGet(buffer, url_loc, &len);
     TSDebug(PLUGIN_NAME, "collect_headers(): found url %.*s", len, cp);
     result += "," + json_entry("url", cp, len);
-    TSHandleMLocRelease(buffer, hdr_loc, url_loc);
+    TSMimeHdrFldRelease(buffer, hdr_loc, url_loc);
   } else {
     // 1. "status":(string)
     result += R"("status":)" + std::to_string(TSHttpHdrStatusGet(buffer, hdr_loc));
@@ -276,7 +276,7 @@ collect_headers(TSMBuffer &buffer, TSMLoc &hdr_loc, int64_t body_bytes)
     }
 
     next_field_loc = TSMimeHdrFieldNext(buffer, hdr_loc, field_loc);
-    TSHandleMLocRelease(buffer, hdr_loc, field_loc);
+    TSMimeHdrFldRelease(buffer, hdr_loc, field_loc);
     if ((field_loc = next_field_loc) != nullptr) {
       result += ",";
     }
@@ -366,25 +366,25 @@ session_txn_handler(TSCont contp, TSEvent event, void *edata)
     if (TS_SUCCESS == TSHttpTxnClientReqGet(txnp, &buffer, &hdr_loc)) {
       TSDebug(PLUGIN_NAME, "Found client request");
       txn_info += R"(,"client-request":)" + collect_headers(buffer, hdr_loc, TSHttpTxnClientReqBodyBytesGet(txnp));
-      TSHandleMLocRelease(buffer, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(buffer, nullptr, hdr_loc);
       buffer = nullptr;
     }
     if (TS_SUCCESS == TSHttpTxnServerReqGet(txnp, &buffer, &hdr_loc)) {
       TSDebug(PLUGIN_NAME, "Found proxy request");
       txn_info += R"(,"proxy-request":)" + collect_headers(buffer, hdr_loc, TSHttpTxnServerReqBodyBytesGet(txnp));
-      TSHandleMLocRelease(buffer, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(buffer, nullptr, hdr_loc);
       buffer = nullptr;
     }
     if (TS_SUCCESS == TSHttpTxnServerRespGet(txnp, &buffer, &hdr_loc)) {
       TSDebug(PLUGIN_NAME, "Found server response");
       txn_info += R"(,"server-response":)" + collect_headers(buffer, hdr_loc, TSHttpTxnServerRespBodyBytesGet(txnp));
-      TSHandleMLocRelease(buffer, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(buffer, nullptr, hdr_loc);
       buffer = nullptr;
     }
     if (TS_SUCCESS == TSHttpTxnClientRespGet(txnp, &buffer, &hdr_loc)) {
       TSDebug(PLUGIN_NAME, "Found proxy response");
       txn_info += R"(,"proxy-response":)" + collect_headers(buffer, hdr_loc, TSHttpTxnClientRespBodyBytesGet(txnp));
-      TSHandleMLocRelease(buffer, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(buffer, nullptr, hdr_loc);
       buffer = nullptr;
     }
 

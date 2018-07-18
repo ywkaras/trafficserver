@@ -409,14 +409,14 @@ TSRemapDoRemap(void *ih, TSHttpTxn rh, TSRemapRequestInfo *rri)
           has_error = true;
           break;
         }
-        TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+        TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
       } else {
         if (redirect_flag == 2) {
           TSHttpTxnSetHttpRetStatus(rh, TS_HTTP_STATUS_BAD_REQUEST);
           has_error = true;
         }
       }
-      TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+      TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     } else {
       TSHttpTxnSetHttpRetStatus(rh, TS_HTTP_STATUS_BAD_REQUEST);
       has_error = true;

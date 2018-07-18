@@ -96,7 +96,7 @@ HttpSetMimeHeader(TSMBuffer mbuf, TSMLoc mhdr, const char *name, unsigned value)
   TSReleaseAssert(TSMimeHdrFieldValueUintInsert(mbuf, mhdr, mloc, 0 /* index */, value) == TS_SUCCESS);
   TSReleaseAssert(TSMimeHdrFieldAppend(mbuf, mhdr, mloc) == TS_SUCCESS);
 
-  TSHandleMLocRelease(mbuf, mhdr, mloc);
+  TSMimeHdrFldRelease(mbuf, mhdr, mloc);
 }
 
 void
@@ -114,7 +114,7 @@ HttpSetMimeHeader(TSMBuffer mbuf, TSMLoc mhdr, const char *name, const char *val
   TSReleaseAssert(TSMimeHdrFieldValueStringInsert(mbuf, mhdr, mloc, 0 /* index */, value, -1) == TS_SUCCESS);
   TSReleaseAssert(TSMimeHdrFieldAppend(mbuf, mhdr, mloc) == TS_SUCCESS);
 
-  TSHandleMLocRelease(mbuf, mhdr, mloc);
+  TSMimeHdrFldRelease(mbuf, mhdr, mloc);
 }
 
 unsigned
@@ -128,7 +128,7 @@ HttpGetContentLength(TSMBuffer mbuf, TSMLoc mhdr)
     value = TSMimeHdrFieldValueUintGet(mbuf, mhdr, mloc, 0 /* index */);
   }
 
-  TSHandleMLocRelease(mbuf, mhdr, mloc);
+  TSMimeHdrFldRelease(mbuf, mhdr, mloc);
   return value;
 }
 
@@ -149,7 +149,7 @@ HttpIsChunkedEncoding(TSMBuffer mbuf, TSMLoc mhdr)
     }
   }
 
-  TSHandleMLocRelease(mbuf, mhdr, mloc);
+  TSMimeHdrFldRelease(mbuf, mhdr, mloc);
   return ischunked;
 }
 
@@ -165,7 +165,7 @@ HttpGetOriginHost(TSMBuffer mbuf, TSMLoc mhdr, char *name, size_t namelen)
   mloc = TSMimeHdrFieldFind(mbuf, mhdr, TS_MIME_FIELD_HOST, -1);
   if (mloc != nullptr) {
     host = TSMimeHdrFieldValueStringGet(mbuf, mhdr, mloc, -1 /* index */, &len);
-    TSHandleMLocRelease(mbuf, mhdr, mloc);
+    TSMimeHdrFldRelease(mbuf, mhdr, mloc);
 
     if (host) {
       AuthLogDebug("using origin %.*s from host header", len, host);
@@ -179,7 +179,7 @@ HttpGetOriginHost(TSMBuffer mbuf, TSMLoc mhdr, char *name, size_t namelen)
   // If that didn't work, try to get the origin host from the request URL.
   if (TSHttpHdrUrlGet(mbuf, mhdr, &mloc) == TS_SUCCESS) {
     host = TSUrlHostGet(mbuf, mloc, &len);
-    TSHandleMLocRelease(mbuf, mhdr, mloc);
+    TSMimeHdrFldRelease(mbuf, mhdr, mloc);
 
     if (host) {
       AuthLogDebug("using origin %.*s from request URL", len, host);

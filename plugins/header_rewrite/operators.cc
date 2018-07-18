@@ -306,7 +306,7 @@ EditRedirectResponse(TSHttpTxn txnp, std::string const &location, int const &siz
     const char *reason = TSHttpHdrReasonLookup(status);
     size_t len         = strlen(reason);
     TSHttpHdrReasonSet(bufp, hdr_loc, reason, len);
-    TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+    TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
   }
 
   // Set the body.
@@ -524,7 +524,7 @@ OperatorRMHeader::exec(const Resources &res) const
       TSDebug(PLUGIN_NAME, "   Deleting header %s", _header.c_str());
       tmp = TSMimeHdrFieldNextDup(res.bufp, res.hdr_loc, field_loc);
       TSMimeHdrFieldDestroy(res.bufp, res.hdr_loc, field_loc);
-      TSHandleMLocRelease(res.bufp, res.hdr_loc, field_loc);
+      TSMimeHdrFldRelease(res.bufp, res.hdr_loc, field_loc);
       field_loc = tmp;
     }
   }
@@ -567,7 +567,7 @@ OperatorAddHeader::exec(const Resources &res) const
         TSDebug(PLUGIN_NAME, "   Adding header %s", _header.c_str());
         TSMimeHdrFieldAppend(res.bufp, res.hdr_loc, field_loc);
       }
-      TSHandleMLocRelease(res.bufp, res.hdr_loc, field_loc);
+      TSMimeHdrFldRelease(res.bufp, res.hdr_loc, field_loc);
     }
   }
 }
@@ -612,7 +612,7 @@ OperatorSetHeader::exec(const Resources &res) const
           TSDebug(PLUGIN_NAME, "   Adding header %s", _header.c_str());
           TSMimeHdrFieldAppend(res.bufp, res.hdr_loc, field_loc);
         }
-        TSHandleMLocRelease(res.bufp, res.hdr_loc, field_loc);
+        TSMimeHdrFldRelease(res.bufp, res.hdr_loc, field_loc);
       }
     } else {
       TSMLoc tmp = nullptr;
@@ -628,7 +628,7 @@ OperatorSetHeader::exec(const Resources &res) const
           TSMimeHdrFieldDestroy(res.bufp, res.hdr_loc, field_loc);
         }
         tmp = TSMimeHdrFieldNextDup(res.bufp, res.hdr_loc, field_loc);
-        TSHandleMLocRelease(res.bufp, res.hdr_loc, field_loc);
+        TSMimeHdrFldRelease(res.bufp, res.hdr_loc, field_loc);
         field_loc = tmp;
       }
     }
@@ -702,7 +702,7 @@ OperatorRMCookie::exec(const Resources &res) const
         TSDebug(PLUGIN_NAME, "OperatorRMCookie::exec, updated_cookie = [%s]", updated_cookie.c_str());
       }
     }
-    TSHandleMLocRelease(res.bufp, res.hdr_loc, field_loc);
+    TSMimeHdrFldRelease(res.bufp, res.hdr_loc, field_loc);
   }
 }
 
@@ -741,7 +741,7 @@ OperatorAddCookie::exec(const Resources &res) const
           TSDebug(PLUGIN_NAME, "Adding cookie %s", _cookie.c_str());
           TSMimeHdrFieldAppend(res.bufp, res.hdr_loc, field_loc);
         }
-        TSHandleMLocRelease(res.bufp, res.hdr_loc, field_loc);
+        TSMimeHdrFldRelease(res.bufp, res.hdr_loc, field_loc);
       }
       return;
     }
@@ -792,7 +792,7 @@ OperatorSetCookie::exec(const Resources &res) const
           TSDebug(PLUGIN_NAME, "Adding cookie %s", _cookie.c_str());
           TSMimeHdrFieldAppend(res.bufp, res.hdr_loc, field_loc);
         }
-        TSHandleMLocRelease(res.bufp, res.hdr_loc, field_loc);
+        TSMimeHdrFldRelease(res.bufp, res.hdr_loc, field_loc);
       }
       return;
     }
@@ -805,7 +805,7 @@ OperatorSetCookie::exec(const Resources &res) const
           TSMimeHdrFieldValueStringSet(res.bufp, res.hdr_loc, field_loc, -1, updated_cookie.c_str(), updated_cookie.size())) {
       TSDebug(PLUGIN_NAME, "OperatorSetCookie::exec, updated_cookie = [%s]", updated_cookie.c_str());
     }
-    TSHandleMLocRelease(res.bufp, res.hdr_loc, field_loc);
+    TSMimeHdrFldRelease(res.bufp, res.hdr_loc, field_loc);
   }
 }
 

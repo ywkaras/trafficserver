@@ -137,7 +137,7 @@ static int
 on_send_response_header(TSHttpTxn txnp, TSCont contp, PurgeInstance *purge)
 {
   TSMBuffer bufp;
-  TSMLoc hdr_loc;
+  TSHttpHdrLoc hdr_loc;
 
   TSDebug(PLUGIN_NAME, "Fixing up the response on the successful PURGE");
   if (TS_SUCCESS == TSHttpTxnClientRespGet(txnp, &bufp, &hdr_loc)) {
@@ -148,7 +148,7 @@ on_send_response_header(TSHttpTxn txnp, TSCont contp, PurgeInstance *purge)
     TSHttpHdrReasonSet(bufp, hdr_loc, "OK", 2);
     TSHttpTxnErrorBodySet(txnp, TSstrdup(response), len >= (int)sizeof(response) ? (int)sizeof(response) - 1 : len, NULL);
 
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
     TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
   } else {
     TSHttpTxnReenable(txnp, TS_EVENT_HTTP_ERROR);
@@ -186,7 +186,8 @@ static void
 handle_purge(TSHttpTxn txnp, PurgeInstance *purge)
 {
   TSMBuffer reqp;
-  TSMLoc hdr_loc = NULL, url_loc = NULL;
+  TSHttpHdrLoc hdr_loc = nullptr;
+  TSUrlHdrLoc url_loc = nullptr;
   bool should_purge = false;
 
   if (TS_SUCCESS == TSHttpTxnClientReqGet(txnp, &reqp, &hdr_loc)) {
@@ -196,7 +197,7 @@ handle_purge(TSHttpTxn txnp, PurgeInstance *purge)
     if ((TS_HTTP_METHOD_PURGE == method) || ((TS_HTTP_METHOD_GET == method) && purge->allow_get)) {
       /* First see if we require the "secret" to be passed in a header, and then use that */
       if (purge->header) {
-        TSMLoc field_loc = TSMimeHdrFieldFind(reqp, hdr_loc, purge->header, purge->header_len);
+        TSMimeHdrFldLoc field_loc = TSMimeHdrFieldFind(reqp, hdr_loc, purge->header, purge->header_len);
 
         if (field_loc) {
           const char *header;
@@ -207,7 +208,7 @@ handle_purge(TSHttpTxn txnp, PurgeInstance *purge)
           if (header && (header_len == purge->secret_len) && !memcmp(header, purge->secret, header_len)) {
             should_purge = true;
           }
-          TSHandleMLocRelease(reqp, hdr_loc, field_loc);
+          TSMimeHdrFldRelease(reqp, hdr_loc, field_loc);
         }
       } else {
         /* We are matching on the path component instead of a header */
@@ -227,11 +228,11 @@ handle_purge(TSHttpTxn txnp, PurgeInstance *purge)
               should_purge = true;
             }
           }
-          TSHandleMLocRelease(reqp, hdr_loc, url_loc);
+          TSMimeHdrFldRelease(reqp, hdr_loc, url_loc);
         }
       }
     }
-    TSHandleMLocRelease(reqp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(reqp, nullptr, hdr_loc);
   }
 
   /* Setup the continuation to handle this request if appropriate, if not, set the GenID if needed */

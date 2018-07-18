@@ -619,7 +619,7 @@ convert_url_func(TSMBuffer req_bufp, TSMLoc req_loc)
     if (slash == nullptr) {
       // if (VALID_PTR(str))
       //  TSHandleStringRelease(req_bufp, url_loc, str);
-      TSHandleMLocRelease(req_bufp, req_loc, url_loc);
+      TSMimeHdrFldRelease(req_bufp, req_loc, url_loc);
       return;
     }
     char pathTmp[len + 1];
@@ -649,14 +649,14 @@ convert_url_func(TSMBuffer req_bufp, TSMLoc req_loc)
     if ((field_loc = TSMimeHdrFieldFind(req_bufp, req_loc, TS_MIME_FIELD_HOST, TS_MIME_LEN_HOST)) != nullptr &&
         field_loc != nullptr) {
       TSMimeHdrFieldValueStringSet(req_bufp, req_loc, field_loc, 0, str, slash - str);
-      TSHandleMLocRelease(req_bufp, req_loc, field_loc);
+      TSMimeHdrFldRelease(req_bufp, req_loc, field_loc);
     }
   } else {
     // if (VALID_PTR(str))
     //  TSHandleStringRelease(req_bufp, url_loc, str);
   }
 
-  TSHandleMLocRelease(req_bufp, req_loc, url_loc);
+  TSMimeHdrFldRelease(req_bufp, req_loc, url_loc);
 }
 
 static int
@@ -701,7 +701,7 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
     if (NOT_VALID_PTR(method) || method_len == 0) {
       TSDebug(DEBUG_TAG, "invalid method");
 
-      TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+      TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
       break;
     }
     // only deal with POST method
@@ -712,7 +712,7 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
       TSDebug(DEBUG_TAG, "Not POST method");
 
       // TSHandleStringRelease(req_bufp, req_loc, method);
-      TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+      TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
       break;
     }
 
@@ -724,7 +724,7 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
       // check against URL list
       if (TSHttpHdrUrlGet(req_bufp, req_loc, &url_loc) == TS_ERROR) {
         LOG_ERROR("Couldn't get the url");
-        TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+        TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
         break;
       }
       host_str = TSUrlHostGet(req_bufp, url_loc, &host_str_len);
@@ -735,17 +735,17 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
           // if (VALID_PTR(str))
           //  TSHandleStringRelease(req_bufp, url_loc, str);
           LOG_ERROR("Host field not found");
-          TSHandleMLocRelease(req_bufp, req_loc, url_loc);
-          TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+          TSMimeHdrFldRelease(req_bufp, req_loc, url_loc);
+          TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
           break;
         }
         host_hdr_str_val = TSMimeHdrFieldValueStringGet(req_bufp, req_loc, field_loc, -1, &host_hdr_str_val_len);
         if (NOT_VALID_PTR(host_hdr_str_val) || host_hdr_str_val_len <= 0) {
           // if (VALID_PTR(str))
           //  TSHandleStringRelease(req_bufp, field_loc, str);
-          TSHandleMLocRelease(req_bufp, req_loc, field_loc);
-          TSHandleMLocRelease(req_bufp, req_loc, url_loc);
-          TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+          TSMimeHdrFldRelease(req_bufp, req_loc, field_loc);
+          TSMimeHdrFldRelease(req_bufp, req_loc, url_loc);
+          TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
           break;
         }
 
@@ -769,7 +769,7 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
         TSUrlHostSet(req_bufp, url_loc, host_hdr_str_val, host_hdr_str_val_len);
 
         // TSHandleStringRelease(req_bufp, field_loc, str);
-        TSHandleMLocRelease(req_bufp, req_loc, field_loc);
+        TSMimeHdrFldRelease(req_bufp, req_loc, field_loc);
       } else {
         // TSHandleStringRelease(req_bufp, url_loc, str);
       }
@@ -791,11 +791,11 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
 
         TSfree(url);
       }
-      TSHandleMLocRelease(req_bufp, req_loc, url_loc);
+      TSMimeHdrFldRelease(req_bufp, req_loc, url_loc);
 
       if (uconfig->url_num > 0 && i == uconfig->url_num) {
         TSDebug(DEBUG_TAG, "breaking: url_num > 0 and i== url_num, URL match not found");
-        TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+        TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
         break;
       }
     }
@@ -807,15 +807,15 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
 
     field_loc = TSMimeHdrFieldFind(req_bufp, req_loc, TS_MIME_FIELD_CONTENT_LENGTH, TS_MIME_LEN_CONTENT_LENGTH);
     if (field_loc == nullptr) {
-      TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+      TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
       LOG_ERROR("TSMimeHdrFieldRetrieve");
       break;
     }
 
     content_length = TSMimeHdrFieldValueIntGet(req_bufp, req_loc, field_loc, 0);
     /*{
-  TSHandleMLocRelease(req_bufp, req_loc, field_loc);
-  TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+  TSMimeHdrFldRelease(req_bufp, req_loc, field_loc);
+  TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
   LOG_ERROR("TSMimeFieldValueGet");
 } else
     */
@@ -823,16 +823,16 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
 
     mutex = TSMutexCreate();
     if (NOT_VALID_PTR(mutex)) {
-      TSHandleMLocRelease(req_bufp, req_loc, field_loc);
-      TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+      TSMimeHdrFldRelease(req_bufp, req_loc, field_loc);
+      TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
       LOG_ERROR("TSMutexCreate");
       break;
     }
 
     new_cont = TSContCreate(pvc_plugin, mutex);
     if (NOT_VALID_PTR(new_cont)) {
-      TSHandleMLocRelease(req_bufp, req_loc, field_loc);
-      TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+      TSMimeHdrFldRelease(req_bufp, req_loc, field_loc);
+      TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
       LOG_ERROR("TSContCreate");
       break;
     }
@@ -891,8 +891,8 @@ attach_pvc_plugin(TSCont /* contp ATS_UNUSED */, TSEvent event, void *edata)
               my_state->req_size, uconfig->mem_buffer_size);
 
       pvc_cleanup(new_cont, my_state);
-      TSHandleMLocRelease(req_bufp, req_loc, field_loc);
-      TSHandleMLocRelease(req_bufp, nullptr, req_loc);
+      TSMimeHdrFldRelease(req_bufp, req_loc, field_loc);
+      TSMimeHdrFldRelease(req_bufp, nullptr, req_loc);
       break;
     }
 

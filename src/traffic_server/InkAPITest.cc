@@ -456,7 +456,7 @@ get_request_id_value(const char *name, TSMBuffer buf, TSMLoc hdr)
     id = TSMimeHdrFieldValueIntGet(buf, hdr, field, 0);
   }
 
-  TSHandleMLocRelease(buf, hdr, field);
+  TSMimeHdrFldRelease(buf, hdr, field);
   return id;
 }
 
@@ -475,7 +475,7 @@ get_request_id(TSHttpTxn txnp)
   }
 
   id = get_request_id_value(X_REQUEST_ID, bufp, hdr_loc);
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSMimeHdrFldRelease(bufp, TS_NULL_MLOC, hdr_loc);
   return id;
 }
 
@@ -494,7 +494,7 @@ get_response_id(TSHttpTxn txnp)
   }
 
   id = get_request_id_value(X_RESPONSE_ID, bufp, hdr_loc);
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSMimeHdrFldRelease(bufp, TS_NULL_MLOC, hdr_loc);
   return id;
 }
 
@@ -4020,9 +4020,9 @@ REGRESSION_TEST(SDK_API_TSUrl)(RegressionTest *test, int /* atype ATS_UNUSED */,
   }
 
   SDK_RPRINT(test, "TSUrlCreate", "TestCase1&2", TC_PASS, "ok");
-  TSHandleMLocRelease(bufp1, TS_NULL_MLOC, url_loc1);
-  TSHandleMLocRelease(bufp2, TS_NULL_MLOC, url_loc2);
-  TSHandleMLocRelease(bufp3, TS_NULL_MLOC, url_loc3);
+  TSMimeHdrFldRelease(bufp1, TS_NULL_MLOC, url_loc1);
+  TSMimeHdrFldRelease(bufp2, TS_NULL_MLOC, url_loc2);
+  TSMimeHdrFldRelease(bufp3, TS_NULL_MLOC, url_loc3);
   test_passed_create = true;
 
 print_results:
@@ -4233,8 +4233,8 @@ REGRESSION_TEST(SDK_API_TSHttpHdr)(RegressionTest *test, int /* atype ATS_UNUSED
           } else {
             SDK_RPRINT(test, "TSHttpHdrUrlSet&Get", "TestCase1", TC_FAIL, "Value's mismatch");
           }
-          if (TSHandleMLocRelease(bufp1, hdr_loc1, url_loc_Get) == TS_ERROR) {
-            SDK_RPRINT(test, "TSHandleMLocRelease", "", TC_FAIL, "Unable to release handle to URL");
+          if (TSMimeHdrFldRelease(bufp1, hdr_loc1, url_loc_Get) == TS_ERROR) {
+            SDK_RPRINT(test, "TSMimeHdrFldRelease", "", TC_FAIL, "Unable to release handle to URL");
           }
         }
       }
@@ -4256,8 +4256,8 @@ REGRESSION_TEST(SDK_API_TSHttpHdr)(RegressionTest *test, int /* atype ATS_UNUSED
         SDK_RPRINT(test, "TSUrlPathSet", "", TC_FAIL, "Unable to set path in URL in the HTTP Header");
         try_print_function = false;
       }
-      if (TSHandleMLocRelease(bufp1, hdr_loc1, url_loc) == TS_ERROR) {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "", TC_FAIL, "Unable to release handle to URL");
+      if (TSMimeHdrFldRelease(bufp1, hdr_loc1, url_loc) == TS_ERROR) {
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "", TC_FAIL, "Unable to release handle to URL");
       }
     }
   } else {
@@ -4467,9 +4467,9 @@ REGRESSION_TEST(SDK_API_TSHttpHdr)(RegressionTest *test, int /* atype ATS_UNUSED
                 flag = false;
               }
             }
-            if ((TSHandleMLocRelease(bufp1, hdr_loc1, url_loc1) == TS_ERROR) ||
-                (TSHandleMLocRelease(bufp3, hdr_loc3, url_loc2) == TS_ERROR)) {
-              SDK_RPRINT(test, "TSHandleMLocRelease", "", TC_FAIL, "Unable to release Handle acquired by TSHttpHdrUrlGet");
+            if ((TSMimeHdrFldRelease(bufp1, hdr_loc1, url_loc1) == TS_ERROR) ||
+                (TSMimeHdrFldRelease(bufp3, hdr_loc3, url_loc2) == TS_ERROR)) {
+              SDK_RPRINT(test, "TSMimeHdrFldRelease", "", TC_FAIL, "Unable to release Handle acquired by TSHttpHdrUrlGet");
             }
           }
 
@@ -4578,9 +4578,9 @@ REGRESSION_TEST(SDK_API_TSHttpHdr)(RegressionTest *test, int /* atype ATS_UNUSED
                 flag = false;
               }
             }
-            if ((TSHandleMLocRelease(bufp1, hdr_loc1, url_loc1) == TS_ERROR) ||
-                (TSHandleMLocRelease(bufp4, hdr_loc4, url_loc2) == TS_ERROR)) {
-              SDK_RPRINT(test, "TSHandleMLocRelease", "", TC_FAIL, "Unable to release Handle acquired by TSHttpHdrUrlGet");
+            if ((TSMimeHdrFldRelease(bufp1, hdr_loc1, url_loc1) == TS_ERROR) ||
+                (TSMimeHdrFldRelease(bufp4, hdr_loc4, url_loc2) == TS_ERROR)) {
+              SDK_RPRINT(test, "TSMimeHdrFldRelease", "", TC_FAIL, "Unable to release Handle acquired by TSHttpHdrUrlGet");
             }
           }
 
@@ -4666,11 +4666,11 @@ REGRESSION_TEST(SDK_API_TSHttpHdr)(RegressionTest *test, int /* atype ATS_UNUSED
     TSHttpHdrDestroy(bufp2, hdr_loc2);
     TSHttpHdrDestroy(bufp3, hdr_loc3);
     TSHttpHdrDestroy(bufp4, hdr_loc4);
-    if ((TSHandleMLocRelease(bufp1, TS_NULL_MLOC, hdr_loc1) == TS_ERROR) ||
-        (TSHandleMLocRelease(bufp2, TS_NULL_MLOC, hdr_loc2) == TS_ERROR) ||
-        (TSHandleMLocRelease(bufp3, TS_NULL_MLOC, hdr_loc3) == TS_ERROR) ||
-        (TSHandleMLocRelease(bufp4, TS_NULL_MLOC, hdr_loc4) == TS_ERROR)) {
-      SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase1|2|3|4", TC_FAIL, "Unable to release the handle to headers");
+    if ((TSMimeHdrFldRelease(bufp1, TS_NULL_MLOC, hdr_loc1) == TS_ERROR) ||
+        (TSMimeHdrFldRelease(bufp2, TS_NULL_MLOC, hdr_loc2) == TS_ERROR) ||
+        (TSMimeHdrFldRelease(bufp3, TS_NULL_MLOC, hdr_loc3) == TS_ERROR) ||
+        (TSMimeHdrFldRelease(bufp4, TS_NULL_MLOC, hdr_loc4) == TS_ERROR)) {
+      SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase1|2|3|4", TC_FAIL, "Unable to release the handle to headers");
     }
     SDK_RPRINT(test, "TSHttpHdrDestroy", "TestCase1&2&3&4", TC_PASS, "ok");
     test_passed_Http_Hdr_Destroy = true;
@@ -5070,13 +5070,13 @@ REGRESSION_TEST(SDK_API_TSMimeHdrField)(RegressionTest *test, int /* atype ATS_U
         }
       }
 
-      if ((TSHandleMLocRelease(bufp1, mime_loc1, test_field_loc11) == TS_ERROR) ||
-          (TSHandleMLocRelease(bufp1, mime_loc1, test_field_loc12) == TS_ERROR) ||
-          (TSHandleMLocRelease(bufp1, mime_loc1, test_field_loc13) == TS_ERROR) ||
-          (TSHandleMLocRelease(bufp1, mime_loc1, test_field_loc14) == TS_ERROR) ||
-          (TSHandleMLocRelease(bufp1, mime_loc1, test_field_loc15) == TS_ERROR)) {
+      if ((TSMimeHdrFldRelease(bufp1, mime_loc1, test_field_loc11) == TS_ERROR) ||
+          (TSMimeHdrFldRelease(bufp1, mime_loc1, test_field_loc12) == TS_ERROR) ||
+          (TSMimeHdrFldRelease(bufp1, mime_loc1, test_field_loc13) == TS_ERROR) ||
+          (TSMimeHdrFldRelease(bufp1, mime_loc1, test_field_loc14) == TS_ERROR) ||
+          (TSMimeHdrFldRelease(bufp1, mime_loc1, test_field_loc15) == TS_ERROR)) {
         SDK_RPRINT(test, "TSMimeHdrFieldAppend/Next/Get", "", TC_FAIL,
-                   "Unable to release handle using TSHandleMLocRelease. Can be bad handle.");
+                   "Unable to release handle using TSMimeHdrFldRelease. Can be bad handle.");
       }
     }
   } else {
@@ -5098,8 +5098,8 @@ REGRESSION_TEST(SDK_API_TSMimeHdrField)(RegressionTest *test, int /* atype ATS_U
 
           actualNumberOfFields++;
           next_field_loc = TSMimeHdrFieldNext(bufp1, mime_loc1, field_loc);
-          if (TSHandleMLocRelease(bufp1, mime_loc1, field_loc) == TS_ERROR) {
-            SDK_RPRINT(test, "TSMimeHdrFieldsCount", "TestCase1", TC_FAIL, "Unable to release handle using TSHandleMLocRelease");
+          if (TSMimeHdrFldRelease(bufp1, mime_loc1, field_loc) == TS_ERROR) {
+            SDK_RPRINT(test, "TSMimeHdrFieldsCount", "TestCase1", TC_FAIL, "Unable to release handle using TSMimeHdrFldRelease");
           }
           field_loc      = next_field_loc;
           next_field_loc = nullptr;
@@ -5401,12 +5401,12 @@ REGRESSION_TEST(SDK_API_TSMimeHdrField)(RegressionTest *test, int /* atype ATS_U
         test_passed_Mime_Hdr_Field_Destroy = true;
       } else {
         SDK_RPRINT(test, "TSMimeHdrFieldDestroy", "TestCase1", TC_FAIL, "Field not destroyed");
-        if (TSHandleMLocRelease(bufp1, mime_loc1, test_field_loc15) == TS_ERROR) {
-          SDK_RPRINT(test, "TSMimeHdrFieldDestroy", "TestCase1", TC_FAIL, "Unable to release handle using TSHandleMLocRelease");
+        if (TSMimeHdrFldRelease(bufp1, mime_loc1, test_field_loc15) == TS_ERROR) {
+          SDK_RPRINT(test, "TSMimeHdrFieldDestroy", "TestCase1", TC_FAIL, "Unable to release handle using TSMimeHdrFldRelease");
         }
       }
-      if (TSHandleMLocRelease(bufp1, mime_loc1, field_loc15) == TS_ERROR) {
-        SDK_RPRINT(test, "TSMimeHdrFieldDestroy", "TestCase2", TC_FAIL, "Unable to release handle using TSHandleMLocRelease");
+      if (TSMimeHdrFldRelease(bufp1, mime_loc1, field_loc15) == TS_ERROR) {
+        SDK_RPRINT(test, "TSMimeHdrFieldDestroy", "TestCase2", TC_FAIL, "Unable to release handle using TSMimeHdrFldRelease");
       }
     }
   } else {
@@ -5432,11 +5432,11 @@ REGRESSION_TEST(SDK_API_TSMimeHdrField)(RegressionTest *test, int /* atype ATS_U
           SDK_RPRINT(test, "TSMimeHdrFieldsClear", "TestCase1", TC_FAIL, "Fields still exist");
         }
       }
-      if ((TSHandleMLocRelease(bufp1, mime_loc1, field_loc11) == TS_ERROR) ||
-          (TSHandleMLocRelease(bufp1, mime_loc1, field_loc12) == TS_ERROR) ||
-          (TSHandleMLocRelease(bufp1, mime_loc1, field_loc13) == TS_ERROR) ||
-          (TSHandleMLocRelease(bufp1, mime_loc1, field_loc14) == TS_ERROR)) {
-        SDK_RPRINT(test, "TSMimeHdrFieldsDestroy", "", TC_FAIL, "Unable to release handle using TSHandleMLocRelease");
+      if ((TSMimeHdrFldRelease(bufp1, mime_loc1, field_loc11) == TS_ERROR) ||
+          (TSMimeHdrFldRelease(bufp1, mime_loc1, field_loc12) == TS_ERROR) ||
+          (TSMimeHdrFldRelease(bufp1, mime_loc1, field_loc13) == TS_ERROR) ||
+          (TSMimeHdrFldRelease(bufp1, mime_loc1, field_loc14) == TS_ERROR)) {
+        SDK_RPRINT(test, "TSMimeHdrFieldsDestroy", "", TC_FAIL, "Unable to release handle using TSMimeHdrFldRelease");
       }
     }
   } else {
@@ -5455,8 +5455,8 @@ REGRESSION_TEST(SDK_API_TSMimeHdrField)(RegressionTest *test, int /* atype ATS_U
     }
     /** Commented out as Traffic Server was crashing. Will have to look into it. */
     /*
-       if (TSHandleMLocRelease(bufp1,TS_NULL_MLOC,mime_loc1)==TS_ERROR) {
-       SDK_RPRINT(test,"TSHandleMLocRelease","TSMimeHdrDestroy",TC_FAIL,"unable to release handle using TSHandleMLocRelease");
+       if (TSMimeHdrFldRelease(bufp1,TS_NULL_MLOC,mime_loc1)==TS_ERROR) {
+       SDK_RPRINT(test,"TSMimeHdrFldRelease","TSMimeHdrDestroy",TC_FAIL,"unable to release handle using TSMimeHdrFldRelease");
        }
      */
   } else {
@@ -5681,12 +5681,12 @@ REGRESSION_TEST(SDK_API_TSHttpHdrParse)(RegressionTest *test, int /* atype ATS_U
   }
 
   TSMimeHdrDestroy(reqbufp, req_hdr_loc);
-  TSHandleMLocRelease(reqbufp, TS_NULL_MLOC, req_hdr_loc);
+  TSMimeHdrFldRelease(reqbufp, TS_NULL_MLOC, req_hdr_loc);
   TSMBufferDestroy(reqbufp);
 
   if (resp_hdr_loc) {
     TSMimeHdrDestroy(respbufp, resp_hdr_loc);
-    TSHandleMLocRelease(respbufp, TS_NULL_MLOC, resp_hdr_loc);
+    TSMimeHdrFldRelease(respbufp, TS_NULL_MLOC, resp_hdr_loc);
   }
 
   if (respbufp) {
@@ -5712,7 +5712,7 @@ REGRESSION_TEST(SDK_API_TSHttpHdrParse)(RegressionTest *test, int /* atype ATS_U
 //                    TSMimeParserClear
 //                    TSMimeParserCreate
 //                    TSMimeParserDestroy
-//                    TSHandleMLocRelease
+//                    TSMimeHdrFldRelease
 //////////////////////////////////////////////
 
 static char *
@@ -5949,20 +5949,20 @@ REGRESSION_TEST(SDK_API_TSMimeHdrParse)(RegressionTest *test, int /* atype ATS_U
         test_passed_mime_hdr_field_next_dup = true;
       }
 
-      // TSHandleMLocRelease
-      if (TSHandleMLocRelease(bufp1, mime_hdr_loc1, field_loc1) == TS_ERROR) {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase1", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+      // TSMimeHdrFldRelease
+      if (TSMimeHdrFldRelease(bufp1, mime_hdr_loc1, field_loc1) == TS_ERROR) {
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase1", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
       } else {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase1", TC_PASS, "ok");
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase1", TC_PASS, "ok");
         test_passed_handle_mloc_release = true;
       }
 
       if (field_loc2 != nullptr) {
-        if (TSHandleMLocRelease(bufp1, mime_hdr_loc1, field_loc2) == TS_ERROR) {
-          SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase2", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+        if (TSMimeHdrFldRelease(bufp1, mime_hdr_loc1, field_loc2) == TS_ERROR) {
+          SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase2", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
           test_passed_handle_mloc_release = false;
         } else {
-          SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase2", TC_PASS, "ok");
+          SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase2", TC_PASS, "ok");
         }
       }
     }
@@ -6027,20 +6027,20 @@ REGRESSION_TEST(SDK_API_TSMimeHdrParse)(RegressionTest *test, int /* atype ATS_U
         }
       }
 
-      // TSHandleMLocRelease
-      if (TSHandleMLocRelease(bufp2, mime_hdr_loc2, field_loc1) == TS_ERROR) {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase3", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+      // TSMimeHdrFldRelease
+      if (TSMimeHdrFldRelease(bufp2, mime_hdr_loc2, field_loc1) == TS_ERROR) {
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase3", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
         test_passed_handle_mloc_release = false;
       } else {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase3", TC_PASS, "ok");
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase3", TC_PASS, "ok");
       }
 
       if (field_loc2 != nullptr) {
-        if (TSHandleMLocRelease(bufp2, mime_hdr_loc2, field_loc2) == TS_ERROR) {
-          SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase4", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+        if (TSMimeHdrFldRelease(bufp2, mime_hdr_loc2, field_loc2) == TS_ERROR) {
+          SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase4", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
           test_passed_handle_mloc_release = false;
         } else {
-          SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase4", TC_PASS, "ok");
+          SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase4", TC_PASS, "ok");
         }
       }
     }
@@ -6068,19 +6068,19 @@ REGRESSION_TEST(SDK_API_TSMimeHdrParse)(RegressionTest *test, int /* atype ATS_U
           }
         }
       }
-      if (TSHandleMLocRelease(bufp2, mime_hdr_loc2, field_loc1) == TS_ERROR) {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase5", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+      if (TSMimeHdrFldRelease(bufp2, mime_hdr_loc2, field_loc1) == TS_ERROR) {
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase5", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
         test_passed_handle_mloc_release = false;
       } else {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase5", TC_PASS, "ok");
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase5", TC_PASS, "ok");
       }
 
       if (field_loc2 != nullptr) {
-        if (TSHandleMLocRelease(bufp1, mime_hdr_loc1, field_loc2) == TS_ERROR) {
-          SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase6", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+        if (TSMimeHdrFldRelease(bufp1, mime_hdr_loc1, field_loc2) == TS_ERROR) {
+          SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase6", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
           test_passed_handle_mloc_release = false;
         } else {
-          SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase6", TC_PASS, "ok");
+          SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase6", TC_PASS, "ok");
         }
       }
     }
@@ -6106,20 +6106,20 @@ REGRESSION_TEST(SDK_API_TSMimeHdrParse)(RegressionTest *test, int /* atype ATS_U
     }
   }
   if (field_loc1 != nullptr) {
-    if (TSHandleMLocRelease(bufp3, mime_hdr_loc3, field_loc1) == TS_ERROR) {
-      SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase7", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+    if (TSMimeHdrFldRelease(bufp3, mime_hdr_loc3, field_loc1) == TS_ERROR) {
+      SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase7", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
       test_passed_handle_mloc_release = false;
     } else {
-      SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase7", TC_PASS, "ok");
+      SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase7", TC_PASS, "ok");
     }
   }
 
   if (field_loc2 != nullptr) {
-    if (TSHandleMLocRelease(bufp1, mime_hdr_loc1, field_loc2) == TS_ERROR) {
-      SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase8", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+    if (TSMimeHdrFldRelease(bufp1, mime_hdr_loc1, field_loc2) == TS_ERROR) {
+      SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase8", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
       test_passed_handle_mloc_release = false;
     } else {
-      SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase8", TC_PASS, "ok");
+      SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase8", TC_PASS, "ok");
     }
   }
 
@@ -6142,19 +6142,19 @@ REGRESSION_TEST(SDK_API_TSMimeHdrParse)(RegressionTest *test, int /* atype ATS_U
           }
         }
       }
-      if (TSHandleMLocRelease(bufp2, mime_hdr_loc2, field_loc1) == TS_ERROR) {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase9", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+      if (TSMimeHdrFldRelease(bufp2, mime_hdr_loc2, field_loc1) == TS_ERROR) {
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase9", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
         test_passed_handle_mloc_release = false;
       } else {
-        SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase9", TC_PASS, "ok");
+        SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase9", TC_PASS, "ok");
       }
 
       if (field_loc2 != nullptr) {
-        if (TSHandleMLocRelease(bufp1, mime_hdr_loc1, field_loc2) == TS_ERROR) {
-          SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase10", TC_FAIL, "TSHandleMLocRelease returns TS_ERROR");
+        if (TSMimeHdrFldRelease(bufp1, mime_hdr_loc1, field_loc2) == TS_ERROR) {
+          SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase10", TC_FAIL, "TSMimeHdrFldRelease returns TS_ERROR");
           test_passed_handle_mloc_release = false;
         } else {
-          SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase10", TC_PASS, "ok");
+          SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase10", TC_PASS, "ok");
         }
       }
     }
@@ -6167,18 +6167,18 @@ REGRESSION_TEST(SDK_API_TSMimeHdrParse)(RegressionTest *test, int /* atype ATS_U
     SDK_RPRINT(test, "", "TestCase", TC_FAIL, "TSMimeHdrDestroy returns TS_ERROR");
   }
 
-  if (TSHandleMLocRelease(bufp1, TS_NULL_MLOC, mime_hdr_loc1) == TS_ERROR) {
-    SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase11|12|13", TC_FAIL, "Unable to release mime_hdr_loc1 to Mime Hdrs");
+  if (TSMimeHdrFldRelease(bufp1, TS_NULL_MLOC, mime_hdr_loc1) == TS_ERROR) {
+    SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase11|12|13", TC_FAIL, "Unable to release mime_hdr_loc1 to Mime Hdrs");
     test_passed_handle_mloc_release = false;
   }
 
-  if (TSHandleMLocRelease(bufp2, TS_NULL_MLOC, mime_hdr_loc2) == TS_ERROR) {
-    SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase11|12|13", TC_FAIL, "Unable to release mime_hdr_loc2 to Mime Hdrs");
+  if (TSMimeHdrFldRelease(bufp2, TS_NULL_MLOC, mime_hdr_loc2) == TS_ERROR) {
+    SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase11|12|13", TC_FAIL, "Unable to release mime_hdr_loc2 to Mime Hdrs");
     test_passed_handle_mloc_release = false;
   }
 
-  if (TSHandleMLocRelease(bufp3, TS_NULL_MLOC, mime_hdr_loc3) == TS_ERROR) {
-    SDK_RPRINT(test, "TSHandleMLocRelease", "TestCase11|12|13", TC_FAIL, "Unable to release mime_hdr_loc3 to Mime Hdrs");
+  if (TSMimeHdrFldRelease(bufp3, TS_NULL_MLOC, mime_hdr_loc3) == TS_ERROR) {
+    SDK_RPRINT(test, "TSMimeHdrFldRelease", "TestCase11|12|13", TC_FAIL, "Unable to release mime_hdr_loc3 to Mime Hdrs");
     test_passed_handle_mloc_release = false;
   }
 
@@ -6277,7 +6277,7 @@ REGRESSION_TEST(SDK_API_TSUrlParse)(RegressionTest *test, int /* atype ATS_UNUSE
       }
     }
 
-    TSHandleMLocRelease(bufp, TS_NULL_MLOC, url_loc);
+    TSMimeHdrFldRelease(bufp, TS_NULL_MLOC, url_loc);
     TSMBufferDestroy(bufp);
   }
 
@@ -7202,7 +7202,7 @@ parent_proxy_fail(TSCont contp, TSEvent event, void *edata)
       SDK_RPRINT(ptest->regtest, "TSHttpTxnParentProxySet", "TestCase", TC_PASS, "Received expected response status %d", expected);
     }
 
-    TSHandleMLocRelease(mbuf, TS_NULL_MLOC, hdr);
+    TSMimeHdrFldRelease(mbuf, TS_NULL_MLOC, hdr);
     return status;
 
   default:
@@ -7468,8 +7468,8 @@ cache_hook_handler(TSCont contp, TSEvent event, void *edata)
       }
     }
 
-    if ((TSHandleMLocRelease(reqbuf, TS_NULL_MLOC, reqhdr) != TS_SUCCESS) ||
-        (TSHandleMLocRelease(respbuf, TS_NULL_MLOC, resphdr) != TS_SUCCESS)) {
+    if ((TSMimeHdrFldRelease(reqbuf, TS_NULL_MLOC, reqhdr) != TS_SUCCESS) ||
+        (TSMimeHdrFldRelease(respbuf, TS_NULL_MLOC, resphdr) != TS_SUCCESS)) {
       SDK_RPRINT(data->test, "TSHttpTxnCache", "", TC_FAIL, "Unable to release handle to headers.");
     }
 
@@ -7813,7 +7813,7 @@ transformable(TSHttpTxn txnp, TransformTestData *data)
   //      SDK_RPRINT(data->test,"TSHttpTxnTransform","",TC_FAIL,"[transformable]: TSHttpHdrStatusGet returns TS_ERROR");
   //     }
 
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
+  TSMimeHdrFldRelease(bufp, TS_NULL_MLOC, hdr_loc);
   return ret; /* not a 200 */
 }
 
@@ -7902,12 +7902,12 @@ transform_hook_handler(TSCont contp, TSEvent event, void *edata)
             TSHttpTxnTransformedRespCache(txnp, 1);
             TSHttpTxnUntransformedRespCache(txnp, 0);
           }
-          if (TSHandleMLocRelease(bufp, hdr, field) != TS_SUCCESS) {
+          if (TSMimeHdrFldRelease(bufp, hdr, field) != TS_SUCCESS) {
             SDK_RPRINT(data->test, "TSHttpTxnTransform", "TestCase", TC_FAIL,
                        "Unable to release handle to field in Client request");
           }
         }
-        if (TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr) != TS_SUCCESS) {
+        if (TSMimeHdrFldRelease(bufp, TS_NULL_MLOC, hdr) != TS_SUCCESS) {
           SDK_RPRINT(data->test, "TSHttpTxnTransform", "TestCase", TC_FAIL, "Unable to release handle to Client request");
         }
       }
@@ -7934,7 +7934,7 @@ transform_hook_handler(TSCont contp, TSEvent event, void *edata)
         SDK_RPRINT(data->test, "TSHttpTxnTransformRespGet", "TestCase", TC_FAIL, "Value's Mismatch");
         data->test_passed_txn_transform_resp_get = false;
       }
-      if (TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr) != TS_SUCCESS) {
+      if (TSMimeHdrFldRelease(bufp, TS_NULL_MLOC, hdr) != TS_SUCCESS) {
         SDK_RPRINT(data->test, "TSHttpTxnTransformRespGet", "TestCase", TC_FAIL,
                    "Unable to release handle to Transform header handle");
       }

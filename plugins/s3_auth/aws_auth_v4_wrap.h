@@ -50,7 +50,7 @@ public:
   {
     /* @todo this is said to be slow in the API call comments, do something better here */
     TSMLoc next = TSMimeHdrFieldNext(_bufp, _hdrs, _field);
-    TSHandleMLocRelease(_bufp, _hdrs, _field);
+    TSMimeHdrFldRelease(_bufp, _hdrs, _field);
     _field = next;
     return *this;
   }

@@ -65,15 +65,15 @@ replace_header(TSHttpTxn txnp)
     TSMimeHdrFieldValueAppend(resp_bufp, resp_loc, field_loc, -1, "none", 4);
     /* insert it into the header */
     TSMimeHdrFieldAppend(resp_bufp, resp_loc, field_loc);
-    TSHandleMLocRelease(resp_bufp, resp_loc, field_loc);
-    TSHandleMLocRelease(resp_bufp, nullptr, resp_loc);
+    TSMimeHdrFldRelease(resp_bufp, resp_loc, field_loc);
+    TSMimeHdrFldRelease(resp_bufp, nullptr, resp_loc);
   } else {
     /* clear the field */
     TSMimeHdrFieldValuesClear(resp_bufp, resp_loc, field_loc);
     /* set the value to "none" */
     TSMimeHdrFieldValueStringInsert(resp_bufp, resp_loc, field_loc, -1, "none", 4);
-    TSHandleMLocRelease(resp_bufp, resp_loc, field_loc);
-    TSHandleMLocRelease(resp_bufp, nullptr, resp_loc);
+    TSMimeHdrFldRelease(resp_bufp, resp_loc, field_loc);
+    TSMimeHdrFldRelease(resp_bufp, nullptr, resp_loc);
   }
 
 done:

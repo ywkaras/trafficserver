@@ -264,7 +264,7 @@ transformable(TSHttpTxn txnp)
   if (TS_SUCCESS == TSHttpTxnServerRespGet(txnp, &bufp, &hdr_loc)) {
     resp_status = TSHttpHdrStatusGet(bufp, hdr_loc);
     retv        = (resp_status == TS_HTTP_STATUS_OK);
-    TSHandleMLocRelease(bufp, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, hdr_loc);
   }
 
   return retv;

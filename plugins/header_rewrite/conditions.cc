@@ -232,7 +232,7 @@ ConditionHeader::append_value(std::string &s, const Resources &res)
       if (next_field_loc) {
         s += ',';
       }
-      TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+      TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
       field_loc = next_field_loc;
     }
   }
@@ -274,7 +274,7 @@ ConditionPath::append_value(std::string &s, const Resources &res)
       s.append(path, path_length);
     }
 
-    TSHandleMLocRelease(bufp, nullptr, url_loc);
+    TSMimeHdrFldRelease(bufp, nullptr, url_loc);
   }
 }
 
@@ -559,7 +559,7 @@ ConditionCookie::append_value(std::string &s, const Resources &res)
 
 // Unwind
 out_release_field:
-  TSHandleMLocRelease(bufp, hdr_loc, field_loc);
+  TSMimeHdrFldRelease(bufp, hdr_loc, field_loc);
 }
 
 bool

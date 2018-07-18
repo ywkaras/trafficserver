@@ -113,7 +113,7 @@ ts_lua_client_response_header_get(lua_State *L)
           lua_pushlstring(L, ",", 1);
           count++;
         }
-        TSHandleMLocRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
+        TSMimeHdrFldRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
         field_loc = next_field_loc;
       }
       lua_concat(L, count);
@@ -167,7 +167,7 @@ ts_lua_client_response_header_set(lua_State *L)
     while (field_loc != nullptr) {
       tmp = TSMimeHdrFieldNextDup(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
       TSMimeHdrFieldDestroy(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
-      TSHandleMLocRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
+      TSMimeHdrFldRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
       field_loc = tmp;
     }
 
@@ -181,7 +181,7 @@ ts_lua_client_response_header_set(lua_State *L)
       } else {
         TSMimeHdrFieldDestroy(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
       }
-      TSHandleMLocRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
+      TSMimeHdrFldRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
       field_loc = tmp;
     }
   } else if (TSMimeHdrFieldCreateNamed(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, key, key_len, &field_loc) !=
@@ -195,7 +195,7 @@ ts_lua_client_response_header_set(lua_State *L)
   }
 
   if (field_loc != nullptr) {
-    TSHandleMLocRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
+    TSMimeHdrFldRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
   }
 
   return 0;
@@ -260,7 +260,7 @@ ts_lua_client_response_get_headers(lua_State *L)
     }
 
     next_field_loc = TSMimeHdrFieldNext(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
-    TSHandleMLocRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
+    TSMimeHdrFldRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
     field_loc = next_field_loc;
   }
 
@@ -426,7 +426,7 @@ ts_lua_client_response_set_error_resp(lua_State *L)
 
   if (field_loc) {
     TSMimeHdrFieldDestroy(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
-    TSHandleMLocRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
+    TSMimeHdrFldRelease(http_ctx->client_response_bufp, http_ctx->client_response_hdrp, field_loc);
   }
 
   TSHttpTxnErrorBodySet(http_ctx->txnp, resp_buf, resp_len, NULL);

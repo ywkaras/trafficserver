@@ -70,7 +70,7 @@ add_header(TSHttpTxn txnp, TSCont contp ATS_UNUSED)
     /* First create a new field in the client request header */
     if (TSMimeHdrFieldCreate(req_bufp, req_loc, &new_field_loc) != TS_SUCCESS) {
       TSError("[%s] Unable to create new field", PLUGIN_NAME);
-      TSHandleMLocRelease(hdr_bufp, hdr_loc, field_loc);
+      TSMimeHdrFldRelease(hdr_bufp, hdr_loc, field_loc);
       break;
     }
 
@@ -78,7 +78,7 @@ add_header(TSHttpTxn txnp, TSCont contp ATS_UNUSED)
     retval = TSMimeHdrFieldCopy(req_bufp, req_loc, new_field_loc, hdr_bufp, hdr_loc, field_loc);
     if (retval == TS_ERROR) {
       TSError("[%s] Unable to copy new field", PLUGIN_NAME);
-      TSHandleMLocRelease(hdr_bufp, hdr_loc, field_loc);
+      TSMimeHdrFldRelease(hdr_bufp, hdr_loc, field_loc);
       break;
     }
 
@@ -86,20 +86,20 @@ add_header(TSHttpTxn txnp, TSCont contp ATS_UNUSED)
     retval = TSMimeHdrFieldAppend(req_bufp, req_loc, new_field_loc);
     if (retval != TS_SUCCESS) {
       TSError("[%s] Unable to append new field", PLUGIN_NAME);
-      TSHandleMLocRelease(hdr_bufp, hdr_loc, field_loc);
+      TSMimeHdrFldRelease(hdr_bufp, hdr_loc, field_loc);
       break;
     }
 
     /* We can now release this handle */
-    TSHandleMLocRelease(req_bufp, req_loc, new_field_loc);
+    TSMimeHdrFldRelease(req_bufp, req_loc, new_field_loc);
 
     next_field_loc = TSMimeHdrFieldNext(hdr_bufp, hdr_loc, field_loc);
-    TSHandleMLocRelease(hdr_bufp, hdr_loc, field_loc);
+    TSMimeHdrFldRelease(hdr_bufp, hdr_loc, field_loc);
     field_loc = next_field_loc;
   }
 
 error:
-  TSHandleMLocRelease(req_bufp, TS_NULL_MLOC, req_loc);
+  TSMimeHdrFldRelease(req_bufp, TS_NULL_MLOC, req_loc);
 
 done:
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);

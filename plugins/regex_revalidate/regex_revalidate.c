@@ -387,16 +387,17 @@ static time_t
 get_date_from_cached_hdr(TSHttpTxn txn)
 {
   TSMBuffer buf;
-  TSMLoc hdr_loc, date_loc;
+  TSMimeHdrLoc hdr_loc
+  TSMimeHdrFldLoc date_loc;
   time_t date = 0;
 
   if (TSHttpTxnCachedRespGet(txn, &buf, &hdr_loc) == TS_SUCCESS) {
     date_loc = TSMimeHdrFieldFind(buf, hdr_loc, TS_MIME_FIELD_DATE, TS_MIME_LEN_DATE);
     if (date_loc != nullptr) {
       date = TSMimeHdrFieldValueDateGet(buf, hdr_loc, date_loc);
-      TSHandleMLocRelease(buf, hdr_loc, date_loc);
+      TSMimeHdrFldRelease(buf, hdr_loc, date_loc);
     }
-    TSHandleMLocRelease(buf, nullptr, hdr_loc);
+    TSMimeHdrFldRelease(buf, nullptr, hdr_loc);
   }
 
   return date;
