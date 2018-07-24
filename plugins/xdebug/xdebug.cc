@@ -50,6 +50,7 @@ enum {
 
 static int XArgIndex              = 0;
 static TSCont XInjectHeadersCont  = nullptr;
+static TSCont XCopyDebugHdrCont   = nullptr;
 static TSCont XDeleteDebugHdrCont = nullptr;
 
 // Return the length of a string literal.
@@ -587,11 +588,59 @@ XScanRequestHeaders(TSCont /* contp */, TSEvent event, void *edata)
     TSHttpTxnHookAdd(txn, TS_HTTP_SEND_RESPONSE_HDR_HOOK, XInjectHeadersCont);
     TSHttpTxnArgSet(txn, XArgIndex, reinterpret_cast<void *>(xheaders));
 
-    if (fwdCnt == 0) {
-      // X-Debug header has to be deleted, but not too soon for other plugins to see it.
-      TSHttpHookAdd(TS_HTTP_CACHE_LOOKUP_COMPLETE_HOOK, XDeleteDebugHdrCont);
-    }
+    // Make sure X-Debug header either copied to or deleted from response.
+    TSHttpTxnHookAdd(txn, TS_HTTP_SEND_REQUEST_HDR_HOOK, fwdCnt == 0 ? XDeleteDebugHdrCont : XCopyDebugHdrCont);
   }
+
+  return TS_EVENT_NONE;
+}
+
+// Continuation function to copy the x-debug header.
+//
+static int
+XCopyDebugHdr(TSCont /* contp */, TSEvent event, void *edata)
+{
+  TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
+  TSMLoc clientReqHdr, serverReqHdr, clientReqField, serverReqField;
+  TSMBuffer clientReqBuffer, serverReqBuffer;
+
+  // Make sure TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE) is called before exiting function.
+  //
+  ts::PostScript ps(TSHttpTxnReenable, &*txn, TS_EVENT_HTTP_CONTINUE);
+
+  TSReleaseAssert(event == TS_EVENT_HTTP_SEND_REQUEST_HDR);
+
+  if (TSHttpTxnServerReqGet(txn, &serverReqBuffer, &serverReqHdr) == TS_ERROR) {
+    return TS_EVENT_NONE;
+  }
+
+  serverReqField = TSMimeHdrFieldFind(serverReqBuffer, serverReqHdr, xDebugHeader.str, xDebugHeader.len);
+  if (serverReqField != TS_NULL_MLOC) {
+    TSHandleMLocRelease(serverReqBuffer, serverReqHdr, serverReqField);
+    TSDebug("xdebug", "%s header already present in request to server", xDebugHeader.str);
+    return TS_EVENT_NONE;
+  }
+
+  if (TSHttpTxnClientReqGet(txn, &clientReqBuffer, &clientReqHdr) == TS_ERROR) {
+    return TS_EVENT_NONE;
+  }
+
+  clientReqField = TSMimeHdrFieldFind(clientReqBuffer, clientReqHdr, xDebugHeader.str, xDebugHeader.len);
+  if (clientReqField == TS_NULL_MLOC) {
+    TSError("Missing %s header", xDebugHeader.str);
+    return TS_EVENT_NONE;
+  }
+
+  ts::PostScript ps2(TSHandleMLocRelease, &*clientReqBuffer, &*clientReqHdr, &*clientReqField);
+
+  if (TSMimeHdrFieldClone(serverReqBuffer, serverReqHdr, clientReqBuffer, clientReqHdr, clientReqField, &serverReqField) == TS_ERROR) {
+    TSError("Failure copying %s header", xDebugHeader.str);
+
+  } else {
+    TSDebug("xdebug", "Copied %s header", xDebugHeader.str);
+  }
+
+  TSHandleMLocRelease(serverReqBuffer, serverReqHdr, serverReqField);
 
   return TS_EVENT_NONE;
 }
@@ -609,21 +658,23 @@ XDeleteDebugHdr(TSCont /* contp */, TSEvent event, void *edata)
   //
   ts::PostScript ps(TSHttpTxnReenable, &*txn, TS_EVENT_HTTP_CONTINUE);
 
-  TSReleaseAssert(event == TS_EVENT_HTTP_CACHE_LOOKUP_COMPLETE);
+  TSReleaseAssert(event == TS_EVENT_HTTP_SEND_REQUEST_HDR);
 
-  if (TSHttpTxnClientReqGet(txn, &buffer, &hdr) == TS_ERROR) {
+  if (TSHttpTxnServerReqGet(txn, &buffer, &hdr) == TS_ERROR) {
     return TS_EVENT_NONE;
   }
 
   field = TSMimeHdrFieldFind(buffer, hdr, xDebugHeader.str, xDebugHeader.len);
   if (field == TS_NULL_MLOC) {
-    TSError("Missing %s header", xDebugHeader.str);
+    TSDebug("xdebug", "Missing %s header", xDebugHeader.str);
     return TS_EVENT_NONE;
   }
 
   if (TSMimeHdrFieldDestroy(buffer, hdr, field) == TS_ERROR) {
     TSError("Failure destroying %s header", xDebugHeader.str);
   }
+
+  TSDebug("xdebug", "Deleted %s header from request to server", xDebugHeader.str);
 
   TSHandleMLocRelease(buffer, hdr, field);
 
@@ -668,6 +719,7 @@ TSPluginInit(int argc, const char *argv[])
   // Setup the global hook
   TSReleaseAssert(TSHttpTxnArgIndexReserve("xdebug", "xdebug header requests", &XArgIndex) == TS_SUCCESS);
   TSReleaseAssert(XInjectHeadersCont = TSContCreate(XInjectResponseHeaders, nullptr));
+  TSReleaseAssert(XCopyDebugHdrCont = TSContCreate(XCopyDebugHdr, nullptr));
   TSReleaseAssert(XDeleteDebugHdrCont = TSContCreate(XDeleteDebugHdr, nullptr));
   TSHttpHookAdd(TS_HTTP_READ_REQUEST_HDR_HOOK, TSContCreate(XScanRequestHeaders, nullptr));
 }
