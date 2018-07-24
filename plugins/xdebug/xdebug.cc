@@ -440,10 +440,11 @@ isFwdFieldValue(const char *value, int valueLen, intmax_t &fwdCnt)
 
   val.ltrim(httpSpace);
 
-  if (value[0] != '=') {
+  if (val[0] != '=') {
     return false;
   }
 
+  val.remove_prefix(1);
   val.ltrim(httpSpace);
 
   size_t sz  = val.size();

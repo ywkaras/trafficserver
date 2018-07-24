@@ -15,10 +15,10 @@
 #  limitations under the License.
 
 Test.Summary = '''
-Test xdebug plugin X-Remap header
+Test xdebug plugin X-Remap and fwd headers
 '''
 
-server = Test.MakeOriginServer("server")
+server = Test.MakeOriginServer("server", options={'--load': (Test.TestDirectory + '/x_remap-observer.py')})
 
 request_header = {
     "headers": "GET /argh HTTP/1.1\r\nHost: doesnotmatter\r\n\r\n", "timestamp": "1469733493.993", "body": "" }
@@ -29,8 +29,9 @@ ts = Test.MakeATSProcess("ts")
 
 ts.Disk.records_config.update({
     'proxy.config.url_remap.remap_required': 0,
-    'proxy.config.diags.debug.enabled': 0,
-    'proxy.config.diags.debug.tags': 'http'
+    'proxy.config.diags.debug.enabled': 1,
+    'proxy.config.diags.debug.tags': 'http|xdebug'
+    # 'proxy.config.diags.debug.tags': 'xdebug'
 })
 
 ts.Disk.plugin_config.AddLine('xdebug.so')
@@ -67,6 +68,11 @@ sendMsg('none')
 sendMsg('one')
 sendMsg('two')
 sendMsg('three')
+sendMsg('fwd1')
+sendMsg('fwd2')
+sendMsg('fwd3')
+sendMsg('fwd4')
+sendMsg('fwd5')
 
 tr = Test.AddTestRun()
 tr.Processes.Default.Command = "echo test gold"
