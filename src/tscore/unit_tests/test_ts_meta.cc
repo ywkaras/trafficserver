@@ -21,6 +21,8 @@
 #include <cstring>
 
 #include "tscore/ts_meta.h"
+#include "tscpp/util/Comparable.h"
+#include "tscpp/util/TextView.h"
 
 #include "catch.hpp"
 
@@ -103,4 +105,144 @@ TEST_CASE("Meta", "[meta]")
   REQUIRE(detect(B()) == "value");
   REQUIRE(detect(C()) == "none");
   REQUIRE(detect(AA()) == "value");
+}
+
+struct Alpha : public ts::Comparable {
+  Alpha(int x) : _n(x) {}
+  int _n{0};
+};
+
+int
+cmp(Alpha const &lhs, Alpha const &rhs)
+{
+  return lhs._n - rhs._n;
+}
+
+int
+cmp(Alpha const &lhs, int rhs)
+{
+  return lhs._n - rhs;
+}
+
+int
+cmp(int lhs, Alpha const &rhs)
+{
+  return lhs - rhs._n;
+}
+
+struct Bravo : public ts::Comparable {
+  Bravo(float x) : _f(x) {}
+  float _f{0};
+
+  float
+  cmp(Bravo const &that) const
+  {
+    return _f - that._f;
+  }
+};
+
+int
+cmp(Alpha const &lhs, Bravo const &rhs)
+{
+  return lhs._n < rhs._f ? -1 : lhs._n > rhs._f ? 1 : 0;
+}
+
+int
+cmp(Bravo const &lhs, Alpha const &rhs)
+{
+  return lhs._f < rhs._n ? -1 : lhs._f > rhs._n ? 1 : 0;
+}
+
+struct Charlie : public ts::Comparable {
+  Charlie(intmax_t x) : _n(x) {}
+
+  intmax_t _n{0};
+
+  intmax_t
+  cmp(Charlie const &that) const
+  {
+    return _n - that._n;
+  }
+  int
+  cmp(int x) const
+  {
+    return _n - x;
+  }
+};
+
+struct Delta : public ts::Comparable {
+  Delta(std::string_view const &s) : _s(s) {}
+
+  std::string _s;
+
+  int
+  cmp(std::string_view const &x) const
+  {
+    return ts::strcmp(_s, x);
+  }
+
+  // Verify we can override the use of `cmp`.
+  int
+  self_cmp(Delta const &that) const
+  {
+    return ts::strcmp(_s, that._s);
+  }
+};
+
+// Tell Comparable to use self_cmp instead of cmp.
+template <> struct ts::ComparablePolicy<Delta, Delta> {
+  int
+  operator()(Delta const &lhs, Delta const &rhs) const
+  {
+    return lhs.self_cmp(rhs);
+  }
+};
+
+TEST_CASE("Comparable", "[meta][comparable]")
+{
+  Alpha a1{1};
+  Alpha a2{2};
+  Bravo b1{1.5};
+  Charlie c1{3};
+  Charlie c2{4};
+  Delta d1{"sepideh"};
+  Delta d2{"persia"};
+
+  REQUIRE(a1 == a1);
+  REQUIRE(a1 == 1);
+  REQUIRE(1 == a1);
+  REQUIRE(a1 != a2);
+  REQUIRE(a1 < a2);
+  REQUIRE(a2 > a1);
+
+  REQUIRE(c1 == c1);
+  REQUIRE(c1 != c2);
+  REQUIRE(c1 < c2);
+  REQUIRE(c2 > c1);
+  REQUIRE(c1 == 3);
+  REQUIRE(3 == c1);
+
+  // check that we didn't break the non-overloaded operators.
+  REQUIRE(1 != 3);
+  REQUIRE(3 != 1);
+
+  REQUIRE(b1 < a2);
+  REQUIRE(b1 > a1);
+  REQUIRE(a2 > b1);
+  REQUIRE(a1 < b1);
+
+  REQUIRE(d1 < "zephyr");
+  REQUIRE(d1 > "alpha");
+  REQUIRE(d1 == "sepideh");
+  REQUIRE(d1 == std::string_view{"sepideh"});
+  // Verify the flip side.
+  REQUIRE("zephyr" > d1);
+  REQUIRE("alpha" < d1);
+  REQUIRE("sepideh" == d1);
+  REQUIRE(std::string_view{"sepideh"} == d1);
+  REQUIRE(ts::TextView{"sepideh"} == d1);
+
+  REQUIRE(d1 != d2);
+  REQUIRE(d1 > d2);
+  REQUIRE(d2 < d1);
 }
