@@ -132,24 +132,20 @@ namespace detail
     self *x(this); // the node with the imbalance
 
     while (x && x->_parent == RED) {
-      Direction child_dir = NONE;
-
-      if (x->_parent->_parent) {
-        child_dir = x->_parent->_parent->getChildDirection(x->_parent);
-      } else {
-        break;
-      }
-      Direction other_dir(flip(child_dir));
-
-      self *y = x->_parent->_parent->getChild(other_dir);
+      self *ppx{x->_parent->_parent};
+      if (nullptr == ppx)
+        break; // if parent of x is root, done.
+      Direction child_dir{ppx->getChildDirection(x->_parent)};
+      Direction other_dir{flip(child_dir)};
+      self *y{ppx->getChild(other_dir)};
       if (y == RED) {
         x->_parent->_color = BLACK;
         y->_color          = BLACK;
-        x                  = x->_parent->_parent;
+        x                  = ppx;
         x->_color          = RED;
       } else {
         if (x->_parent->getChild(other_dir) == x) {
-          x = x->_parent;
+          x = x->_parent; // invalidates ppx, don't use again.
           x->rotate(child_dir);
         }
         // Note setting the parent color to BLACK causes the loop to exit.
