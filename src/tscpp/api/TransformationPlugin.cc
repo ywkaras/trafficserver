@@ -28,6 +28,8 @@
 #include "utils_internal.h"
 #include "logging_internal.h"
 #include "tscpp/api/noncopyable.h"
+#include "tscpp/api/Continuation.h"
+#include "tscpp/util/FieldToClass.h"
 
 #ifndef INT64_MAX
 #define INT64_MAX (9223372036854775807LL)
@@ -35,6 +37,21 @@
 
 using namespace atscppapi;
 using atscppapi::TransformationPlugin;
+
+namespace
+{
+class TransformationPluginContinuation : public Continuation
+{
+public:
+  TransformationPluginContinuation() : Continuation() {}
+
+  TransformationPluginContinuation(Continuation::Mutex m) : Continuation(m) {}
+
+protected:
+  int _run(TSEvent event, void *edata) override;
+};
+
+} // end anonymous namespace
 
 /**
  * @private
@@ -50,7 +67,7 @@ struct atscppapi::TransformationPluginState : noncopyable {
   TSIOBufferReader output_buffer_reader_;
   int64_t bytes_written_;
   bool paused_;
-  TSCont resume_cont_;
+  TransformationPluginContinuation resume_cont_;
 
   // We can only send a single WRITE_COMPLETE even though
   // we may receive an immediate event after we've sent a
@@ -89,11 +106,6 @@ struct atscppapi::TransformationPluginState : noncopyable {
     if (output_buffer_) {
       TSIOBufferDestroy(output_buffer_);
       output_buffer_ = nullptr;
-    }
-
-    // Cleanup pending cont
-    if (resume_cont_) {
-      TSContDataSet(resume_cont_, nullptr);
     }
   }
 };
@@ -273,31 +285,44 @@ TransformationPlugin::~TransformationPlugin()
   delete state_;
 }
 
-TSCont
+void
 TransformationPlugin::pause()
 {
-  if (state_->input_complete_dispatched_) {
+  if (state_->paused_) {
+    LOG_ERROR("Can not pause transformation, already paused  TransformationPlugin=%p (vconn)contp=%p tshttptxn=%p", this,
+              state_->vconn_, state_->txn_);
+  } else if (state_->input_complete_dispatched_) {
     LOG_ERROR("Can not pause transformation (transformation completed) TransformationPlugin=%p (vconn)contp=%p tshttptxn=%p", this,
               state_->vconn_, state_->txn_);
-    return nullptr;
   } else {
-    state_->paused_      = true;
-    state_->resume_cont_ = TSContCreate(&resumeCallback, TSContMutexGet(reinterpret_cast<TSCont>(state_->txn_)));
-    TSContDataSet(state_->resume_cont_, static_cast<void *>(state_));
-    return state_->resume_cont_;
+    state_->paused_ = true;
+    if (!static_cast<bool>(state_->resume_cont_)) {
+      state_->resume_cont_ = TransformationPluginContinuation(TSContMutexGet(reinterpret_cast<TSCont>(state_->txn_)));
+    }
   }
 }
 
-int
-TransformationPlugin::resumeCallback(TSCont cont, TSEvent event, void *edata)
+bool
+TransformationPlugin::isPaused() const
 {
-  auto state = static_cast<TransformationPluginState *>(TSContDataGet(cont));
-  if (state) {
-    state->paused_ = false;
-    handleTransformationPluginRead(state->vconn_, state);
-  }
+  return state_->paused_;
+}
 
-  TSContDestroy(cont);
+Continuation &
+TransformationPlugin::resumeCont()
+{
+  TSReleaseAssert(state_->paused_);
+
+  return state_->resume_cont_;
+}
+
+int
+TransformationPluginContinuation::_run(TSEvent event, void *edata)
+{
+  auto state     = TS_FIELD_TO_CLASS_PTR(TransformationPluginState, resume_cont_, this);
+  state->paused_ = false;
+  handleTransformationPluginRead(state->vconn_, state);
+
   return TS_SUCCESS;
 }
 
