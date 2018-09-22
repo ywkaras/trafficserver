@@ -23,7 +23,9 @@
 #pragma once
 
 #include "tscpp/api/noncopyable.h"
+#include "tscpp/util/cmp_op.h"
 #include <string>
+#include <string_view>
 
 namespace atscppapi
 {
@@ -56,52 +58,35 @@ public:
    * std::string conversion
    * @return a string which is this HeaderFieldName
    */
-  operator std::string();
+  operator std::string() const;
 
   /**
    * const char * conversion
    * @return a const char * which is this HeaderFieldName
    */
-  operator const char *();
+  operator const char *() const;
 
   /**
    * @return the length of this HeaderFieldName
    */
-  size_type length();
+  size_type length() const;
 
   /**
    * @return a string which is this HeaderFieldName
    */
-  std::string str();
+  std::string str() const;
 
   /**
    * @return a const char * which points to the name of this HeaderFIeldName
    */
-  const char *c_str();
+  const char *c_str() const;
 
-  /**
-   * Case insensitive comparison of this HeaderFieldName
-   * @return true if the two strings are equal.
-   */
-  bool operator==(const char *field_name);
-
-  /**
-   * Case insensitive comparison of this HeaderFieldName
-   * @return true if the two strings are equal.
-   */
-  bool operator==(const std::string &field_name);
-
-  /**
-   * Case insensitive comparison of this HeaderFieldName
-   * @return true if the two strings are not equal.
-   */
-  bool operator!=(const char *field_name);
-
-  /**
-   * Case insensitive comparison of this HeaderFieldName
-   * @return true if the two strings are not equal.
-   */
-  bool operator!=(const std::string &field_name);
+  std::string_view
+  sV() const
+  {
+    return name_;
+  }
+  operator std::string_view() const { return name_; }
 };
 
 class HeaderField;
@@ -600,4 +585,37 @@ private:
   friend class ClientRequest;
   friend class Response;
 };
+
+// Case-insensitive compare function.
+//
+int cmp(const HeaderFieldName &n, std::string_view sV);
+
 } // namespace atscppapi
+
+namespace ts
+{
+namespace cmp_op
+{
+  inline int
+  cmp(const atscppapi::HeaderFieldName &n1, const std::string_view &n2)
+  {
+    return atscppapi::cmp(n1, n2);
+  }
+
+  template <>
+  struct Enable<atscppapi::HeaderFieldName, std::string_view> : public Yes<atscppapi::HeaderFieldName, std::string_view, cmp> {
+  };
+
+  inline int
+  cmp(const atscppapi::HeaderFieldName &n1, const atscppapi::HeaderFieldName &n2)
+  {
+    return atscppapi::cmp(n1, n2.sV());
+  }
+
+  template <>
+  struct Enable<atscppapi::HeaderFieldName, atscppapi::HeaderFieldName>
+    : public Yes<atscppapi::HeaderFieldName, atscppapi::HeaderFieldName, cmp> {
+  };
+
+} // namespace cmp_op
+} // namespace ts
