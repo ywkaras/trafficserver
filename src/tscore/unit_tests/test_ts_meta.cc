@@ -246,3 +246,13 @@ TEST_CASE("Comparable", "[meta][comparable]")
   REQUIRE(d1 > d2);
   REQUIRE(d2 < d1);
 }
+
+class X : public ts::Comparable {};
+
+int cmp(const X &, const X &) { return 0; }
+
+class Y : public X, public ts::Comparable {};
+
+int cmp(const Y &, const Y &) { return 0; }
+
+bool foo(Y &b1, Y &b2) { return b1 == b2; }
