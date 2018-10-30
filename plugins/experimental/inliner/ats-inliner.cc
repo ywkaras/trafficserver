@@ -196,7 +196,7 @@ transform_plugin(TSCont, TSEvent e, void *d)
 }
 
 void
-TSPluginInit(int, const char **)
+TS_PLUGIN_INIT(int, const char **)
 {
   TSPluginRegistrationInfo info;
 

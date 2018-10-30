@@ -299,7 +299,7 @@ parse_hook_list(const char *hook_list)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   static const char usage[] = "tcpinfo.so [--log-file=PATH] [--log-level=LEVEL] [--hooks=LIST] [--sample-rate=COUNT] "
                               "[--rolling-enabled=VALUE] [--rolling-offset-hr=HOUR] [--rolling-interval-sec=SECONDS] "

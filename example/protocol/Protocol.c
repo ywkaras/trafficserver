@@ -101,7 +101,7 @@ protocol_init(int accept_port, int server_port ATS_UNUSED)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   char *end;

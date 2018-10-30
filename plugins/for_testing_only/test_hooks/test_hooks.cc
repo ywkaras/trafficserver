@@ -244,7 +244,7 @@ TSCont gCont;
 } // end anonymous namespace
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
 

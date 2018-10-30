@@ -36,7 +36,7 @@ GlobalPlugin *plugin;
 using namespace atscppapi;
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   if (!RegisterGlobalPlugin("CPP_Example_WebSocket", "apache", "dev@trafficserver.apache.org")) {
     return;

@@ -238,7 +238,7 @@ handle_txn_close(TSCont cont, TSEvent event ATS_UNUSED, void *edata)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   TSCont pre_remap_cont, post_remap_cont, global_cont;

@@ -916,6 +916,13 @@ typedef struct TSSslSessionID_s {
 /* --------------------------------------------------------------------------
    Init */
 
+#define TS_PLUGIN_INIT TS_PLUGIN_INIT_(TS_VERSION_MAJOR, TS_VERSION_MINOR)
+
+/* PRIVATE -- do not use these diredtly *****/
+#define TS_PLUGIN_INIT_(MAJOR, MINOR) TS_PLUGIN_INIT__(MAJOR, MINOR)
+#define TS_PLUGIN_INIT__(MAJOR, MINOR) TSPluginInit_##MAJOR##_##MINOR
+/********************************************/
+
 /**
     This function must be defined by all plugins. Traffic Server
     calls this initialization routine when it loads the plugin (at
@@ -931,7 +938,7 @@ typedef struct TSSslSessionID_s {
       plugin.config.
 
  */
-extern tsapi void TSPluginInit(int argc, const char *argv[]);
+extern tsapi void TS_PLUGIN_INIT(int argc, const char *argv[]);
 
 /* --------------------------------------------------------------------------
    URL schemes */

@@ -86,7 +86,7 @@ TSOptionsProcess(char *option, char *value)
 }
 
 void
-TSPluginInit()
+TS_PLUGIN_INIT()
 {
   fprintf(stderr, "*** PSI Server ***\n");
   TSFuncRegister(TS_FID_OPTIONS_PROCESS);

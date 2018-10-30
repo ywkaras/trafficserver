@@ -32,7 +32,7 @@ extern "C" {
  * @param argc Count of arguments
  * @param argv Array of pointers pointing to arguments
  */
-void TSPluginInit(int argc, const char *argv[]);
+void TS_PLUGIN_INIT(int argc, const char *argv[]);
 /**
  * Invoked for remap plugins - listed in remap.config. The arguments provided as @pparam
  * in the remap.config line are provided in this invocation.

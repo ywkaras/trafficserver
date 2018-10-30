@@ -122,7 +122,7 @@ public:
 };
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   RegisterGlobalPlugin(ATS_MODULE_FCGI_NAME, "apache", "dev@trafficserver.apache.org");
   plugin_data                          = new ats_plugin::InterceptPluginData();

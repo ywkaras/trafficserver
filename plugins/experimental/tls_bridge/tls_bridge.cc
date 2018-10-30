@@ -619,7 +619,7 @@ CB_Read_Request_Hdr(TSCont contp, TSEvent ev_idx, void *data)
 /* ------------------------------------------------------------------------------------ */
 
 void
-TSPluginInit(int argc, char const *argv[])
+TS_PLUGIN_INIT(int argc, char const *argv[])
 {
   TSPluginRegistrationInfo info{PLUGIN_NAME, "Oath:", "solidwallofcode@oath.com"};
 

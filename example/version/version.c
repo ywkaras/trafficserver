@@ -27,7 +27,7 @@
 #define PLUGIN_NAME "version"
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   (void)argc; // unused
   (void)argv; // unused

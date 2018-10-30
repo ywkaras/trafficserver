@@ -108,7 +108,7 @@ setup_callbacks(int count)
 
 // Called by ATS as our initialization point
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   info.plugin_name   = const_cast<char *>("SSL verify server test");

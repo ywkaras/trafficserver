@@ -163,7 +163,7 @@ TEST(f)
 // Run all the tests.
 //
 void
-TSPluginInit(int, const char **)
+TS_PLUGIN_INIT(int, const char **)
 {
   TSPluginRegistrationInfo info;
 

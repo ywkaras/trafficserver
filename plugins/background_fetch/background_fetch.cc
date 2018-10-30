@@ -549,7 +549,7 @@ cont_handle_response(TSCont contp, TSEvent event, void *edata)
 ///////////////////////////////////////////////////////////////////////////
 // Setup global hooks
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   static const struct option longopt[] = {{const_cast<char *>("log"), required_argument, nullptr, 'l'},

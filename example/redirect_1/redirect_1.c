@@ -286,7 +286,7 @@ update_redirected_method_stats(TSMBuffer bufp, TSMLoc hdr_loc)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   const char prefix[] = "http://";
   int uri_len;

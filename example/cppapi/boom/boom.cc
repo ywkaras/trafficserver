@@ -431,7 +431,7 @@ BoomGlobalPlugin::handleReadResponseHeaders(Transaction &transaction)
  * This is the plugin registration point
  */
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   if (!RegisterGlobalPlugin("CPP_Example_Boom", "apache", "dev@trafficserver.apache.org")) {
     return;

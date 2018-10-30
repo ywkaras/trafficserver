@@ -734,7 +734,7 @@ AuthParseOptions(int argc, const char **argv)
 #undef LONGOPT_OPTION_CAST
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
 

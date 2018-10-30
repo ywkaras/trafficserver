@@ -77,7 +77,7 @@ public:
 };
 
 void
-TSPluginInit(int /* argc ATS_UNUSED */, const char * /* argv ATS_UNUSED */ [])
+TS_PLUGIN_INIT(int /* argc ATS_UNUSED */, const char * /* argv ATS_UNUSED */ [])
 {
   if (!RegisterGlobalPlugin("CPP_Example_AsyncHttpFetchStreaming", "apache", "dev@trafficserver.apache.org")) {
     return;

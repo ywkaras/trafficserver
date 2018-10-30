@@ -39,7 +39,7 @@
 #define PLUGIN_NAME "file_1"
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSFile filep;
   char buf[4096];

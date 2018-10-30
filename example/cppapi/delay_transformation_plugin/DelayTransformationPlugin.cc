@@ -113,11 +113,11 @@ public:
 };
 
 void
-TSPluginInit(int argc ATSCPPAPI_UNUSED, const char *argv[] ATSCPPAPI_UNUSED)
+TS_PLUGIN_INIT(int argc ATSCPPAPI_UNUSED, const char *argv[] ATSCPPAPI_UNUSED)
 {
   if (!RegisterGlobalPlugin("CPP_Example_DelayTransformation", "apache", "dev@trafficserver.apache.org")) {
     return;
   }
-  TS_DEBUG(TAG, "TSPluginInit");
+  TS_DEBUG(TAG, "TS_PLUGIN_INIT");
   plugin = new GlobalHookPlugin();
 }

@@ -598,7 +598,7 @@ TSRemapInit(TSRemapInterface *api_info, char *errbug, int errbuf_size)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   TSCont main_cont, config_cont;

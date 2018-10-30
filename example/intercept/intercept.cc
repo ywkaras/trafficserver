@@ -534,7 +534,7 @@ InterceptTxnHook(TSCont contp, TSEvent event, void *edata)
 }
 
 void
-TSPluginInit(int /* argc */, const char * /* argv */ [])
+TS_PLUGIN_INIT(int /* argc */, const char * /* argv */ [])
 {
   TSPluginRegistrationInfo info;
 

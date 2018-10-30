@@ -78,7 +78,7 @@ public:
 };
 
 void
-TSPluginInit(int argc ATSCPPAPI_UNUSED, const char *argv[] ATSCPPAPI_UNUSED)
+TS_PLUGIN_INIT(int argc ATSCPPAPI_UNUSED, const char *argv[] ATSCPPAPI_UNUSED)
 {
   if (!RegisterGlobalPlugin("CPP_Example_ClientDirect", "apache", "dev@trafficserver.apache.org")) {
     return;

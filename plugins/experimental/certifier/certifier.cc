@@ -581,7 +581,7 @@ cert_retriever(TSCont contp, TSEvent event, void *edata)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSDebug(PLUGIN_NAME, "initializing plugin");
   // Initialization data and callback

@@ -946,7 +946,7 @@ read_response_handler(TSCont contp ATS_UNUSED, TSEvent event, void *edata)
 }
 
 /*-------------------------------------------------------------------------
-  TSPluginInit
+  TS_PLUGIN_INIT
   Function called at plugin init time
 
   Input:
@@ -956,7 +956,7 @@ read_response_handler(TSCont contp ATS_UNUSED, TSEvent event, void *edata)
   Return Value:
   -------------------------------------------------------------------------*/
 void
-TSPluginInit(int argc ATS_UNUSED, const char *argv[] ATS_UNUSED)
+TS_PLUGIN_INIT(int argc ATS_UNUSED, const char *argv[] ATS_UNUSED)
 {
   TSPluginRegistrationInfo info;
   int i;

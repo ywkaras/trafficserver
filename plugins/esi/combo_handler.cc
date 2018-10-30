@@ -321,7 +321,7 @@ static bool getDefaultBucket(TSHttpTxn txnp, TSMBuffer bufp, TSMLoc hdr_obj, Cli
 pthread_key_t threadKey = 0;
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   info.plugin_name   = "combo_handler";

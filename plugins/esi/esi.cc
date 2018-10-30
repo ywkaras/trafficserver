@@ -1653,7 +1653,7 @@ esiPluginInit(int argc, const char *argv[], struct OptionInfo *pOptionInfo)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   info.plugin_name   = (char *)"esi";

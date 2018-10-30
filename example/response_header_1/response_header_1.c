@@ -217,7 +217,7 @@ modify_response_header_plugin(TSCont contp ATS_UNUSED, TSEvent event, void *edat
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSMLoc chk_field_loc;
 

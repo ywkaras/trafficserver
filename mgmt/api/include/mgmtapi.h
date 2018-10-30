@@ -299,12 +299,12 @@ tsapi TSMgmtError TSInit(const char *socket_path, TSInitOptionT options);
 tsapi TSMgmtError TSTerminate();
 
 /*--- plugin initialization -----------------------------------------------*/
-/* TSPluginInit: called by traffic_manager to initialize the plugin
+/* TS_PLUGIN_INIT: called by traffic_manager to initialize the plugin
  * Input:  argc - argument count
  *         argv - argument array
  * Output: <none>
  */
-inkexp extern void TSPluginInit(int argc, const char *argv[]);
+inkexp extern void TS_PLUGIN_INIT(int argc, const char *argv[]);
 
 /*--- network operations --------------------------------------------------*/
 /* UNIMPLEMENTED: used for remote clients on a different machine */

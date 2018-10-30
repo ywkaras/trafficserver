@@ -22,7 +22,7 @@ TS_PLUGIN_LD_FLAGS = \
   -module \
   -shared \
   -avoid-version \
-  -export-symbols-regex '^(TSRemapInit|TSRemapDone|TSRemapDoRemap|TSRemapNewInstance|TSRemapDeleteInstance|TSRemapOSResponse|TSPluginInit)$$'
+  -export-symbols-regex '^(TSRemapInit|TSRemapDone|TSRemapDoRemap|TSRemapNewInstance|TSRemapDeleteInstance|TSRemapOSResponse|TSPluginInit_@TS_VERSION_MAJOR@_@TS_VERSION_MINOR@)$$'
 
 TS_PLUGIN_CPPFLAGS = \
   -I$(abs_top_builddir)/proxy/api \

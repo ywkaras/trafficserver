@@ -213,7 +213,7 @@ handle_hook(TSCont contp, TSEvent event, void *edata)
 
 /// Registration entry point for plugin.
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSDebug(DEBUG_TAG_INIT, "initializing plugin");
 

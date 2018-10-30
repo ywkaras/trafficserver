@@ -995,7 +995,7 @@ management_update(TSCont contp, TSEvent event, void * /* edata ATS_UNUSED */)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   const char *config_path = nullptr;
 
@@ -1009,7 +1009,7 @@ TSPluginInit(int argc, const char *argv[])
     fatal("the compress plugin failed to register");
   }
 
-  info("TSPluginInit %s", argv[0]);
+  info("TS_PLUGIN_INIT %s", argv[0]);
 
   if (!global_hidden_header_name) {
     global_hidden_header_name = init_hidden_header_name();

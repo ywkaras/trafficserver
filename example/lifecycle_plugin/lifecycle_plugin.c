@@ -59,7 +59,7 @@ CallbackHandler(TSCont this, TSEvent id, void *data)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   TSCont cb;

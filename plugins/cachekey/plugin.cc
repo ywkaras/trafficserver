@@ -87,7 +87,7 @@ contSetCachekey(TSCont contp, TSEvent event, void *edata)
  * @param argv plugin arguments
  */
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
 

@@ -689,7 +689,7 @@ main_plugin(TSCont cont, TSEvent event, void *edata)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   config_t *plugin_config;
   TSPluginRegistrationInfo info;

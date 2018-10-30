@@ -155,7 +155,7 @@ CB_Pre_Accept(TSCont, TSEvent event, void *edata)
 
 // Called by ATS as our initialization point
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   bool success = false;
   TSPluginRegistrationInfo info;

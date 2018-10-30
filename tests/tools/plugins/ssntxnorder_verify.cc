@@ -277,7 +277,7 @@ handle_order(TSCont contp, TSEvent event, void *edata)
         - Initializes all statistics as described in the README
 */
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSDebug(DEBUG_TAG_INIT, "initializing plugin");
 

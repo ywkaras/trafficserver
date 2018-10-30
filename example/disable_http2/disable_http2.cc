@@ -84,7 +84,7 @@ CB_NetAcceptReady(TSCont contp, TSEvent event, void *cb_data)
 }
 
 void
-TSPluginInit(int argc, char const *argv[])
+TS_PLUGIN_INIT(int argc, char const *argv[])
 {
   int ret;
   TSPluginRegistrationInfo info;

@@ -297,7 +297,7 @@ cleanup:
 
 /* Initialize the plugin / global continuation hook */
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   const char *proof = "acme";

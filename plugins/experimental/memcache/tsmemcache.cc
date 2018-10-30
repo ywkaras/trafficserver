@@ -1609,7 +1609,7 @@ init_tsmemcache(int port)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   ink_assert(sizeof(protocol_binary_request_header) == 24);
 

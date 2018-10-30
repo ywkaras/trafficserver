@@ -101,7 +101,7 @@ CB_servername_whitelist(TSCont /* contp */, TSEvent /* event */, void *edata)
 
 // Called by ATS as our initialization point
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   bool success = false;
   TSPluginRegistrationInfo info;

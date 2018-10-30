@@ -306,7 +306,7 @@ cont_rewrite_headers(TSCont contp, TSEvent event, void *edata)
 // Initialize the InkAPI plugin for the global hooks we support.
 //
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
 

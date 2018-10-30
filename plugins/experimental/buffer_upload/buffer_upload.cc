@@ -1196,7 +1196,7 @@ read_upload_config(const char *file_name)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   TSCont contp;

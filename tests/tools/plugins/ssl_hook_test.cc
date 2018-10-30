@@ -345,7 +345,7 @@ setup_callbacks(TSHttpTxn txn, int preaccept_count, int sni_count, int cert_coun
 
 // Called by ATS as our initialization point
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   TSPluginRegistrationInfo info;
   info.plugin_name   = const_cast<char *>("SSL hooks test");

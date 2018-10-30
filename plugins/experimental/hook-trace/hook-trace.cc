@@ -158,7 +158,7 @@ LifecycleHookTracer(TSCont contp, TSEvent event, void *edata)
 }
 
 void
-TSPluginInit(int argc, const char *argv[])
+TS_PLUGIN_INIT(int argc, const char *argv[])
 {
   // clang-format off
   static const TSHttpHookID http[] = {
