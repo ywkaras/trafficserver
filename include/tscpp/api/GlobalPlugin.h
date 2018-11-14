@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include "tscpp/api/Plugin.h"
 
 namespace atscppapi
@@ -84,5 +86,8 @@ protected:
 private:
   GlobalPluginState *state_; /**< Internal state tied to a GlobalPlugin */
 };
+
+bool
+RegisterGlobalPlugin(std::string_view name, std::string_view vendor, std::string_view email);
 
 } // namespace atscppapi

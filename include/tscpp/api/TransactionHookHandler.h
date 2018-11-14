@@ -16,14 +16,16 @@
   limitations under the License.
  */
 /**
- * @file Plugin.h
+ * @file TransactionHookHandler.h
  *
- * @brief Contains the base interface used in creating Global and Transaciton plugins.
+ * @brief Contains the base interface used in creating Global, Virtual Connection, Session and Transaction plugins.
  * \note This interface can never be implemented directly, it should be implemented
  *   through extending GlobalPlugin, TransactionPlugin, or TransformationPlugin.
  */
 
 #pragma once
+
+#include <string_view>
 
 #include "tscpp/api/Request.h"
 #include "tscpp/api/Transaction.h"
@@ -35,7 +37,7 @@ namespace atscppapi
  * @brief The base interface used when creating a Plugin.
  *
  * \note This interface can never be implemented directly, it should be implemented
- *   through extending GlobalPlugin, TransactionPlugin, or TransformationPlugin.
+ *   through extending GlobalPlugin, SessionPlugin, TransactionPlugin, or TransformationPlugin.
  *
  * @see TransactionPlugin
  * @see GlobalPlugin
@@ -45,10 +47,10 @@ class Plugin : noncopyable
 {
 public:
   /**
-   * A enumeration of the available types of Hooks. These are used with GlobalPlugin::registerHook()
-   * and TransactionPlugin::registerHook().
+   * A enumeration of the available types of Hooks. These are used with GlobalPlugin::registerHook(),
+   * SessionPlugin::registerHook() TransactionPlugin::registerHook().
    */
-  enum HookType {
+  enum sactionHookType {
     HOOK_READ_REQUEST_HEADERS_PRE_REMAP = 0, /**< This hook will be fired before remap has occured. */
     HOOK_READ_REQUEST_HEADERS_POST_REMAP,    /**< This hook will be fired directly after remap has occured. */
     HOOK_SEND_REQUEST_HEADERS,               /**< This hook will be fired right before request headers are sent to the origin */
@@ -60,6 +62,9 @@ public:
     HOOK_CACHE_LOOKUP_COMPLETE, /**< This hook will be fired after caceh lookup complete. */
     HOOK_SELECT_ALT             /**< This hook will be fired after select alt. */
   };
+
+  /**< Human readable strings for each HookType, you can access them as HOOK_TYPE_STRINGS[HOOK_OS_DNS] for example. */
+  static const std::string_view HOOK_TYPE_STRINGS[];
 
   /**
    * This method must be implemented when you hook HOOK_READ_REQUEST_HEADERS_PRE_REMAP
@@ -158,15 +163,5 @@ protected:
    */
   Plugin(){};
 };
-
-/**< Human readable strings for each HookType, you can access them as HOOK_TYPE_STRINGS[HOOK_OS_DNS] for example. */
-extern const std::string HOOK_TYPE_STRINGS[];
-
-bool RegisterGlobalPlugin(const char *name, const char *vendor, const char *email);
-inline bool
-RegisterGlobalPlugin(std::string const &name, std::string const &vendor, std::string const &email)
-{
-  return RegisterGlobalPlugin(name.c_str(), vendor.c_str(), email.c_str());
-}
 
 } // namespace atscppapi
