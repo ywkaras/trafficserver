@@ -39,8 +39,16 @@
 #include <cstdlib>
 typedef pthread_mutex_t ink_mutex;
 
+typedef int ink_mutex_try_only; // TEMP TEMP TEMP
+
 void ink_mutex_init(ink_mutex *m);
 void ink_mutex_destroy(ink_mutex *m);
+
+void ink_mutex_init(ink_mutex_try_only *m);
+void ink_mutex_destroy(ink_mutex_try_only *m);
+void ink_mutex_release(ink_mutex_try_only *m);
+bool ink_mutex_try_acquire(ink_mutex_try_only *m);
+
 
 static inline void
 ink_mutex_acquire(ink_mutex *m)

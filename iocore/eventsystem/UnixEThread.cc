@@ -314,9 +314,9 @@ EThread::execute()
   // Do the start event first.
   // coverity[lock]
   if (start_event) {
-    MUTEX_TAKE_LOCK_FOR(start_event->mutex, this, start_event->continuation);
+    // MUTEX_TAKE_LOCK_FOR(start_event->mutex, this, start_event->continuation); TEMP TEMP TEMP
     start_event->continuation->handleEvent(EVENT_IMMEDIATE, start_event);
-    MUTEX_UNTAKE_LOCK(start_event->mutex, this);
+    // MUTEX_UNTAKE_LOCK(start_event->mutex, this); TEMP TEMP TEMP
     free_event(start_event);
     start_event = nullptr;
   }

@@ -50,7 +50,7 @@ static bool initialized ATS_UNUSED = ([]() -> bool {
 Thread::Thread()
 {
   mutex = new_ProxyMutex();
-  MUTEX_TAKE_LOCK(mutex, (EThread *)this);
+  // MUTEX_TAKE_LOCK(mutex, (EThread *)this); TEMP TEMP TEMP
   mutex->nthread_holding += THREAD_MUTEX_THREAD_HOLDING;
 }
 

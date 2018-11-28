@@ -154,7 +154,7 @@ public:
 
   */
   // coverity[uninit_member]
-  ink_mutex the_mutex;
+  ink_mutex_try_only the_mutex;
 
   /**
     Backpointer to owning thread.
@@ -368,7 +368,9 @@ Mutex_lock(
 {
   ink_assert(t != nullptr);
   if (m->thread_holding != t) {
+#if 0 // TEMP TEMP TEMP
     ink_mutex_acquire(&m->the_mutex);
+#endif
     m->thread_holding = t;
     ink_assert(m->thread_holding);
 #ifdef DEBUG
@@ -435,6 +437,8 @@ Mutex_unlock(Ptr<ProxyMutex> &m, EThread *t)
   Mutex_unlock(m.get(), t);
 }
 
+#if 0 // TEMP TEMP TEMP
+
 /** Scoped lock class for ProxyMutex
  */
 class MutexLock
@@ -483,6 +487,8 @@ public:
 
   ~MutexLock() { this->release(); }
 };
+
+#endif
 
 /** Scoped try lock class for ProxyMutex
  */
@@ -561,7 +567,9 @@ public:
   void
   acquire(EThread *t)
   {
+#if 0 // TEMP TEMP TEMP
     MUTEX_TAKE_LOCK(m.get(), t);
+#endif
     lock_acquired = true;
   }
 

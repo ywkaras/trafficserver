@@ -155,7 +155,7 @@ SNIConfig::startup()
 void
 SNIConfig::cloneProtoSet()
 {
-  SCOPED_MUTEX_LOCK(lock, naVecMutex, this_ethread());
+  // SCOPED_MUTEX_LOCK(lock, naVecMutex, this_ethread()); TEMP TEMP TEMP
   for (auto na : naVec) {
     if (na->snpa) {
       auto snps = na->snpa->cloneProtoSet();
