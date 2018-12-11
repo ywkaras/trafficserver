@@ -32,6 +32,10 @@
 #include <ts/apidefs.h>
 namespace atscppapi
 {
+
+class VConnection {};
+
+#if 0
 // forward declarations
 class TransactionPlugin;
 struct TransactionState;
@@ -412,4 +416,6 @@ private:
   friend class utils::internal;
 };
 
+#endif
 } // namespace atscppapi
+

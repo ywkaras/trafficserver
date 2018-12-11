@@ -32,9 +32,8 @@ struct GlobalPluginState;
 /**
  * @brief The interface used when creating a GlobalPlugin.
  *
- * A GlobalPlugin is a Plugin that will fire for a given hook on all Transactions.
- * In otherwords, a GlobalPlugin is not tied to a specific plugin, a Transaction
- * specific plugin would be a TransactionPlugin.
+ * A GlobalPlugin is a Plugin that will fire for a given transaction hook on all transactions, a given session hook for all
+ * sessions, and global hooks as they occur.
  *
  * Depending on the
  * type of hook you choose to build you will implement one or more callback methods.
@@ -54,32 +53,35 @@ struct GlobalPluginState;
  * \endcode
  * @see Plugin
  */
-class GlobalPlugin : public Plugin
+class GlobalPlugin : public GlobalEvents
 {
 public:
   /**
    * registerHook is the mechanism used to attach a global hook.
    *
    * \note Whenever you register a hook you must have the appropriate callback definied in your GlobalPlugin
-   *  see HookType and Plugin for the correspond HookTypes and callback methods. If you fail to implement the
-   *  callback, a default implmentation will be used that will only resume the Transaction.
-   *
-   * @param HookType the type of hook you wish to register
-   * @see HookType
-   * @see Plugin
+   *  see HookType and GlobalEvents for the correspond HookTypes and callback methods. If you fail to implement the
+   *  callback, a default implmentation will be used that will only resume.
    */
-  void registerHook(Plugin::HookType);
+  void registerHook(TransactionEvents::HookType);
+  void registerHook(SessionEvents::HookType);
+  void registerHook(GlobalEvents::HookType);
+
   ~GlobalPlugin() override;
 
 protected:
   /**
    * Constructor.
    *
+   * @param ignore_internal_sessions When true, all hooks registered by this plugin are ignored
+   *                                 for internal sessions (internal sessions are created
+   *                                 when other plugins create requests).
+   *
    * @param ignore_internal_transactions When true, all hooks registered by this plugin are ignored
    *                                     for internal transactions (internal transactions are created
-   *                                     when other plugins create requests). Defaults to false.
+   *                                     when other plugins create requests).
    */
-  GlobalPlugin(bool ignore_internal_transactions = false);
+  GlobalPlugin(bool ignore_internal_sessions = false, bool ignore_internal_transactions = ignore_internal_sessions);
 
 private:
   GlobalPluginState *state_; /**< Internal state tied to a GlobalPlugin */

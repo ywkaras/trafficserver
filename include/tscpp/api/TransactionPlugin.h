@@ -79,25 +79,19 @@ struct TransactionPluginState;
  *   char *char_ptr_;
  * };
  * \endcode
- *
- * @see Plugin
- * @see HookType
  */
-class TransactionPlugin : public Plugin
+class TransactionPlugin : public TransactionEvents
 {
 public:
   /**
    * registerHook is the mechanism used to attach a transaction hook.
    *
    * \note Whenever you register a hook you must have the appropriate callback definied in your TransactionPlugin
-   *  see HookType and Plugin for the correspond HookTypes and callback methods. If you fail to implement the
+   *  see HookType and TransactionEvents for the correspond HookTypes and callback methods. If you fail to implement the
    *  callback, a default implmentation will be used that will only resume the Transaction.
-   *
-   * @param HookType the type of hook you wish to register
-   * @see HookType
-   * @see Plugin
    */
-  void registerHook(Plugin::HookType hook_type);
+  void registerHook(TransactionEvent::HookType hook_type);
+
   ~TransactionPlugin() override;
 
   bool isWebsocket() const;

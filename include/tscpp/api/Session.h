@@ -16,7 +16,7 @@
   limitations under the License.
  */
 /**
- * @file Transaction.h
+ * @file Session.h
  */
 
 #pragma once
@@ -33,21 +33,21 @@
 namespace atscppapi
 {
 // forward declarations
-class TransactionPlugin;
-struct TransactionState;
+class SessionPlugin;
+struct SessionState;
 namespace utils
 {
   class internal;
 }
 
 /**
- * @brief Transactions are the object containing all the state related to a HTTP Transaction
+ * @brief Sessions are the object containing all the state related to a HTTP Session
  *
- * @warning Transactions should never be directly created by the user, they will always be automatically
- * created and destroyed as they are needed. Transactions should never be saved beyond the
+ * @warning Sessions should never be directly created by the user, they will always be automatically
+ * created and destroyed as they are needed. Sessions should never be saved beyond the
  * scope of the function in which they are delivered otherwise undefined behaviour will result.
  */
-class Transaction final : noncopyable
+class Session : noncopyable
 {
 public:
   /**
@@ -63,10 +63,10 @@ public:
    *       mydata(int id, string foo) : id_(id), foo_(foo) { }
    *     }
    *
-   *     Transaction.setContextValue("some-key", std::shared_ptr(new mydata(12, "hello")));
+   *     Session.setContextValue("some-key", std::shared_ptr(new mydata(12, "hello")));
    *
    *     // From another plugin you'll have access to this contextual data:
-   *     std::shared_ptr<Transaction.getContextValue("some-key")
+   *     std::shared_ptr<Session.getContextValue("some-key")
    *
    * \endcode
    *
@@ -80,7 +80,7 @@ public:
     virtual ~ContextValue() {}
   };
 
-  ~Transaction();
+  ~Session();
 
   /**
    * Set the @a event for the currently active hook.
@@ -105,20 +105,20 @@ public:
   void setContextValue(const std::string &key, std::shared_ptr<ContextValue> value);
 
   /**
-   * Causes the Transaction to continue on to other states in the HTTP state machine
-   * If you do not call resume() on a Transaction it will remain in that state until
+   * Causes the Session to continue on to other states in the HTTP state machine
+   * If you do not call resume() on a Session it will remain in that state until
    * it's advanced out by a call to resume() or error().
    */
   void resume();
 
   /**
-   * Causes the Transaction to advance to the error state in the HTTP state machine.
+   * Causes the Session to advance to the error state in the HTTP state machine.
    * @see error(const std::string &)
    */
   void error();
 
   /**
-   * Causes the Transaction to advance to the error state in the HTTP state machine with
+   * Causes the Session to advance to the error state in the HTTP state machine with
    * a specific error message displayed. This is functionally equivalent to the following:
    *
    * \code
@@ -194,14 +194,14 @@ public:
   const sockaddr *getNextHopAddress() const;
 
   /**
-   * Set the incoming port on the Transaction
+   * Set the incoming port on the Session
    *
    * @param port is the port to set as the incoming port on the transaction
    */
   bool setIncomingPort(uint16_t port);
 
   /**
-   * Sets the server address on the Transaction to a populated sockaddr *
+   * Sets the server address on the Session to a populated sockaddr *
    *
    * @param sockaddr* the sockaddr structure populated as the server address.
    */
@@ -278,7 +278,7 @@ public:
   void setSkipRemapping(int);
 
   /**
-   * The available types of timeouts you can set on a Transaction.
+   * The available types of timeouts you can set on a Session.
    */
   enum TimeoutType {
     TIMEOUT_DNS = 0,     /**< Timeout on DNS */
@@ -288,7 +288,7 @@ public:
   };
 
   /**
-   * Allows you to set various types of timeouts on a Transaction
+   * Allows you to set various types of timeouts on a Session
    *
    * @param type The type of timeout
    * @param time_ms The timeout time in milliseconds
@@ -312,19 +312,19 @@ public:
   CacheStatus getCacheStatus();
 
   /**
-   * Returns the TSHttpTxn related to the current Transaction
+   * Returns the TSHttpTxn related to the current Session
    *
    * @return a void * which can be cast back to a TSHttpTxn.
    */
   void *getAtsHandle() const;
 
   /**
-   * Adds a TransactionPlugin to the current Transaction. This effectively transfers ownership and the
-   * Transaction is now responsible for cleaning it up.
+   * Adds a SessionPlugin to the current Session. This effectively transfers ownership and the
+   * Session is now responsible for cleaning it up.
    *
-   * @param TransactionPlugin* the TransactionPlugin that will be now bound to the current Transaction.
+   * @param SessionPlugin* the SessionPlugin that will be now bound to the current Session.
    */
-  void addPlugin(TransactionPlugin *);
+  void addPlugin(SessionPlugin *);
 
   /*
    * Note: The following methods cannot be attached to a Response
@@ -373,8 +373,8 @@ public:
   bool configFind(std::string const &name, TSOverridableConfigKey *conf, TSRecordDataType *type);
 
 private:
-  TransactionState *state_;          //!< The internal TransactionState object tied to the current Transaction
-  friend class TransactionPlugin;    //!< TransactionPlugin is a friend so it can call addPlugin()
+  SessionState *state_;          //!< The internal SessionState object tied to the current Session
+  friend class SessionPlugin;    //!< SessionPlugin is a friend so it can call addPlugin()
   friend class TransformationPlugin; //!< TransformationPlugin is a friend so it can call addPlugin()
 
   /**
@@ -382,7 +382,7 @@ private:
    *
    * @param raw_txn a void pointer that represents a TSHttpTxn
    */
-  Transaction(void *);
+  Session(void *);
 
   /**
    * Used to initialize the Request object for the Server.
@@ -401,13 +401,13 @@ private:
   void resetHandles();
 
   /**
-   * Returns a list of TransactionPlugin pointers bound to the current Transaction
+   * Returns a list of SessionPlugin pointers bound to the current Session
    *
    * @private
    *
-   * @return a std::list<TransactionPlugin *> which represents all TransactionPlugin bound to the current Transaction.
+   * @return a std::list<SessionPlugin *> which represents all SessionPlugin bound to the current Session.
    */
-  const std::list<TransactionPlugin *> &getPlugins() const;
+  const std::list<SessionPlugin *> &getPlugins() const;
 
   friend class utils::internal;
 };

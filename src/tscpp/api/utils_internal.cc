@@ -29,6 +29,9 @@
 #include <mutex>
 #include "tscpp/api/Plugin.h"
 #include "tscpp/api/GlobalPlugin.h"
+#include "tscpp/api/VConnection.h"
+#include "tscpp/api/Session.h"
+#include "tscpp/api/SessionPlugin.h"
 #include "tscpp/api/Transaction.h"
 #include "tscpp/api/TransactionPlugin.h"
 #include "tscpp/api/TransformationPlugin.h"
@@ -41,6 +44,12 @@ namespace
 {
 /// The index used to store required transaction based data.
 int TRANSACTION_STORAGE_INDEX = -1;
+
+/// The index used to store required session based data.
+int SESSION_STORAGE_INDEX = -1;
+
+/// The index used to store required vconnection based data.
+int VCONNECTION_STORAGE_INDEX = -1;
 
 void
 resetTransactionHandles(Transaction &transaction, TSEvent event)
@@ -79,7 +88,7 @@ handleTransactionEvents(TSCont cont, TSEvent event, void *edata)
     const std::list<TransactionPlugin *> &plugins = utils::internal::getTransactionPlugins(transaction);
     for (auto plugin : plugins) {
       std::shared_ptr<Mutex> trans_mutex = utils::internal::getTransactionPluginMutex(*plugin);
-      LOG_DEBUG("Locking TransacitonPlugin mutex to delete transaction plugin at %p", plugin);
+      LOG_DEBUG("Locking TransactionPlugin mutex to delete transaction plugin at %p", plugin);
       trans_mutex->lock();
       LOG_DEBUG("Locked Mutex...Deleting transaction plugin at %p", plugin);
       delete plugin;
@@ -111,41 +120,43 @@ setupTransactionManagement()
   TSHttpHookAdd(TS_HTTP_TXN_CLOSE_HOOK, cont);
 }
 
-void inline invokePluginForEvent(Plugin *plugin, TSHttpTxn ats_txn_handle, TSEvent event)
+void
+invokeHandlerForTransactionEvent(TransactionEventHandler *handler, TSHttpTxn ats_txn_handle, TSEvent event)
 {
-  Transaction &transaction = utils::internal::getTransaction(ats_txn_handle);
+  void (*mbr_func_ptr)(Transaction &);
   switch (event) {
   case TS_EVENT_HTTP_PRE_REMAP:
-    plugin->handleReadRequestHeadersPreRemap(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleReadRequestHeadersPreRemap;
     break;
   case TS_EVENT_HTTP_POST_REMAP:
-    plugin->handleReadRequestHeadersPostRemap(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleReadRequestHeadersPostRemap;
     break;
   case TS_EVENT_HTTP_SEND_REQUEST_HDR:
-    plugin->handleSendRequestHeaders(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleSendRequestHeaders;
     break;
   case TS_EVENT_HTTP_READ_RESPONSE_HDR:
-    plugin->handleReadResponseHeaders(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleReadResponseHeaders;
     break;
   case TS_EVENT_HTTP_SEND_RESPONSE_HDR:
-    plugin->handleSendResponseHeaders(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleSendResponseHeaders;
     break;
   case TS_EVENT_HTTP_OS_DNS:
-    plugin->handleOsDns(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleOsDns;
     break;
   case TS_EVENT_HTTP_READ_REQUEST_HDR:
-    plugin->handleReadRequestHeaders(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleReadRequestHeaders;
     break;
   case TS_EVENT_HTTP_READ_CACHE_HDR:
-    plugin->handleReadCacheHeaders(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleReadCacheHeaders;
     break;
   case TS_EVENT_HTTP_CACHE_LOOKUP_COMPLETE:
-    plugin->handleReadCacheLookupComplete(transaction);
+    mbr_func_ptr = &TransactionEventHandler::handleReadCacheLookupComplete;
     break;
   default:
     assert(false); /* we should never get here */
     break;
   }
+  handler->*mbr_func_ptr(utils::internal::getTransaction(ats_txn_handle));
 }
 
 } /* anonymous namespace */
@@ -167,30 +178,30 @@ utils::internal::getTransactionPluginMutex(TransactionPlugin &transaction_plugin
 {
   return transaction_plugin.getMutex();
 }
-
+)
 TSHttpHookID
-utils::internal::convertInternalHookToTsHook(Plugin::HookType hooktype)
+utils::internal::convertInternalHookToTsHook(TransactionEvents::HookType hooktype)
 {
   switch (hooktype) {
-  case Plugin::HOOK_READ_REQUEST_HEADERS_POST_REMAP:
+  case TransactionEvents::HOOK_READ_REQUEST_HEADERS_POST_REMAP:
     return TS_HTTP_POST_REMAP_HOOK;
-  case Plugin::HOOK_READ_REQUEST_HEADERS_PRE_REMAP:
+  case TransactionEvents::HOOK_READ_REQUEST_HEADERS_PRE_REMAP:
     return TS_HTTP_PRE_REMAP_HOOK;
-  case Plugin::HOOK_READ_RESPONSE_HEADERS:
+  case TransactionEvents::HOOK_READ_RESPONSE_HEADERS:
     return TS_HTTP_READ_RESPONSE_HDR_HOOK;
-  case Plugin::HOOK_SEND_REQUEST_HEADERS:
+  case TransactionEvents::HOOK_SEND_REQUEST_HEADERS:
     return TS_HTTP_SEND_REQUEST_HDR_HOOK;
-  case Plugin::HOOK_SEND_RESPONSE_HEADERS:
+  case TransactionEvents::HOOK_SEND_RESPONSE_HEADERS:
     return TS_HTTP_SEND_RESPONSE_HDR_HOOK;
-  case Plugin::HOOK_OS_DNS:
+  case TransactionEvents::HOOK_OS_DNS:
     return TS_HTTP_OS_DNS_HOOK;
-  case Plugin::HOOK_READ_REQUEST_HEADERS:
+  case TransactionEvents::HOOK_READ_REQUEST_HEADERS:
     return TS_HTTP_READ_REQUEST_HDR_HOOK;
-  case Plugin::HOOK_READ_CACHE_HEADERS:
+  case TransactionEvents::HOOK_READ_CACHE_HEADERS:
     return TS_HTTP_READ_CACHE_HDR_HOOK;
-  case Plugin::HOOK_CACHE_LOOKUP_COMPLETE:
+  case TransactionEvents::HOOK_CACHE_LOOKUP_COMPLETE:
     return TS_HTTP_CACHE_LOOKUP_COMPLETE_HOOK;
-  case Plugin::HOOK_SELECT_ALT:
+  case TransactionEvents::HOOK_SELECT_ALT:
     return TS_HTTP_SELECT_ALT_HOOK;
   default:
     assert(false); // shouldn't happen, let's catch it early

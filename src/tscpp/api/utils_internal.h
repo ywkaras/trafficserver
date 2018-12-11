@@ -57,6 +57,8 @@ namespace utils
     static std::string consumeFromTSIOBufferReader(TSIOBufferReader);
     static std::shared_ptr<Mutex> getTransactionPluginMutex(TransactionPlugin &);
     static Transaction &getTransaction(TSHttpTxn);
+    static Session &getSession(TSHttpSsn);
+    static VConnection &getVConnection(TSHttpVConn);
 
     static AsyncHttpFetchState *
     getAsyncHttpFetchState(AsyncHttpFetch &async_http_fetch)
