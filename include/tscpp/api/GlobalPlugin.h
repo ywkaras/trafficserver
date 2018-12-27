@@ -85,4 +85,11 @@ private:
   GlobalPluginState *state_; /**< Internal state tied to a GlobalPlugin */
 };
 
+bool RegisterGlobalPlugin(const char *name, const char *vendor, const char *email);
+inline bool
+RegisterGlobalPlugin(std::string const &name, std::string const &vendor, std::string const &email)
+{
+  return RegisterGlobalPlugin(name.c_str(), vendor.c_str(), email.c_str());
+}
+
 } // namespace atscppapi

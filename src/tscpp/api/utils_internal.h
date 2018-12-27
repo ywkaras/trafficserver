@@ -55,7 +55,13 @@ namespace utils
     static HttpVersion getHttpVersion(TSMBuffer hdr_buf, TSMLoc hdr_loc);
     static void initTransactionManagement();
     static std::string consumeFromTSIOBufferReader(TSIOBufferReader);
-    static std::shared_ptr<Mutex> getTransactionPluginMutex(TransactionPlugin &);
+    // TEMP static std::shared_ptr<Mutex> getTransactionPluginMutex(TransactionPlugin &);
+
+    /**
+    * Get a Transaction object for the TS API Transaction handle (creating one if necessary).  The TSMutex for the
+    * Transaction is presumed to be locked, as it will be when a Hook is triggered where the "edata" is a pointer to the
+    * Transaction.  
+    */
     static Transaction &getTransaction(TSHttpTxn);
 
     static AsyncHttpFetchState *

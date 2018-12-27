@@ -25,6 +25,7 @@ library_include_HEADERS = \
         ClientRequest.h \
         Continuation.h \
         GlobalPlugin.h \
+        GlobalPluginAbs.h \
         GzipDeflateTransformation.h \
         GzipInflateTransformation.h \
         Headers.h \
@@ -33,14 +34,16 @@ library_include_HEADERS = \
         HttpVersion.h \
         InterceptPlugin.h \
         Logger.h \
-        Plugin.h \
         PluginInit.h \
         RemapPlugin.h \
         Request.h \
         Response.h \
         Stat.h \
+        SessionPlugin.h \
+        SessionPluginAbs.h \
         Transaction.h \
         TransactionPlugin.h \
+        TransactionPluginAbs.h \
         TransformationPlugin.h \
         Url.h \
         noncopyable.h \

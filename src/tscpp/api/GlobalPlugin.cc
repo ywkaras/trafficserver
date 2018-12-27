@@ -91,3 +91,18 @@ GlobalPlugin::registerHook(Plugin::HookType hook_type)
   TSHttpHookAdd(hook_id, state_->cont_);
   LOG_DEBUG("Registered global plugin %p for hook %s", this, HOOK_TYPE_STRINGS[hook_type].c_str());
 }
+
+bool
+atscppapi::RegisterGlobalPlugin(const char *name, const char *vendor, const char *email)
+{
+  TSPluginRegistrationInfo info;
+  info.plugin_name   = name;
+  info.vendor_name   = vendor;
+  info.support_email = email;
+
+  bool success = (TSPluginRegister(&info) == TS_SUCCESS);
+  if (!success) {
+    TSError("[Plugin.cc] Plugin registration failed");
+  }
+  return success;
+}

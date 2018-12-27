@@ -16,37 +16,36 @@
   limitations under the License.
  */
 /**
- * @file Plugin.h
+ * @file TransactionPluginAbs.h
  *
- * @brief Contains the base interface used in creating Global and Transaction plugins.
+ * @brief Contains the (abstract) base interface used in creating Transaciton plugins.
  * \note This interface can never be implemented directly, it should be implemented
- *   through extending GlobalPlugin, TransactionPlugin, or TransformationPlugin.
+ *   through extending TransactionPlugin or TransformationPlugin.
  */
 
 #pragma once
 
 #include "tscpp/api/Request.h"
 #include "tscpp/api/Transaction.h"
-#include "tscpp/api/noncopyable.h"
 
 namespace atscppapi
 {
 /**
- * @brief The base interface used when creating a Plugin.
+ * @brief The base interface used when creating a TransactionPlugin.
  *
  * \note This interface can never be implemented directly, it should be implemented
- *   through extending GlobalPlugin, TransactionPlugin, or TransformationPlugin.
+ *   through extending TransactionTransactionPlugin or TransformationTransactionPlugin.
  *
- * @see TransactionPlugin
- * @see GlobalPlugin
- * @see TransformationPlugin
+ * @see TransactionTransactionPlugin
+ * @see TransformationTransactionPlugin
  */
-class Plugin : noncopyable
+class TransactionPluginAbs
 {
 public:
+  using Self = TransactionPluginAbs;
+
   /**
-   * A enumeration of the available types of Hooks. These are used with GlobalPlugin::registerHook()
-   * and TransactionPlugin::registerHook().
+   * A enumeration of the available types of per-transaction Hooks.
    */
   enum HookType {
     HOOK_READ_REQUEST_HEADERS_PRE_REMAP = 0, /**< This hook will be fired before remap has occurred. */
@@ -60,6 +59,9 @@ public:
     HOOK_CACHE_LOOKUP_COMPLETE, /**< This hook will be fired after cache lookup complete. */
     HOOK_SELECT_ALT             /**< This hook will be fired after select alt. */
   };
+
+  /**< Human readable strings for each HookType, you can access them as HOOK_TYPE_STRINGS[HOOK_OS_DNS] for example. */
+  static const std::string HOOK_TYPE_STRINGS[];
 
   /**
    * This method must be implemented when you hook HOOK_READ_REQUEST_HEADERS_PRE_REMAP
@@ -147,26 +149,22 @@ public:
    */
   virtual void handleSelectAlt(const Request &clientReq, const Request &cachedReq, const Response &cachedResp){};
 
-  virtual ~Plugin(){};
+  virtual ~Self(){};
+
+  /**
+   * No copying/moving.
+   */
+  Self(const Self &) = delete;
+  Self & operator = (const Self &) = delete;
 
 protected:
   /**
    * \note This interface can never be implemented directly, it should be implemented
-   *   through extending GlobalPlugin, TransactionPlugin, or TransformationPlugin.
+   *   through extending TransactionPluginAbs or TransformationPluginAbs.
    *
    * @private
    */
-  Plugin(){};
+  Self(){};
 };
-
-/**< Human readable strings for each HookType, you can access them as HOOK_TYPE_STRINGS[HOOK_OS_DNS] for example. */
-extern const std::string HOOK_TYPE_STRINGS[];
-
-bool RegisterGlobalPlugin(const char *name, const char *vendor, const char *email);
-inline bool
-RegisterGlobalPlugin(std::string const &name, std::string const &vendor, std::string const &email)
-{
-  return RegisterGlobalPlugin(name.c_str(), vendor.c_str(), email.c_str());
-}
 
 } // namespace atscppapi

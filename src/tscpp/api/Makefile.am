@@ -37,11 +37,12 @@ libtscppapi_la_SOURCES = \
 	HttpVersion.cc \
 	InterceptPlugin.cc \
 	Logger.cc \
-	Plugin.cc \
+	PluginAbs.cc \
 	RemapPlugin.cc \
 	Request.cc \
 	Response.cc \
 	Stat.cc \
+	SessionPlugin.cc \
 	Transaction.cc \
 	TransactionPlugin.cc \
 	TransformationPlugin.cc \

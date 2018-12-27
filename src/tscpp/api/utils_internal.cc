@@ -26,7 +26,6 @@
 #include <cstdlib>
 #include <cassert>
 #include <cstddef>
-#include <mutex>
 #include "tscpp/api/Plugin.h"
 #include "tscpp/api/GlobalPlugin.h"
 #include "tscpp/api/Transaction.h"
