@@ -71,7 +71,7 @@ protected:
    *
    * @private
    */
-  Self() : TransactionPluginAbs() {};
+  Self() : TransactionPluginAbs(){};
 };
 
 } // namespace atscppapi

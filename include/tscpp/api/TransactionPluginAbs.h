@@ -155,7 +155,7 @@ public:
    * No copying/moving.
    */
   Self(const Self &) = delete;
-  Self & operator = (const Self &) = delete;
+  Self &operator=(const Self &) = delete;
 
 protected:
   /**

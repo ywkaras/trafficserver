@@ -42,8 +42,8 @@ class GlobalPluginAbs : public SessionPluginAbs
 public:
   using Self = GlobalPluginAbs;
 
-  // TODO
-  #if 0
+// TODO
+#if 0
   /**
    * A enumeration of the available types of per-transaction Hooks.
    */
@@ -52,7 +52,7 @@ public:
 
   /**< Human readable strings for each HookType, you can access them as HOOK_TYPE_STRINGS[HOOK_xxx] for example. */
   static const std::string HOOK_TYPE_STRINGS[];
-  #endif
+#endif
 
   virtual ~Self(){};
 
@@ -63,7 +63,7 @@ protected:
    *
    * @private
    */
-  Self() : SessionPluginAbs() {};
+  Self() : SessionPluginAbs(){};
 };
 
 } // namespace atscppapi

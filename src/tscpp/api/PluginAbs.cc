@@ -31,5 +31,4 @@ const std::string atscppapi::TransactionPluginAbs::HOOK_TYPE_STRINGS[] = {
   std::string("HOOK_READ_REQUEST_HEADERS"),           std::string("HOOK_READ_CACHE_HEADERS"),
   std::string("HOOK_CACHE_LOOKUP_COMPLETE"),          std::string("HOOK_SELECT_ALT")};
 
-const std::string atscppapi::SessionPluginAbs::HOOK_TYPE_STRINGS[] = {
-  std::string("HOOK_START_TRANSACTION")};
+const std::string atscppapi::SessionPluginAbs::HOOK_TYPE_STRINGS[] = {std::string("HOOK_START_TRANSACTION")};
