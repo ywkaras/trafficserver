@@ -84,23 +84,49 @@ tr = Test.AddTestRun()
 tr.Processes.Default.StartBefore(server)
 tr.Processes.Default.StartBefore(Test.Processes.ts)
 tr.Processes.Default.Command = (
-'curl "http://127.0.0.1:{0}" --user-agent "007" --verbose '.format(ts.Variables.port) + reallyLong()
+'curl "http://127.0.0.1:{0}" --user-agent "007" --verbose -H "Connection: close"'.format(ts.Variables.port) + reallyLong()
 )
 tr.Processes.Default.ReturnCode = 0
 
-# Repeat same curl, will be answered from the ATS cache.
+# Repeat same curl multiple times.  Caching is unpredictable in 7.1.x, but the last request will be answered from cache.
 #
 tr = Test.AddTestRun()
 tr.Processes.Default.Command = (
-'curl "http://127.0.0.1:{0}" --user-agent "007" --verbose '.format(ts.Variables.port) + reallyLong()
+'curl "http://127.0.0.1:{0}" --user-agent "007" --verbose -H "Connection: close"'.format(ts.Variables.port) + reallyLong()
+)
+tr.Processes.Default.ReturnCode = 0
+#
+tr = Test.AddTestRun()
+tr.Processes.Default.Command = (
+'curl "http://127.0.0.1:{0}" --user-agent "007" --verbose -H "Connection: close"'.format(ts.Variables.port) + reallyLong()
+)
+tr.Processes.Default.ReturnCode = 0
+#
+tr = Test.AddTestRun()
+tr.Processes.Default.Command = (
+'curl "http://127.0.0.1:{0}" --user-agent "007" --verbose -H "Connection: close"'.format(ts.Variables.port) + reallyLong()
+)
+tr.Processes.Default.ReturnCode = 0
+#
+tr = Test.AddTestRun()
+tr.Processes.Default.Command = (
+'curl "http://127.0.0.1:{0}" --user-agent "007" --verbose -H "Connection: close"'.format(ts.Variables.port) + reallyLong()
+)
+tr.Processes.Default.ReturnCode = 0
+#
+tr = Test.AddTestRun()
+tr.Processes.Default.Command = (
+'curl "http://127.0.0.1:{0}" --user-agent "007" --verbose -H "Connection: close"'.format(ts.Variables.port) + reallyLong()
 )
 tr.Processes.Default.ReturnCode = 0
 
-# Delay to allow TS to flush report to disk, then "sanitize" generated log.
+# Delay to allow TS to flush report to disk, then "sanitize" generated log.  Look at only the log lines for the first
+# request (definitely not cached) and the last request (definitely cached).
 #
 tr = Test.AddTestRun()
 tr.DelayStart = 10
-tr.Processes.Default.Command = 'python {0} {3} < {1} > {2}'.format(
+tr.Processes.Default.Command = '( head -1 {0} ; tail -1 {0} ) | python {1} {4} > {3}'.format(
+    os.path.join(ts.Variables.LOGDIR, 'test_all_headers.log'),
     os.path.join(Test.TestDirectory, 'all_headers_sanitizer.py'),
     os.path.join(ts.Variables.LOGDIR, 'test_all_headers.log'),
     os.path.join(ts.Variables.LOGDIR, 'test_all_headers.log.san'),
