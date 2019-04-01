@@ -31,6 +31,7 @@ Synopsis
 
 .. function:: char * TSUrlStringGet(TSMBuffer bufp, TSMLoc offset, int * length)
 .. function:: char * TSHttpTxnEffectiveUrlStringGet(TSHttpTxn txn, int * length)
+.. function:: TSReturnCode TSHttpHdrEffectiveURLBuffGet(TSMBuffer hdr_buf, TSMLoc hdr_loc, void * buff, int64_t size, int64_t* length)
 .. function:: int TSUrlLengthGet(TSMBuffer bufp, TSMLoc offset)
 .. function:: void TSUrlPrint(TSMBuffer bufp, TSMLoc offset, TSIOBuffer iobufp)
 
