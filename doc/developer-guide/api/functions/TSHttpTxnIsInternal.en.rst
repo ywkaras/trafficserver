@@ -28,6 +28,7 @@ Synopsis
 
 .. function:: int TSHttpTxnIsInternal(TSHttpTxn txnp)
 .. function:: int TSHttpSsnIsInternal(TSHttpSsn ssnp)
+.. function:: int TSVConnIsInternal(TSVConn vconnp)
 
 Description
 ===========
@@ -38,10 +39,16 @@ was originated within Traffic Server.
 :func:`TSHttpSsnIsInternal` tests whether a HTTP session
 was originated within Traffic Server.
 
+:func:`TSVConnIsInternal` tests whether a virtual connection
+was originated within Traffic Server.
+
+Note that a session is internal if and only if its virtual connection is internal,
+and a transaction is internal if and only if its session  is intennal.
+
 Return Values
 =============
 
-Both these APIs return a :type:`int`, indicating whether the
+All of these APIs return a :type:`int`, indicating whether the
 request was internal (:literal:`1`) or not (:literal:`0`).
 
 Examples
