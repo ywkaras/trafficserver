@@ -91,3 +91,5 @@ tools_plugins_async_engine_la_LDFLAGS = \
   -avoid-version \
   -rpath $(abs_builddir)
 
+noinst_LTLIBRARIES += tools/plugins/test_msg_comp.la
+tools_plugins_test_msg_comp_la_SOURCES = tools/plugins/test_msg_comp.cc
