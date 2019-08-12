@@ -1720,9 +1720,8 @@ tsapi void TSFetchUrl(const char *request, int request_len, struct sockaddr cons
                       TSFetchWakeUpOptions callback_options, TSFetchEvent event);
 tsapi void TSFetchPages(TSFetchUrlParams_t *params);
 
-/* Check if HTTP State machine is internal or not */
-tsapi int TSHttpTxnIsInternal(TSHttpTxn txnp);
-tsapi int TSHttpSsnIsInternal(TSHttpSsn ssnp);
+/* Check if the virtual connection is internal or not. */
+tsapi int TSVConnIsInternal(TSVConn vconnp);
 
 /* --------------------------------------------------------------------------
    HTTP alternate selection */

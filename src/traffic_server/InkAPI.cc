@@ -7890,27 +7890,15 @@ TSFetchRespHdrMLocGet(TSFetchSM fetch_sm)
 }
 
 int
-TSHttpSsnIsInternal(TSHttpSsn ssnp)
+TSVConnIsInternal(TSVConn vconnp)
 {
-  ProxySession *cs = reinterpret_cast<ProxySession *>(ssnp);
-
-  if (!cs) {
+  if (!vconnp) {
     return 0;
   }
 
-  NetVConnection *vc = cs->get_netvc();
-  if (!vc) {
-    return 0;
-  }
+  NetVConnection *vc = reinterpret_cast<NetVConnection *>(vconnp);
 
   return vc->get_is_internal_request() ? 1 : 0;
-}
-
-int
-TSHttpTxnIsInternal(TSHttpTxn txnp)
-{
-  sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
-  return TSHttpSsnIsInternal(TSHttpTxnSsnGet(txnp));
 }
 
 void
