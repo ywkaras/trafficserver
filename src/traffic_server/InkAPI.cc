@@ -27,6 +27,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <string_view>
+#include <type_traits>
 
 #include "tscore/ink_platform.h"
 #include "tscore/ink_base64.h"
@@ -397,6 +398,84 @@ static ClassAllocator<APIHook> apiHookAllocator("apiHookAllocator");
 static ClassAllocator<INKContInternal> INKContAllocator("INKContAllocator");
 static ClassAllocator<INKVConnInternal> INKVConnAllocator("INKVConnAllocator");
 static ClassAllocator<MIMEFieldSDKHandle> mHandleAllocator("MIMEFieldSDKHandle");
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Mapping from internal C++ types to external C types).
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+template <typename External_type> struct ET_To_IT {
+  using T = void;
+};
+
+template <typename Internal_type> struct IT_To_ET {
+  using T = void;
+};
+
+#define X(EXTERNAL_TYPE, INTERNAL_TYPE)        \
+  template <> struct ET_To_IT<EXTERNAL_TYPE> { \
+    using T = INTERNAL_TYPE;                   \
+  };                                           \
+  template <> struct IT_To_ET<INTERNAL_TYPE> { \
+    using T = EXTERNAL_TYPE;                   \
+  };
+
+X(TSMLoc, HdrHeapObjImpl *)
+X(TSMBuffer, HdrHeapSDKHandle *)
+X(TSHttpSsn, ProxySession *ServerSession *)
+X(TSHttpTxn, HttpSM *)
+X(TSVIO, VIO *)
+X(TSVConn, VConnection *)
+X(TSMimeParser, MIMEParser *)
+X(TSHttpParser, HttpParser *)
+X(TSFile, FileImpl *)
+X(TSCont, INKContInternal *)
+X(TSMutex, ProxyMutex *)
+X(TSCacheKey, CacheInfo * CryptoHash * ?)
+X(TSCacheHttpInfo, CacheHTTPInfo *)
+X(TSConfig, INKConfigImpl *)
+X(TSTextLogObject, TextLogObject *)
+X(TSPortDescriptor, HttpProxyPort *)
+X(TSUuid, ATSUuid *)
+X(TSIOBuffer, MIOBuffer *)
+X(TSIOBufferReader, MIOBufferReader *)
+X(TSHttpAltInfo, HttpAltInfo *)
+X(TSMatcherLine, matcher_line *)
+X(TSAIOCallBack, AIOCallBack *)
+
+X(TSAction, Action *)
+WEIRD
+
+#undef X
+
+// Function to convert type of internal value to external.
+//
+template <typename Internal_type>
+typename IT_To_ET<Internal_type>::T
+iToE(Internal_type v)
+{
+  return reinterpret_cast<typename ET_To_IT<Internal_type>::T>(v);
+}
+
+// Function to convert type of external value to internal.
+//
+template <typename External_type>
+typename ET_To_IT<External_type>::T
+eToI(External_type v)
+{
+  return reinterpret_cast<typename ET_To_IT<External_type>::T>(v);
+}
+
+} // end anonymous namespace
+
+// Verify assumptions the API implementaion makes about external types that are the same as internal types.
+//
+static_assert(std::is_same<TSMgmtInt, RecInt>::value);
+static_assert(std::is_same<TSMgmtFloat, RecFloat>::value);
+static_assert(std::is_same<TSMgmtCounter, RecCounter>::value);
 
 ////////////////////////////////////////////////////////////////////
 //
