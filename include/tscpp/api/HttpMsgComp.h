@@ -23,10 +23,37 @@
  */
 
 /*
-Note:  The clases in this include file may be used independently from the rest of the C++ API.
+
+NOTES
+-----
+
+The clases in this include file may be used independently from the rest of the C++ API.
+
+These clases are designed to create intances as local variables in functions.  In TS API hook handling code,
+no TS API function may be called after the call to TSHttpTxnReenable() (which is called by the resume() and error()
+member functions of atscppapi::Transaction).  TS API functions are called by the destructors of these classes.
+Therefore, blocks containing instances of these claesses must end before the call to TSHttpTxnReenable().
+
+void * is used as the formal parameter type in function prototypes when the actual parameter type should be
+TSHttpTxn (a transaction handle).  This is for compatability with  atscppapi::Transaction::getAtsHandle().
+
+A (non-null) TSMLoc may point to 4 different types of values objects:
+- An HTTP message.
+- The URL in a HTTP Request message.
+- The MIME header in an HTTP message.
+- A field (line) in a MIME header.
+Calling TSHamdleMLocRelease() is optional (does nothing) except when the TSMLoc points to a MIME header field.
+This code does not make the optional calls TSHandleMLocRelease().
+
 */
 
 #pragma once
+
+#include <string_view>
+#include <utility>
+#include <memory>
+
+#include <ts/ts.h>
 
 // Use this assert when the check expression has no side effects that are needed in the release build.  Otherwise, use
 // TSAssert().
@@ -37,26 +64,6 @@ Note:  The clases in this include file may be used independently from the rest o
 #else
 #define assert TSAssert
 #endif
-
-#include <string_view>
-#include <utility>
-#include <memory>
-
-#include <ts/ts.h>
-
-/*
-Note:  These clases are designed to create intances as local variables in functions.  It is expected that compiler
-optimization will prevent the use of references from creating run-time overhead (see https://godbolt.org/z/KJZkno ).
-In TS API hook handling code, no TS API function may be called after the call to TSHttpTxnReenable() (which is
-called by the resume() and error() member functions of atscppapi::Transaction).  TS API functions are called by the
-destructors of these classes.  Therefore, blocks containing instances of these claesses must end before the call to
-TSHttpTxnReenable().
-*/
-
-/*
-Note:  void * is used as the formal parameter type in function prototypes when the actual parameter type should be
-TSHttpTxn (a transaction handle).  This is for compatability with  atscppapi::Transaction::getAtsHandle().
-*/
 
 namespace atscppapi
 {
@@ -109,10 +116,6 @@ namespace detail
   DynamicCharArray
   txnRemapUrlStringGet(void *txn)
   {
-    // Note:  Generally, TSMLoc instances must be freed with a call to TSHandleMLocRelease().  But currently releasing a
-    // URL TSMLoc is a no-op.  And it's impossible to call TSHandleMLocRelease() here because it won't accept a null
-    // TSMBuffer.
-    //
     TSMLoc urlLoc;
     if (txnRemapUrlGetFuncPtr(static_cast<TSHttpTxn>(txn), &urlLoc) != TS_SUCCESS) {
       return DynamicCharArray(nullptr, 0);
@@ -146,22 +149,110 @@ txnEffectiveUrlStringGet(void *txn)
   return DynamicCharArray(str, str ? length : 0);
 }
 
-class MsgBase;
+using MsgBuffer = TSMbuffer;
+
+class MsgBase
+{
+public:
+  MsgBuffer
+  msgBuffer() const
+  {
+    return _msgBuffer;
+  }
+
+  TSMLoc
+  msgLoc() const
+  {
+    return _msgLoc;
+  }
+
+  bool
+  hasMsg() const
+  {
+    return msgLoc() != TS_NULL_MLOC;
+  }
+
+  friend bool
+  operator==(const MsgBase &a, const MsgBase &b)
+  {
+    if ((a._msgBuffer == b._msgBuffer) && (a._msgLoc == b._msgLoc)) {
+      return true;
+    }
+
+    return !a.hasMsg() && !b.hasMsg();
+  }
+
+  enum class Type { UNKNOWN = TS_HTTP_TYPE_UNKNOWN, REQUEST = TS_HTTP_TYPE_REQUEST, RESPONSE = TS_HTTP_TYPE_RESPONSE };
+
+  Type
+  type() const
+  {
+    assert(hasMsg());
+
+    return static_cast<Type>(TSHttpHdrTypeGet(_msgBuffer, _msgLoc));
+  }
+
+  friend bool
+  operator!=(const MsgBase &a, const MsgBase &b)
+  {
+    return !(a == b);
+  }
+
+  //  Returns number of mime header lines in HTTP message.  Can only be called if hasMsg() is true.
+  //
+  int
+  mimeFieldsCount() const
+  {
+    assert(hasMsg());
+
+    return TSMimeHdrFieldsCount(msgBuffer(), msgLoc());
+  }
+
+protected:
+  explicit MsgBase(MsgBuffer msgBuffer = nullptr, TSMLoc msgLoc = TS_NULL_MLOC) : _msgBuffer(msgBuffer), _msgLoc(msgLoc)
+  {
+    assert((nullptr == msgBuffer) == (TS_NULL_MLOC == msgLoc));
+  }
+
+private:
+  MsgBuffer _msgBuffer;
+  TSMLoc _msgLoc;
+};
 
 class MimeField
 {
 public:
   // If loc is TS_NULL_MLOC, instance constructed in empty state.
   //
-  explicit MimeField(MsgBase &msg, TSMLoc loc = TS_NULL_MLOC) : _msg(msg), _loc(loc) {}
+  explicit MimeField(MsgBase msg, TSMLoc loc = TS_NULL_MLOC) : _msg(msg), _loc(loc) {}
 
   // MimeField at (zero-base) index idx in HTTP message.
   //
-  MimeField(MsgBase &msg, int idx);
+  MimeField(MsgBase msg, int idx);
 
   // MimeField with given name in HTTP message.
   //
-  MimeField(MsgBase &msg, std::string_view name);
+  MimeField(MsgBase msg, std::string_view name);
+
+  // Create new MIME field in message and optionally include a name for it.
+  //
+  static MimeField
+  create(MsgBase msg, std::string_view name = std::string_view())
+  {
+    assert(msg.hasMsg());
+
+    TSMLoc loc;
+    if (name != std::string_view()) {
+      if (TSMimeHdrFieldCreateNamed(msg.msgBuffer(), msg.msgLoc(), name.data(), name.length(), &loc) != TS_SUCCESS) {
+        loc = TS_NULL_MLOC;
+      }
+    } else {
+      if (TSMimeHdrFieldCreate(msg.msgBuffer(), msg.msgLoc(), &loc) != TS_SUCCESS) {
+        loc = TS_NULL_MLOC;
+      }
+    }
+    return MimeField(msg, loc);
+  }
 
   TSMLoc
   loc() const
@@ -170,7 +261,7 @@ public:
   }
 
   MsgBase &
-  msg() const
+  msg()
   {
     return _msg;
   }
@@ -189,11 +280,10 @@ public:
   MimeField &operator=(const MimeField &) = delete;
 
   MimeField(MimeField &&source);
-
-  // Move assign only allowed if the two instances refer to the same message.
-  //
   MimeField &operator=(MimeField &&source);
 
+  // A Call to this function on an invalid instance is ignored.
+  //
   void destroy();
 
   // Next field, returns invalid instance if none.
@@ -215,15 +305,29 @@ public:
 
   void valuesClear();
 
+  // Get a comma-separated list of all values (or single value).  The returned string_view is invalidated by any change
+  // to field's list of values.
+  //
+  std::string_view valuesGet() const;
+
+  // Set comman-separated list of all values (or single value)
+  //
+  void valuesSet(std::string_view new_values);
+
+  // Append a new value at the end (with separating comma if there are already one or more values).
+  //
+  void valAppend(std::string_view new_value);
+
+  // NOTE: valuesCount(), valGet() and valInsert() should be used rarely.  If you are iterating over the comma-separated
+  // values for field, you generally should use the TextView member function take_prefix_at(',').
+
   // Returns number of values. Values index are from 0 to valuesCount() - 1.
   //
   int valuesCount() const;
 
-  std::string_view valGet(int idx) const;
-
-  // Get comman-separated list of all values.
+  // The returned string_view is invalidated by any change to the field's list of values.
   //
-  std::string_view valuesGet() const;
+  std::string_view valGet(int idx) const;
 
   void valSet(int idx, std::string_view new_value);
 
@@ -231,108 +335,11 @@ public:
   //
   void valInsert(int idx, std::string_view new_value);
 
-  // Append a new value at the end.
-  //
-  void valAppend(std::string_view new_value);
-
   ~MimeField();
 
 private:
-  MsgBase &_msg;
+  MsgBase _msg;
   TSMLoc _loc;
-};
-
-class MsgBuffer
-{
-public:
-  explicit MsgBuffer(TSMBuffer hndl) : _hndl(hndl) {}
-
-  // Returns the handle.
-  //
-  TSMBuffer
-  bufHndl() const
-  {
-    return _hndl;
-  }
-
-  // No copying, in this or derived classes.
-  MsgBuffer(const MsgBuffer &) = delete;
-  MsgBuffer &operator=(const MsgBuffer &) = delete;
-
-protected:
-  MsgBuffer() {}
-
-  void
-  set(TSMBuffer hndl)
-  {
-    _hndl = hndl;
-  }
-
-private:
-  TSMBuffer _hndl;
-};
-
-class MsgBase : public MsgBuffer
-{
-public:
-  TSMLoc
-  msgLoc() const
-  {
-    return _msgLoc;
-  }
-
-  bool
-  hasMsg() const
-  {
-    return msgLoc() != TS_NULL_MLOC;
-  }
-
-  //  Returns number of mime header lines in HTTP message.  Can only be called if hasMsg() is true.
-  //
-  int
-  mimeFieldsCount() const
-  {
-    assert(hasMsg());
-
-    return TSMimeHdrFieldsCount(bufHndl(), msgLoc());
-  }
-
-  MimeField
-  newMimeField(std::string_view name = std::string_view())
-  {
-    assert(hasMsg());
-
-    TSMLoc loc;
-    if (name != std::string_view()) {
-      if (TSMimeHdrFieldCreateNamed(bufHndl(), msgLoc(), name.data(), name.length(), &loc) != TS_SUCCESS) {
-        loc = TS_NULL_MLOC;
-      }
-    } else {
-      if (TSMimeHdrFieldCreate(bufHndl(), msgLoc(), &loc) != TS_SUCCESS) {
-        loc = TS_NULL_MLOC;
-      }
-    }
-    return MimeField(*this, loc);
-  }
-
-  ~MsgBase()
-  {
-    if (_msgLoc && bufHndl()) {
-      TSAssert(TSHandleMLocRelease(bufHndl(), TS_NULL_MLOC, _msgLoc) == TS_SUCCESS);
-    }
-  }
-
-protected:
-  explicit MsgBase(TSMBuffer bHndl = nullptr, TSMLoc msgLoc = TS_NULL_MLOC) : MsgBuffer(bHndl), _msgLoc(msgLoc) {}
-
-  void
-  setMsgLoc(TSMLoc msgLoc)
-  {
-    _msgLoc = msgLoc;
-  }
-
-private:
-  TSMLoc _msgLoc;
 };
 
 class ReqMsg : public MsgBase
@@ -340,7 +347,7 @@ class ReqMsg : public MsgBase
 public:
   ReqMsg() {}
 
-  ReqMsg(TSMBuffer bHndl, TSMLoc msgLoc) : MsgBase(bHndl, msgLoc) {}
+  ReqMsg(MsgBuffer msgBuffer, TSMLoc msgLoc) : MsgBase(msgBuffer, msgLoc) {}
 };
 
 class RespMsg : public MsgBase
@@ -348,10 +355,10 @@ class RespMsg : public MsgBase
 public:
   RespMsg() {}
 
-  RespMsg(TSMBuffer bHndl, TSMLoc msgLoc) : MsgBase(bHndl, msgLoc) {}
+  RespMsg(MsgBuffer msgBuffer, TSMLoc msgLoc) : MsgBase(msgBuffer, msgLoc) {}
 };
 
-template <TSReturnCode (*getInTxn)(TSHttpTxn txnp, TSMBuffer *, TSMLoc *), class ReqOrRespMsgBase>
+template <TSReturnCode (*getInTxn)(TSHttpTxn txnp, MsgBuffer *, TSMLoc *), class ReqOrRespMsgBase>
 class TxnMsg : public ReqOrRespMsgBase
 {
 public:
@@ -375,7 +382,7 @@ private:
   void
   _init(void *txnHndl)
   {
-    TSMBuffer msgBuffer;
+    MsgBuffer msgBuffer;
     TSMLoc msgLoc;
 
     if (TS_SUCCESS == getInTxn(static_cast<TSHttpTxn>(txnHndl), &msgBuffer, &msgLoc)) {
@@ -394,19 +401,37 @@ using TxnCachedResp = TxnMsg<TSHttpTxnCachedRespGet, RespMsg>;
 
 //////////////////// Inline Member Function Implementations //////////////////
 
-inline MimeField::MimeField(MsgBase &msg, int idx) : _msg(msg)
+inline MimeField::MimeField(MsgBase msg, int idx) : _msg(msg)
 {
   assert(msg.hasMsg());
   assert((idx >= 0) && (idx < msg.mimeFieldsCount()));
 
-  _loc = TSMimeHdrFieldGet(_msg.bufHndl(), _msg.msgLoc(), idx);
+  _loc = TSMimeHdrFieldGet(_msg.msgBuffer(), _msg.msgLoc(), idx);
 }
 
-inline MimeField::MimeField(MsgBase &msg, std::string_view name) : _msg(msg)
+inline MimeField::MimeField(MsgBase msg, std::string_view name) : _msg(msg)
 {
   assert(msg.hasMsg());
 
-  _loc = TSMimeHdrFieldFind(_msg.bufHndl(), _msg.msgLoc(), name.data(), name.length());
+  _loc = TSMimeHdrFieldFind(_msg.msgBuffer(), _msg.msgLoc(), name.data(), name.length());
+}
+
+inliine MimeField
+MimeField::create(MsgBase msg, std::string_view name = std::string_view())
+{
+  assert(msg.hasMsg());
+
+  TSMLoc loc;
+  if (name != std::string_view()) {
+    if (TSMimeHdrFieldCreateNamed(msg.msgBuffer(), msg.msgLoc(), name.data(), name.length(), &loc) != TS_SUCCESS) {
+      loc = TS_NULL_MLOC;
+    }
+  } else {
+    if (TSMimeHdrFieldCreate(msg.msgBuffer(), msg.msgLoc(), &loc) != TS_SUCCESS) {
+      loc = TS_NULL_MLOC;
+    }
+  }
+  return MimeField(msg, loc);
 }
 
 inline bool
@@ -421,7 +446,7 @@ inline void
 MimeField::reset()
 {
   if (valid()) {
-    TSAssert(TSHandleMLocRelease(_msg.bufHndl(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
   }
 
   _loc = TS_NULL_MLOC;
@@ -435,21 +460,18 @@ inline MimeField::MimeField(MimeField &&source) : _msg(source._msg)
   source._loc = TS_NULL_MLOC;
 }
 
-// Move assign only allowed if the two instances refer to the same message.
-//
 inline MimeField &
 MimeField::operator=(MimeField &&source)
 {
-  assert(&_msg == &source._msg);
-
-  // Be OCD and block mf = std::move(mf) in debug loads.
-  //
-  assert(_loc != &source._loc);
-
   if (valid()) {
-    TSAssert(TSHandleMLocRelease(_msg.bufHndl(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    // Be OCD and block mf = std::move(mf) in debug loads.
+    //
+    assert((_msg != source._msg) || (_loc != &source._loc));
+
+    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
   }
 
+  _msg        = source._msg;
   _loc        = source._loc;
   source._loc = TS_NULL_MLOC;
 
@@ -459,13 +481,13 @@ MimeField::operator=(MimeField &&source)
 inline void
 MimeField::destroy()
 {
-  assert(valid());
+  if (valid()) {
+    TSAssert(TSMimeHdrFieldDestroy(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
 
-  TSAssert(TSMimeHdrFieldDestroy(_msg.bufHndl(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
 
-  TSAssert(TSHandleMLocRelease(_msg.bufHndl(), _msg.msgLoc(), _loc) == TS_SUCCESS);
-
-  _loc = TS_NULL_MLOC;
+    _loc = TS_NULL_MLOC;
+  }
 }
 
 inline MimeField
@@ -473,7 +495,7 @@ MimeField::next() const
 {
   assert(valid());
 
-  return MimeField(_msg, TSMimeHdrFieldNext(_msg.bufHndl(), _msg.msgLoc(), _loc));
+  return MimeField(_msg, TSMimeHdrFieldNext(_msg.msgBuffer(), _msg.msgLoc(), _loc));
 }
 
 inline MimeField
@@ -481,7 +503,7 @@ MimeField::nextDup() const
 {
   assert(valid());
 
-  return MimeField(_msg, TSMimeHdrFieldNextDup(_msg.bufHndl(), _msg.msgLoc(), _loc));
+  return MimeField(_msg, TSMimeHdrFieldNextDup(_msg.msgBuffer(), _msg.msgLoc(), _loc));
 }
 
 inline MimeField
@@ -507,7 +529,7 @@ MimeField::nameGet() const
   assert(valid());
 
   int length;
-  const char *s = TSMimeHdrFieldNameGet(_msg.bufHndl(), _msg.msgLoc(), _loc, &length);
+  const char *s = TSMimeHdrFieldNameGet(_msg.msgBuffer(), _msg.msgLoc(), _loc, &length);
 
   return std::string_view(s, length);
 }
@@ -517,7 +539,7 @@ MimeField::nameSet(std::string_view new_name)
 {
   assert(valid());
 
-  TSAssert(TSMimeHdrFieldNameSet(_msg.bufHndl(), _msg.msgLoc(), _loc, new_name.data(), new_name.length()) == TS_SUCCESS);
+  TSAssert(TSMimeHdrFieldNameSet(_msg.msgBuffer(), _msg.msgLoc(), _loc, new_name.data(), new_name.length()) == TS_SUCCESS);
 }
 
 inline void
@@ -525,7 +547,7 @@ MimeField::valuesClear()
 {
   assert(valid());
 
-  TSAssert(TSMimeHdrFieldValuesClear(_msg.bufHndl(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+  TSAssert(TSMimeHdrFieldValuesClear(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
 }
 
 inline int
@@ -533,7 +555,7 @@ MimeField::valuesCount() const
 {
   assert(valid());
 
-  return TSMimeHdrFieldValuesCount(_msg.bufHndl(), _msg.msgLoc(), _loc);
+  return TSMimeHdrFieldValuesCount(_msg.msgBuffer(), _msg.msgLoc(), _loc);
 }
 
 inline std::string_view
@@ -544,7 +566,7 @@ MimeField::valGet(int idx) const
   assert((idx >= 0) && (idx < valuesCount()));
 
   int length;
-  const char *s = TSMimeHdrFieldValueStringGet(_msg.bufHndl(), _msg.msgLoc(), _loc, idx, &length);
+  const char *s = TSMimeHdrFieldValueStringGet(_msg.msgBuffer(), _msg.msgLoc(), _loc, idx, &length);
 
   return std::string_view(s, length);
 }
@@ -555,7 +577,7 @@ MimeField::valuesGet() const
   assert(valid());
 
   int length;
-  const char *s = TSMimeHdrFieldValueStringGet(_msg.bufHndl(), _msg.msgLoc(), _loc, -1, &length);
+  const char *s = TSMimeHdrFieldValueStringGet(_msg.msgBuffer(), _msg.msgLoc(), _loc, -1, &length);
 
   return std::string_view(s, length);
 }
@@ -567,7 +589,16 @@ MimeField::valSet(int idx, std::string_view new_value)
 
   assert((idx >= 0) && (idx < valuesCount()));
 
-  TSAssert(TSMimeHdrFieldValueStringSet(_msg.bufHndl(), _msg.msgLoc(), _loc, idx, new_value.data(), new_value.length()) ==
+  TSAssert(TSMimeHdrFieldValueStringSet(_msg.msgBuffer(), _msg.msgLoc(), _loc, idx, new_value.data(), new_value.length()) ==
+           TS_SUCCESS);
+}
+
+inline void
+MimeField::valuesSet(std::string_view new_values)
+{
+  assert(valid());
+
+  TSAssert(TSMimeHdrFieldValueStringSet(_msg.msgBuffer(), _msg.msgLoc(), _loc, -1, new_values.data(), new_values.length()) ==
            TS_SUCCESS);
 }
 
@@ -578,7 +609,7 @@ MimeField::valInsert(int idx, std::string_view new_value)
 
   assert((idx >= 0) && (idx < valuesCount()));
 
-  TSAssert(TSMimeHdrFieldValueStringInsert(_msg.bufHndl(), _msg.msgLoc(), _loc, idx, new_value.data(), new_value.length()) ==
+  TSAssert(TSMimeHdrFieldValueStringInsert(_msg.msgBuffer(), _msg.msgLoc(), _loc, idx, new_value.data(), new_value.length()) ==
            TS_SUCCESS);
 }
 
@@ -587,14 +618,14 @@ MimeField::valAppend(std::string_view new_value)
 {
   assert(valid());
 
-  TSAssert(TSMimeHdrFieldValueStringInsert(_msg.bufHndl(), _msg.msgLoc(), _loc, -1, new_value.data(), new_value.length()) ==
+  TSAssert(TSMimeHdrFieldValueStringInsert(_msg.msgBuffer(), _msg.msgLoc(), _loc, -1, new_value.data(), new_value.length()) ==
            TS_SUCCESS);
 }
 
 MimeField::~MimeField()
 {
   if (valid()) {
-    TSAssert(TSHandleMLocRelease(_msg.bufHndl(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
   }
 }
 
