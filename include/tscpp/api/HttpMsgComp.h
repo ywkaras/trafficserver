@@ -83,7 +83,8 @@ namespace detail
   };
 } // end namespace detail
 
-// Class whose instances own char arrays which should be freed with TSfree().
+// Class whose instances own char arrays which should be freed with TSfree().  (The array is freed by the
+// destructor).
 //
 class DynamicCharArray
 {
@@ -144,6 +145,10 @@ txnRemapToUrlStringGet(void *txn)
 // Note:  The TSUrlXxxGet() functions do not work for the remap to/from URLs.  That is why there are no equivalent
 // capability in C++ provided in this header file.
 
+// This function returns the "effective" URL for the client request HTTP message that triggered the (given)
+// transaction.  "Effective" means that, if the URL in the request was mearly a path, this function returns the
+// equivalent absolute URL.  This function does NOT normalize the host to lower case letters.
+//
 DynamicCharArray
 txnEffectiveUrlStringGet(void *txn)
 {
@@ -164,21 +169,21 @@ public:
   }
 
   TSMLoc
-  msgLoc() const
+  loc() const
   {
-    return _msgLoc;
+    return _loc;
   }
 
   bool
   hasMsg() const
   {
-    return msgLoc() != TS_NULL_MLOC;
+    return loc() != TS_NULL_MLOC;
   }
 
   friend bool
   operator==(const MsgBase &a, const MsgBase &b)
   {
-    if ((a._msgBuffer == b._msgBuffer) && (a._msgLoc == b._msgLoc)) {
+    if ((a._msgBuffer == b._msgBuffer) && (a._loc == b._loc)) {
       return true;
     }
 
@@ -198,7 +203,7 @@ public:
   {
     assert(hasMsg());
 
-    return static_cast<Type>(TSHttpHdrTypeGet(_msgBuffer, _msgLoc));
+    return static_cast<Type>(TSHttpHdrTypeGet(_msgBuffer, _loc));
   }
 
   //  Returns number of MIME header lines in HTTP message.  Can only be called if hasMsg() is true.
@@ -208,18 +213,20 @@ public:
   {
     assert(hasMsg());
 
-    return TSMimeHdrFieldsCount(msgBuffer(), msgLoc());
+    return TSMimeHdrFieldsCount(msgBuffer(), loc());
   }
 
 protected:
-  explicit MsgBase(MsgBuffer msgBuffer = nullptr, TSMLoc msgLoc = TS_NULL_MLOC) : _msgBuffer(msgBuffer), _msgLoc(msgLoc)
+  // Make class abstract.
+  //
+  explicit MsgBase(MsgBuffer msgBuffer = nullptr, TSMLoc loc = TS_NULL_MLOC) : _msgBuffer(msgBuffer), _loc(loc)
   {
-    assert((nullptr == msgBuffer) == (TS_NULL_MLOC == msgLoc));
+    assert((nullptr == msgBuffer) == (TS_NULL_MLOC == loc));
   }
 
 private:
   MsgBuffer _msgBuffer;
-  TSMLoc _msgLoc;
+  TSMLoc _loc;
 };
 
 class MimeField
@@ -334,7 +341,39 @@ class ReqMsg : public MsgBase
 public:
   ReqMsg() {}
 
-  ReqMsg(MsgBuffer msgBuffer, TSMLoc msgLoc) : MsgBase(msgBuffer, msgLoc) { assert(type() == Type::REQUEST); }
+  ReqMsg(MsgBuffer msgBuffer, TSMLoc loc) : MsgBase(msgBuffer, loc) { assert(type() == Type::REQUEST); }
+
+  ReqMsg(MsgBase base) : MsgBase(base) { assert(type() == Type::REQUEST); }
+
+  // This function returns the "effective" URL for this request HTTP message.  "Effective" means that, if the URL
+  // in the request was mearly a path, this function returns the equivalent absolute URL. This function normalizes
+  // the host to lower case letters.  This function returns a negative value if the the message does not have a URL,
+  // or some other error occurs.  Otherwise, it returns the number of characters in the effective URL.  'buf' must
+  // point to an array of char whose dimension is given by 'size'.  If the number of characters in the effective URL
+  // is less than 'size', the effective URL wil be copied into 'buf'.  Otherwise, no data will be put into 'buf'.
+  //
+  int effectiveUrl(char *buf, int size) const
+  {
+    int64_t length;
+    if (TSHttpHdrEffectiveUrlBufGet(msgBuffer(), loc(), buf, size, &length) == TS_SUCCESS) {
+      return static_cast<int>(lentgh);
+    }
+    return -1;
+  }
+
+  // Synonym.
+  //
+  int absoluteUrl(char *buf, int size) const { return effectiveUrl(buf, size); }
+
+  // Get URL loc.  Returns true for success, false for failure.  'urlLoc' will contain TSMLoc for URL, which will
+  // be in the TSMBuffer given by msgBuffer() for this instance.
+  //
+  bool urlLocGet(TSMLoc &urlLoc) { return TSHttHdrUrlGet(msgBuffer(), loc(), &urlLoc) == TS_SUCCESS; }
+
+  // Set URL loc to 'urlLoc'.  Returns true for success, false for failure.  'urlLoc' must refer to the TSMBuffer
+  // given by msgBuffer() for this instance.
+  //
+  bool urlLocSet(TSMLoc &urlLoc) { return TSHttHdrUrlSet(msgBuffer(), loc(), urlLoc) == TS_SUCCESS; }
 };
 
 class RespMsg : public MsgBase
@@ -342,7 +381,9 @@ class RespMsg : public MsgBase
 public:
   RespMsg() {}
 
-  RespMsg(MsgBuffer msgBuffer, TSMLoc msgLoc) : MsgBase(msgBuffer, msgLoc) { assert(type() == Type::RESPONSE); }
+  RespMsg(MsgBuffer msgBuffer, TSMLoc loc) : MsgBase(msgBuffer, loc) { assert(type() == Type::RESPONSE); }
+
+  RespMsg(MsgBase base) : MsgBase(base) { assert(type() == Type::RESPONSE); }
 };
 
 template <TSReturnCode (*getInTxn)(TSHttpTxn txnp, MsgBuffer *, TSMLoc *), class ReqOrRespMsgBase>
@@ -370,10 +411,10 @@ private:
   _init(void *txnHndl)
   {
     MsgBuffer msgBuffer;
-    TSMLoc msgLoc;
+    TSMLoc loc;
 
-    if (TS_SUCCESS == getInTxn(static_cast<TSHttpTxn>(txnHndl), &msgBuffer, &msgLoc)) {
-      *static_cast<MsgBase *>(this) = ReqOrRespMsgBase(msgBuffer, msgLoc);
+    if (TS_SUCCESS == getInTxn(static_cast<TSHttpTxn>(txnHndl), &msgBuffer, &loc)) {
+      *static_cast<MsgBase *>(this) = ReqOrRespMsgBase(msgBuffer, loc);
     }
   }
 };
@@ -392,14 +433,14 @@ inline MimeField::MimeField(MsgBase msg, int idx) : _msg(msg)
   assert(msg.hasMsg());
   assert((idx >= 0) && (idx < msg.mimeFieldsCount()));
 
-  _loc = TSMimeHdrFieldGet(_msg.msgBuffer(), _msg.msgLoc(), idx);
+  _loc = TSMimeHdrFieldGet(_msg.msgBuffer(), _msg.loc(), idx);
 }
 
 inline MimeField::MimeField(MsgBase msg, std::string_view name) : _msg(msg)
 {
   assert(msg.hasMsg());
 
-  _loc = TSMimeHdrFieldFind(_msg.msgBuffer(), _msg.msgLoc(), name.data(), name.length());
+  _loc = TSMimeHdrFieldFind(_msg.msgBuffer(), _msg.loc(), name.data(), name.length());
 }
 
 inline MimeField
@@ -409,11 +450,11 @@ MimeField::create(MsgBase msg, std::string_view name)
 
   TSMLoc loc;
   if (name != std::string_view()) {
-    if (TSMimeHdrFieldCreateNamed(msg.msgBuffer(), msg.msgLoc(), name.data(), name.length(), &loc) != TS_SUCCESS) {
+    if (TSMimeHdrFieldCreateNamed(msg.msgBuffer(), msg.loc(), name.data(), name.length(), &loc) != TS_SUCCESS) {
       loc = TS_NULL_MLOC;
     }
   } else {
-    if (TSMimeHdrFieldCreate(msg.msgBuffer(), msg.msgLoc(), &loc) != TS_SUCCESS) {
+    if (TSMimeHdrFieldCreate(msg.msgBuffer(), msg.loc(), &loc) != TS_SUCCESS) {
       loc = TS_NULL_MLOC;
     }
   }
@@ -432,7 +473,7 @@ inline void
 MimeField::reset()
 {
   if (valid()) {
-    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.loc(), _loc) == TS_SUCCESS);
   }
 
   _loc = TS_NULL_MLOC;
@@ -454,7 +495,7 @@ MimeField::operator=(MimeField &&source)
     //
     assert((_msg != source._msg) || (_loc != source._loc));
 
-    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.loc(), _loc) == TS_SUCCESS);
   }
 
   _msg        = source._msg;
@@ -468,9 +509,9 @@ inline void
 MimeField::destroy()
 {
   if (valid()) {
-    TSAssert(TSMimeHdrFieldDestroy(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    TSAssert(TSMimeHdrFieldDestroy(_msg.msgBuffer(), _msg.loc(), _loc) == TS_SUCCESS);
 
-    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.loc(), _loc) == TS_SUCCESS);
 
     _loc = TS_NULL_MLOC;
   }
@@ -481,7 +522,7 @@ MimeField::next() const
 {
   assert(valid());
 
-  return MimeField(_msg, TSMimeHdrFieldNext(_msg.msgBuffer(), _msg.msgLoc(), _loc));
+  return MimeField(_msg, TSMimeHdrFieldNext(_msg.msgBuffer(), _msg.loc(), _loc));
 }
 
 inline MimeField
@@ -489,7 +530,7 @@ MimeField::nextDup() const
 {
   assert(valid());
 
-  return MimeField(_msg, TSMimeHdrFieldNextDup(_msg.msgBuffer(), _msg.msgLoc(), _loc));
+  return MimeField(_msg, TSMimeHdrFieldNextDup(_msg.msgBuffer(), _msg.loc(), _loc));
 }
 
 inline MimeField
@@ -515,7 +556,7 @@ MimeField::nameGet() const
   assert(valid());
 
   int length;
-  const char *s = TSMimeHdrFieldNameGet(_msg.msgBuffer(), _msg.msgLoc(), _loc, &length);
+  const char *s = TSMimeHdrFieldNameGet(_msg.msgBuffer(), _msg.loc(), _loc, &length);
 
   return std::string_view(s, length);
 }
@@ -525,7 +566,7 @@ MimeField::nameSet(std::string_view new_name)
 {
   assert(valid());
 
-  TSAssert(TSMimeHdrFieldNameSet(_msg.msgBuffer(), _msg.msgLoc(), _loc, new_name.data(), new_name.length()) == TS_SUCCESS);
+  TSAssert(TSMimeHdrFieldNameSet(_msg.msgBuffer(), _msg.loc(), _loc, new_name.data(), new_name.length()) == TS_SUCCESS);
 }
 
 inline void
@@ -533,7 +574,7 @@ MimeField::valuesClear()
 {
   assert(valid());
 
-  TSAssert(TSMimeHdrFieldValuesClear(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+  TSAssert(TSMimeHdrFieldValuesClear(_msg.msgBuffer(), _msg.loc(), _loc) == TS_SUCCESS);
 }
 
 inline std::string_view
@@ -542,7 +583,7 @@ MimeField::valuesGet() const
   assert(valid());
 
   int length;
-  const char *s = TSMimeHdrFieldValueStringGet(_msg.msgBuffer(), _msg.msgLoc(), _loc, -1, &length);
+  const char *s = TSMimeHdrFieldValueStringGet(_msg.msgBuffer(), _msg.loc(), _loc, -1, &length);
 
   return std::string_view(s, length);
 }
@@ -552,7 +593,7 @@ MimeField::valuesSet(std::string_view new_values)
 {
   assert(valid());
 
-  TSAssert(TSMimeHdrFieldValueStringSet(_msg.msgBuffer(), _msg.msgLoc(), _loc, -1, new_values.data(), new_values.length()) ==
+  TSAssert(TSMimeHdrFieldValueStringSet(_msg.msgBuffer(), _msg.loc(), _loc, -1, new_values.data(), new_values.length()) ==
            TS_SUCCESS);
 }
 
@@ -561,7 +602,7 @@ MimeField::valuesCount() const
 {
   assert(valid());
 
-  return TSMimeHdrFieldValuesCount(_msg.msgBuffer(), _msg.msgLoc(), _loc);
+  return TSMimeHdrFieldValuesCount(_msg.msgBuffer(), _msg.loc(), _loc);
 }
 
 inline std::string_view
@@ -572,7 +613,7 @@ MimeField::valGet(int idx) const
   assert((idx >= 0) && (idx < valuesCount()));
 
   int length;
-  const char *s = TSMimeHdrFieldValueStringGet(_msg.msgBuffer(), _msg.msgLoc(), _loc, idx, &length);
+  const char *s = TSMimeHdrFieldValueStringGet(_msg.msgBuffer(), _msg.loc(), _loc, idx, &length);
 
   return std::string_view(s, length);
 }
@@ -584,7 +625,7 @@ MimeField::valSet(int idx, std::string_view new_value)
 
   assert((idx >= 0) && (idx < valuesCount()));
 
-  TSAssert(TSMimeHdrFieldValueStringSet(_msg.msgBuffer(), _msg.msgLoc(), _loc, idx, new_value.data(), new_value.length()) ==
+  TSAssert(TSMimeHdrFieldValueStringSet(_msg.msgBuffer(), _msg.loc(), _loc, idx, new_value.data(), new_value.length()) ==
            TS_SUCCESS);
 }
 
@@ -595,7 +636,7 @@ MimeField::valInsert(int idx, std::string_view new_value)
 
   assert((idx >= 0) && (idx < valuesCount()));
 
-  TSAssert(TSMimeHdrFieldValueStringInsert(_msg.msgBuffer(), _msg.msgLoc(), _loc, idx, new_value.data(), new_value.length()) ==
+  TSAssert(TSMimeHdrFieldValueStringInsert(_msg.msgBuffer(), _msg.loc(), _loc, idx, new_value.data(), new_value.length()) ==
            TS_SUCCESS);
 }
 
@@ -604,14 +645,14 @@ MimeField::valAppend(std::string_view new_value)
 {
   assert(valid());
 
-  TSAssert(TSMimeHdrFieldValueStringInsert(_msg.msgBuffer(), _msg.msgLoc(), _loc, -1, new_value.data(), new_value.length()) ==
+  TSAssert(TSMimeHdrFieldValueStringInsert(_msg.msgBuffer(), _msg.loc(), _loc, -1, new_value.data(), new_value.length()) ==
            TS_SUCCESS);
 }
 
 MimeField::~MimeField()
 {
   if (valid()) {
-    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.msgLoc(), _loc) == TS_SUCCESS);
+    TSAssert(TSHandleMLocRelease(_msg.msgBuffer(), _msg.loc(), _loc) == TS_SUCCESS);
   }
 }
 
