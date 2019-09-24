@@ -53,6 +53,7 @@ traffic_server_traffic_server_SOURCES = \
 	traffic_server/InkAPI.cc \
 	traffic_server/InkIOCoreAPI.cc \
 	traffic_server/SocksProxy.cc \
+	traffic_server/test_vague_linkage.cc \
 	traffic_server/traffic_server.cc
 
 if BUILD_TESTS
