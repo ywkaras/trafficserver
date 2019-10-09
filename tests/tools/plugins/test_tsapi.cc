@@ -107,6 +107,15 @@ testsForReadReqHdrHook(TSHttpTxn txn)
       }
     }
   }
+
+  logFile << "TSStringPercentDecode():  ";
+  {
+    char buf[] = "%41f%42x%20%x", buf2[sizeof(buf)];
+    logFile << std::string_view(buf, sizeof(buf) - 1) << ' ';
+    std::size_t sz;
+    ALWAYS_ASSERT(TSStringPercentDecode(buf, sizeof(buf) - 1, buf2, sizeof(buf2) - 1, &sz) == TS_SUCCESS);
+    logFile << std::string_view(buf2, sz) << std::endl;
+  }
 }
 
 int
