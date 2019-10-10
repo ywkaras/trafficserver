@@ -27,6 +27,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <string_view>
+#include <cinttypes>
 
 #include "tscore/ink_platform.h"
 #include "tscore/ink_base64.h"
@@ -1045,6 +1046,8 @@ void
 INKContInternal::destroy()
 {
   if (m_free_magic == INKCONT_INTERN_MAGIC_DEAD) {
+    Fatal(__FILE__ ", line %d:  Attempt to destroy deleted continuation, event function addresss is 0x%" PRIxPTR, __LINE__,
+          reinterpret_cast<std::uintptr_t>(m_event_func));
     ink_release_assert(!"Plugin tries to use a continuation which is deleted");
   }
   m_deleted = 1;
@@ -1054,6 +1057,8 @@ INKContInternal::destroy()
     // TODO: Should this schedule on some other "thread" ?
     // TODO: we don't care about the return action?
     if (ink_atomic_increment((int *)&m_event_count, 1) < 0) {
+      Fatal(__FILE__ ", line %d:  continuation with negative event count, event function addresss is 0x%" PRIxPTR, __LINE__,
+            reinterpret_cast<std::uintptr_t>(m_event_func));
       ink_assert(!"not reached");
     }
     EThread *p = this_ethread();
@@ -1074,6 +1079,8 @@ INKContInternal::handle_event_count(int event)
   if ((event == EVENT_IMMEDIATE) || (event == EVENT_INTERVAL) || event == TS_EVENT_HTTP_TXN_CLOSE) {
     int val = ink_atomic_increment((int *)&m_event_count, -1);
     if (val <= 0) {
+      Fatal(__FILE__ ", line %d:  continuation with negative event count, event function addresss is 0x%" PRIxPTR, __LINE__,
+            reinterpret_cast<std::uintptr_t>(m_event_func));
       ink_assert(!"not reached");
     }
 
@@ -1085,6 +1092,8 @@ int
 INKContInternal::handle_event(int event, void *edata)
 {
   if (m_free_magic == INKCONT_INTERN_MAGIC_DEAD) {
+    Fatal(__FILE__ ", line %d:  Attempt to run deleted continuation, event function addresss is 0x%" PRIxPTR, __LINE__,
+          reinterpret_cast<std::uintptr_t>(m_event_func));
     ink_release_assert(!"Plugin tries to use a continuation which is deleted");
   }
   handle_event_count(event);
@@ -1105,7 +1114,11 @@ INKContInternal::handle_event(int event, void *edata)
       if (e->period != 0) {
         // In the interval case, we must re-increment the m_event_count for
         // the next go around.  Otherwise, our event count will go negative.
-        ink_release_assert(ink_atomic_increment((int *)&this->m_event_count, 1) >= 0);
+        if (ink_atomic_increment((int *)&this->m_event_count, 1) < 0) {
+          Fatal(__FILE__ ", line %d:  continuation with negative event count, event function addresss is 0x%" PRIxPTR, __LINE__,
+                reinterpret_cast<std::uintptr_t>(m_event_func));
+          ink_assert(!"not reached");
+        }
       }
     }
     return retval;
