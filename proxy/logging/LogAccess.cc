@@ -22,6 +22,8 @@
 
  */
 
+#include <unistd.h>
+
 #include "LogAccess.h"
 
 #include "http/HttpSM.h"
@@ -1269,6 +1271,7 @@ LogAccess::marshal_cache_lookup_url_canon(char *buf)
 int
 LogAccess::marshal_client_sni_server_name(char *buf)
 {
+  // usleep(1000 * 1000);
   m_http_sm->check_save_ssn();
 
   // NOTE:  For this string_view, data() must always be nul-terminated, but the nul character must not be included in

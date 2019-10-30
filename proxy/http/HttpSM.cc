@@ -476,6 +476,8 @@ HttpSM::start_sub_sm()
 void
 HttpSM::attach_client_session(ProxyTransaction *client_vc, IOBufferReader *buffer_reader)
 {
+  MEM_BLK_LIFE_ID_SET(_saved_this_life_id, this);
+
   milestones[TS_MILESTONE_UA_BEGIN] = Thread::get_hrtime();
   ink_assert(client_vc != nullptr);
 
@@ -483,6 +485,8 @@ HttpSM::attach_client_session(ProxyTransaction *client_vc, IOBufferReader *buffe
   if (!netvc) {
     return;
   }
+  _saved_netvc = netvc;
+  MEM_BLK_LIFE_ID_SET(_saved_netvc_life_id, _saved_netvc);
   ua_txn = client_vc;
 
   // It seems to be possible that the ua_txn pointer will go stale before log entries for this HTTP transaction are
@@ -495,7 +499,6 @@ HttpSM::attach_client_session(ProxyTransaction *client_vc, IOBufferReader *buffe
     auto p     = ua_txn->get_proxy_ssn();
     _saved_ssn = p;
     MEM_BLK_LIFE_ID_SET(_saved_ssn_life_id, p);
-    MEM_BLK_LIFE_ID_SET(_saved_this_life_id, this);
 
     if (p) {
       _client_connection_id = p->connection_id();

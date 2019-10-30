@@ -38,6 +38,7 @@ ts.Disk.records_config.update({
     # 'proxy.config.diags.debug.enabled': 1,
     'proxy.config.ssl.server.cert.path': '{0}'.format(ts.Variables.SSLDir),
     'proxy.config.ssl.server.private_key.path': '{0}'.format(ts.Variables.SSLDir),
+    'proxy.config.http.cache.http': 0,
 })
 
 ts.Disk.remap_config.AddLine(
@@ -95,15 +96,23 @@ tr.Processes.Default.ReturnCode = 0
 
 tr = Test.AddTestRun()
 tr.Processes.Default.Command = (
-    'curl "https://reallyreallyreallyreallylong.com:{0}" --http2 --insecure --verbose' +
-    ' --resolve reallyreallyreallyreallylong.com:{0}:127.0.0.1'
-).format(ts.Variables.ssl_port)
+    'N=0' +
+    ' ; while (( N < 1000 ))' +
+    ' ; do' +
+    ' ( curl "https://127.0.0.1:{0}" "https://127.0.0.1:{0}" --http2 --insecure > /dev/null 2>&1 & )'.format(
+        ts.Variables.ssl_port) +
+    ' ; let N=N+1' +
+    ' ; done ; sleep 20'
+)
 tr.Processes.Default.ReturnCode = 0
+
+#    (' ( curl "https://reallyreallyreallyreallylong.com:{0}" --http2 --insecure --verbose' +
+#        ' --resolve reallyreallyreallyreallylong.com:{0}:127.0.0.1 )').format(ts.Variables.ssl_port) +
 
 # Delay to allow TS to flush report to disk, then validate generated log.
 #
 tr = Test.AddTestRun()
-tr.DelayStart = 10
+# tr.DelayStart = 20
 tr.Processes.Default.Command = 'python {0} < {1}'.format(
     os.path.join(Test.TestDirectory, 'new_log_flds_observer.py'),
     os.path.join(ts.Variables.LOGDIR, 'test_new_log_flds.log'))

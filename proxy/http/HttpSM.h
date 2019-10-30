@@ -44,7 +44,7 @@
 #include "../ProxyTransaction.h"
 #include "HdrUtils.h"
 #include "tscore/History.h"
-#include <tscpp/util/MemBlkLife.h>
+#include <tscore/MemBlkLife.h>
 
 #define HTTP_API_CONTINUE (INK_API_EVENT_EVENTS_START + 0)
 #define HTTP_API_ERROR (INK_API_EVENT_EVENTS_START + 1)
@@ -643,6 +643,7 @@ public:
   {
     MEM_BLK_LIFE_ID_CHECK(this, _saved_this_life_id);
     MEM_BLK_LIFE_ID_CHECK(_saved_ssn, _saved_ssn_life_id);
+    MEM_BLK_LIFE_ID_CHECK(_saved_netvc, _saved_netvc_life_id);
   }
 
 private:
@@ -652,9 +653,11 @@ private:
   char const *_client_sni_server_name{nullptr};
 
   ProxySession *_saved_ssn;
+  NetVConnection *_saved_netvc;
 
-  MEM_BLK_LIFE_ID_DEFINE(_saved_ssn_life_id)
   MEM_BLK_LIFE_ID_DEFINE(_saved_this_life_id)
+  MEM_BLK_LIFE_ID_DEFINE(_saved_ssn_life_id)
+  MEM_BLK_LIFE_ID_DEFINE(_saved_netvc_life_id)
 };
 
 // Function to get the cache_sm object - YTS Team, yamsat
