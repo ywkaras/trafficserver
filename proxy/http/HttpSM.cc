@@ -339,6 +339,8 @@ HttpSM::cleanup()
 void
 HttpSM::destroy()
 {
+  watcher.iAmDying();
+  ink_assert(!watcher.watchedDied());
   cleanup();
   httpSMAllocator.free(this);
 }
@@ -494,6 +496,8 @@ HttpSM::attach_client_session(ProxyTransaction *client_vc, IOBufferReader *buffe
   _client_transaction_priority_dependence = ua_txn->get_transaction_priority_dependence();
   {
     auto p = ua_txn->get_proxy_ssn();
+
+    watcher.watch(p->watched);
 
     if (p) {
       _client_connection_id = p->connection_id();

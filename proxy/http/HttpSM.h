@@ -44,6 +44,7 @@
 #include "../ProxyTransaction.h"
 #include "HdrUtils.h"
 #include "tscore/History.h"
+#include "tscpp/util/Watch.h"
 
 #define HTTP_API_CONTINUE (INK_API_EVENT_EVENTS_START + 0)
 #define HTTP_API_ERROR (INK_API_EVENT_EVENTS_START + 1)
@@ -634,6 +635,7 @@ private:
   PostDataBuffers _postbuf;
   int _client_connection_id = -1, _client_transaction_id = -1;
   int _client_transaction_priority_weight = -1, _client_transaction_priority_dependence = -1;
+  ts::Watcher watcher;
 };
 
 // Function to get the cache_sm object - YTS Team, yamsat

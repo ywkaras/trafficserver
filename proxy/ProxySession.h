@@ -26,6 +26,7 @@
 #include "tscore/ink_platform.h"
 #include "tscore/ink_resolver.h"
 #include "tscore/TSSystemState.h"
+#include "tscpp/util/Watch.h"
 #include <string_view>
 #include "P_Net.h"
 #include "InkAPIInternal.h"
@@ -75,6 +76,8 @@ struct ProxyError {
 class ProxySession : public VConnection
 {
 public:
+  ts::Watched watched;
+
   ProxySession();
 
   // noncopyable
