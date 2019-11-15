@@ -72,6 +72,8 @@ static const TSEvent eventmap[TS_HTTP_LAST_HOOK + 1] = {
 void
 ProxySession::free()
 {
+  watched.notify();
+
   if (schedule_event) {
     schedule_event->cancel();
     schedule_event = nullptr;
