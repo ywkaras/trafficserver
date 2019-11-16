@@ -340,7 +340,7 @@ void
 HttpSM::destroy()
 {
   watcher.iAmDying();
-  ink_assert(!watcher.watchedDied());
+  // ink_assert(!watcher.watchedDied());
   cleanup();
   httpSMAllocator.free(this);
 }
@@ -6875,7 +6875,7 @@ HttpSM::kill_this()
     SMDebug("http_seq", "[HttpSM::update_stats] Logging transaction");
     if (Log::transaction_logging_enabled() && t_state.api_info.logging_enabled) {
       // Did Session go away before the logging could happen
-      ink_release_assert(!watcher.notified());
+      ink_release_assert(!watcher.watchedDied());
       LogAccess accessor(this);
 
       int ret = Log::access(&accessor);
