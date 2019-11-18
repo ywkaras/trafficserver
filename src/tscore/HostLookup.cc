@@ -428,9 +428,14 @@ CharIndex::iterator::advance() -> self_type &
       break;
     } else if (state.block->array[state.index].block != nullptr) {
       // There is a lower level block to iterate over, store our current state and descend
-      q[cur_level++] = state;
-      state.block    = state.block->array[state.index].block.get();
-      state.index    = 0;
+      if (static_cast<int>(q.size()) <= cur_level) {
+        q.push_back(state);
+      } else {
+        q[cur_level] = state;
+      }
+      cur_level++;
+      state.block = state.block->array[state.index].block.get();
+      state.index = 0;
     } else {
       ++state.index;
     }
@@ -556,8 +561,9 @@ HostBranch::~HostBranch()
     break;
   case HOST_HASH: {
     HostTable *ht = next_level._table;
-    for (auto spot = ht->begin(), limit = ht->end(); spot != limit; delete &*(spot++)) {
-    } // empty
+    for (auto &item : *ht) {
+      delete item.second;
+    }
     delete ht;
   } break;
   case HOST_INDEX: {
@@ -721,7 +727,7 @@ HostLookup::FindNextLevel(HostBranch *from, string_view level_data, bool bNotPro
     break;
   case HostBranch::HOST_HASH: {
     auto table = from->next_level._table;
-    auto spot  = table->find(level_data);
+    auto spot  = table->find(std::string(level_data));
     r          = spot == table->end() ? nullptr : spot->second;
   } break;
   case HostBranch::HOST_INDEX:
