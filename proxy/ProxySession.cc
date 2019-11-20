@@ -79,6 +79,7 @@ ProxySession::free()
   this->api_hooks.clear();
   this->mutex.clear();
   this->acl.clear();
+  this->_ssl.reset();
 }
 
 int
