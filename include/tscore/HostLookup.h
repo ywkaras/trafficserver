@@ -83,7 +83,21 @@ struct HostBranch {
     HOST_ARRAY,
   };
 
-  using HostTable = std::unordered_map<std::string, HostBranch *>;
+  class HostTable : private std::unordered_map<std::string_view, HostBranch *>
+  {
+  public:
+  private:
+    using Super = std::unordered_map<std::string_view, HostBranch *>;
+
+    ~HostTable()
+    {
+      for (auto it = begin(); it != Super::end(); it = begin()) {
+        std::string_view first = it->first;
+        Super::erase(it);
+        delete it->first.data();
+      }
+    }
+  };
 
   using LeafIndices = std::vector<int>;
 
