@@ -59,6 +59,7 @@ libtscore_la_SOURCES = \
 	ConsistentHash.cc \
 	ContFlags.cc \
 	CryptoHash.cc \
+	DbgCtl.cc \
 	Diags.cc \
 	Errata.cc \
 	EventNotify.cc \
@@ -109,6 +110,7 @@ libtscore_la_SOURCES = \
 	MatcherUtils.cc \
 	MemArena.cc \
 	MMH.cc \
+	OneWriterMultiReader.cc \
 	ParseRules.cc \
 	RbTree.cc \
 	Regex.cc \
@@ -177,7 +179,8 @@ test_tscore_SOURCES = \
 	unit_tests/test_List.cc \
 	unit_tests/test_MemArena.cc \
 	unit_tests/test_MT_hashtable.cc \
-  unit_tests/test_ParseRules.cc \
+	unit_tests/test_OneWriterMultiReader.cc \
+	unit_tests/test_ParseRules.cc \
 	unit_tests/test_PriorityQueue.cc \
 	unit_tests/test_Ptr.cc \
 	unit_tests/test_Regex.cc \

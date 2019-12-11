@@ -1,6 +1,6 @@
 /** @file
 
-  A brief file description
+  DbgCtl class header file.
 
   @section license License
 
@@ -23,27 +23,29 @@
 
 #pragma once
 
-#include "tscore/Diags.h"
-#include "tscore/BaseLogFile.h"
+#include <ts/ts.h>
 
-struct DiagsConfig {
-  void reconfigure_diags();
-  void config_diags_norecords();
-  void parse_output_string(char *s, DiagsModeOutput *o);
-  void register_diags_callbacks();
+class DbgCtl
+{
+public:
+  DbgCtl(char const *tag) : _ptr(_get_ptr(tag)) {}
 
-  DiagsConfig(std::string_view prefix_string, const char *filename, const char *tags, const char *actions, bool use_records = true);
-  ~DiagsConfig();
+  TSFDbgCtl const *
+  ptr() const
+  {
+    return _ptr;
+  }
+
+  // Call this when the compiled regex to enable tags may have changed.
+  //
+  static void update();
 
 private:
-  bool callbacks_established;
-  BaseLogFile *diags_log;
+  TSFDbgCtl const *const _ptr;
 
-public:
-  Diags *diagsPtr;
-  Diags *
-  diags() const
-  {
-    return diagsPtr;
-  }
+  static const TSFDbgCtl *_get_ptr(char const *tag);
+
+  class _RegistryAccessor;
+
+  friend TSFDbgCtl const *TSFDbgCtlCreate(char const *tag);
 };

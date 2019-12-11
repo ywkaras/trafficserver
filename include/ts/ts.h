@@ -2150,6 +2150,26 @@ extern int diags_on_for_plugins;
   if (diags_on_for_plugins) \
   TSDebug
 
+/**
+    Output a debug line if the debug output control is turned on.
+
+    @param ctlp pointer to TSFDbgCtl, returned by TSFDbgCtlCreate().
+    @param ...  Format string and (optional) arguments.
+ */
+#define TSFDbg(ctlp, ...)                            \
+  do {                                               \
+    if (ctlp->on) {                                  \
+      TSDebugSpecific(true, ctlp->tag, __VA_ARGS__); \
+    }                                                \
+  } while (0)
+
+/**
+    Return a pointer for use with TSFDbg().
+
+    @param tag Debug tag for the control.
+ */
+tsapi TSFDbgCtl const *TSFDbgCtlCreate(char const *tag);
+
 /* --------------------------------------------------------------------------
    logging api */
 

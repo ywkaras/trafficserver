@@ -66,27 +66,29 @@ DiagsConfig::reconfigure_diags()
 
   all_found = true;
 
-  // initial value set to 0 or 1 based on command line tags
-  c.enabled[DiagsTagType_Debug]  = (diags->base_debug_tags != nullptr);
-  c.enabled[DiagsTagType_Action] = (diags->base_action_tags != nullptr);
-
   // enabled if records.config set
 
   e = static_cast<int>(REC_readInteger("proxy.config.diags.debug.enabled", &found));
   if (e && found) {
-    c.enabled[DiagsTagType_Debug] = e; // implement OR logic
+    c.enabled(DiagsTagType_Debug, e); // implement OR logic
+
+  } else {
+    c.enabled(DiagsTagType_Debug, diags()->base_debug_tags != nullptr ? 1 : 0);
   }
   all_found = all_found && found;
 
   e = static_cast<int>(REC_readInteger("proxy.config.diags.action.enabled", &found));
   if (e && found) {
-    c.enabled[DiagsTagType_Action] = true; // implement OR logic
+    c.enabled(DiagsTagType_Action, e); // implement OR logic
+
+  } else {
+    c.enabled(DiagsTagType_Action, diags()->base_action_tags != nullptr ? 1 : 0);
   }
   all_found = all_found && found;
 
-  e                    = static_cast<int>(REC_readInteger("proxy.config.diags.show_location", &found));
-  diags->show_location = ((e == 1 && found) ? SHOW_LOCATION_DEBUG : ((e == 2 && found) ? SHOW_LOCATION_ALL : SHOW_LOCATION_NONE));
-  all_found            = all_found && found;
+  e                      = static_cast<int>(REC_readInteger("proxy.config.diags.show_location", &found));
+  diags()->show_location = ((e == 1 && found) ? SHOW_LOCATION_DEBUG : ((e == 2 && found) ? SHOW_LOCATION_ALL : SHOW_LOCATION_NONE));
+  all_found              = all_found && found;
 
   // read output routing values
   for (i = 0;; i++) {
@@ -128,23 +130,23 @@ DiagsConfig::reconfigure_diags()
     // clear out old tag tables //
     //////////////////////////////
 
-    diags->deactivate_all(DiagsTagType_Debug);
-    diags->deactivate_all(DiagsTagType_Action);
+    diags()->deactivate_all(DiagsTagType_Debug);
+    diags()->deactivate_all(DiagsTagType_Action);
 
     //////////////////////////////////////////////////////////////////////
     // add new tag tables from records.config or command line overrides //
     //////////////////////////////////////////////////////////////////////
 
-    diags->activate_taglist((diags->base_debug_tags ? diags->base_debug_tags : dt), DiagsTagType_Debug);
-    diags->activate_taglist((diags->base_action_tags ? diags->base_action_tags : at), DiagsTagType_Action);
+    diags()->activate_taglist((diags()->base_debug_tags ? diags()->base_debug_tags : dt), DiagsTagType_Debug);
+    diags()->activate_taglist((diags()->base_action_tags ? diags()->base_action_tags : at), DiagsTagType_Action);
 
 ////////////////////////////////////
 // change the diags config values //
 ////////////////////////////////////
 #if !defined(__GNUC__)
-    diags->config = c;
+    diags()->config = c;
 #else
-    memcpy(((void *)&diags->config), ((void *)&c), sizeof(DiagsConfigState));
+    memcpy(((void *)&diags()->config), ((void *)&c), sizeof(DiagsConfigState));
 #endif
     Note("updated diags config");
   }
@@ -172,7 +174,7 @@ diags_config_callback(const char * /* name ATS_UNUSED */, RecDataT /* data_type 
   DiagsConfig *diagsConfig;
 
   diagsConfig = static_cast<DiagsConfig *>(opaque_token);
-  ink_assert(diags->magic == DIAGS_MAGIC);
+  ink_assert(::diags()->magic == DIAGS_MAGIC);
   diagsConfig->reconfigure_diags();
   return (0);
 }
@@ -217,37 +219,37 @@ DiagsConfig::config_diags_norecords()
   //////////////////////////////
   // clear out old tag tables //
   //////////////////////////////
-  diags->deactivate_all(DiagsTagType_Debug);
-  diags->deactivate_all(DiagsTagType_Action);
+  diags()->deactivate_all(DiagsTagType_Debug);
+  diags()->deactivate_all(DiagsTagType_Action);
 
   //////////////////////////////////////////////////////////////////////
   // add new tag tables from command line overrides only              //
   //////////////////////////////////////////////////////////////////////
 
-  if (diags->base_debug_tags) {
-    diags->activate_taglist(diags->base_debug_tags, DiagsTagType_Debug);
-    c.enabled[DiagsTagType_Debug] = true;
+  if (diags()->base_debug_tags) {
+    diags()->activate_taglist(diags()->base_debug_tags, DiagsTagType_Debug);
+    c.enabled(DiagsTagType_Debug, 1);
   } else {
-    c.enabled[DiagsTagType_Debug] = false;
+    c.enabled(DiagsTagType_Debug, 0);
   }
 
-  if (diags->base_action_tags) {
-    diags->activate_taglist(diags->base_action_tags, DiagsTagType_Action);
-    c.enabled[DiagsTagType_Action] = true;
+  if (diags()->base_action_tags) {
+    diags()->activate_taglist(diags()->base_action_tags, DiagsTagType_Action);
+    c.enabled(DiagsTagType_Action, 1);
   } else {
-    c.enabled[DiagsTagType_Action] = false;
+    c.enabled(DiagsTagType_Action, 0);
   }
 
 #if !defined(__GNUC__)
-  diags->config = c;
+  diags()->config = c;
 #else
-  memcpy(((void *)&diags->config), ((void *)&c), sizeof(DiagsConfigState));
+  memcpy(((void *)&diags()->config), ((void *)&c), sizeof(DiagsConfigState));
 #endif
 }
 
 DiagsConfig::DiagsConfig(std::string_view prefix_string, const char *filename, const char *tags, const char *actions,
                          bool use_records)
-  : callbacks_established(false), diags_log(nullptr), diags(nullptr)
+  : callbacks_established(false), diags_log(nullptr), diagsPtr(nullptr)
 {
   char diags_logpath[PATH_NAME_MAX];
   ats_scoped_str logpath;
@@ -259,7 +261,7 @@ DiagsConfig::DiagsConfig(std::string_view prefix_string, const char *filename, c
   ////////////////////////////////////////////////////////////////////
 
   if (!use_records) {
-    diags = new Diags(prefix_string, tags, actions, nullptr);
+    diagsPtr = new Diags(prefix_string, tags, actions, nullptr);
     config_diags_norecords();
     return;
   }
@@ -296,10 +298,10 @@ DiagsConfig::DiagsConfig(std::string_view prefix_string, const char *filename, c
 
   // Set up diags, FILE streams are opened in Diags constructor
   diags_log = new BaseLogFile(diags_logpath);
-  diags     = new Diags(prefix_string, tags, actions, diags_log, diags_perm_parsed, output_perm_parsed);
-  diags->config_roll_diagslog(static_cast<RollingEnabledValues>(diags_log_roll_enable), diags_log_roll_int, diags_log_roll_size);
-  diags->config_roll_outputlog(static_cast<RollingEnabledValues>(output_log_roll_enable), output_log_roll_int,
-                               output_log_roll_size);
+  diagsPtr  = new Diags(prefix_string, tags, actions, diags_log, diags_perm_parsed, output_perm_parsed);
+  diags()->config_roll_diagslog(static_cast<RollingEnabledValues>(diags_log_roll_enable), diags_log_roll_int, diags_log_roll_size);
+  diags()->config_roll_outputlog(static_cast<RollingEnabledValues>(output_log_roll_enable), output_log_roll_int,
+                                 output_log_roll_size);
 
   Status("opened %s", diags_logpath);
 
@@ -354,5 +356,5 @@ DiagsConfig::register_diags_callbacks()
 
 DiagsConfig::~DiagsConfig()
 {
-  delete diags;
+  delete diagsPtr;
 }
