@@ -24,15 +24,13 @@
 #include <cstdio>
 #include <atomic>
 #include <string_view>
-#include <tuple>
-#include <unordered_map>
-#include <string_view>
 
 #include "tscore/ink_platform.h"
 #include "tscore/ink_base64.h"
 #include "tscore/PluginUserArgs.h"
 #include "tscore/I_Layout.h"
 #include "tscore/I_Version.h"
+#include "tscore/Diags.h"
 
 #include "InkAPIInternal.h"
 #include "Log.h"
@@ -7598,11 +7596,11 @@ TSIsDebugTagSet(const char *t)
 void
 TSDebugSpecific(int debug_flag, const char *tag, const char *format_str, ...)
 {
-  if ((debug_flag && diags->on()) || is_debug_tag_set(tag)) {
+  if ((debug_flag && diags()->on()) || is_debug_tag_set(tag)) {
     va_list ap;
 
     va_start(ap, format_str);
-    diags->print_va(tag, DL_Diag, nullptr, format_str, ap);
+    diags()->print_va(tag, DL_Diag, nullptr, format_str, ap);
     va_end(ap);
   }
 }
@@ -7616,7 +7614,7 @@ TSDebug(const char *tag, const char *format_str, ...)
     va_list ap;
 
     va_start(ap, format_str);
-    diags->print_va(tag, DL_Diag, nullptr, format_str, ap);
+    diags()->print_va(tag, DL_Diag, nullptr, format_str, ap);
     va_end(ap);
   }
 }
@@ -9994,4 +9992,12 @@ TSHttpTxnPostBufferReaderGet(TSHttpTxn txnp)
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   HttpSM *sm = (HttpSM *)txnp;
   return (TSIOBufferReader)sm->get_postbuf_clone_reader();
+}
+
+tsapi TSFDbgCtl const *
+TSFDbgCtlCreate(char const *tag)
+{
+  sdk_assert(tag != nullptr);
+
+  return DbgCtl::_get_ptr(tag);
 }

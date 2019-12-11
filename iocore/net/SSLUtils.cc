@@ -196,7 +196,7 @@ ssl_new_cached_session(SSL *ssl, SSL_SESSION *sess)
 
   SSLSessionID sid(id, len);
 
-  if (diags->tag_activated("ssl.session_cache")) {
+  if (diags()->tag_activated("ssl.session_cache")) {
     char printable_buf[(len * 2) + 1];
 
     sid.toString(printable_buf, sizeof(printable_buf));
@@ -230,7 +230,7 @@ ssl_rm_cached_session(SSL_CTX *ctx, SSL_SESSION *sess)
     hook = hook->m_link.next;
   }
 
-  if (diags->tag_activated("ssl.session_cache")) {
+  if (diags()->tag_activated("ssl.session_cache")) {
     char printable_buf[(len * 2) + 1];
     sid.toString(printable_buf, sizeof(printable_buf));
     Debug("ssl.session_cache.remove", "ssl_rm_cached_session cached session '%s'", printable_buf);
