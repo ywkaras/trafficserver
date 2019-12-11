@@ -144,15 +144,15 @@ SSLDiagnostic(const SourceLocation &loc, bool debug, SSLNetVConnection *vc, cons
   while ((l = ERR_get_error_line_data(&file, &line, &data, &flags)) != 0) {
 #endif
     if (debug) {
-      if (unlikely(diags->on())) {
-        diags->log("ssl-diag", DL_Debug, &loc, "SSL::%lu:%s:%s:%d%s%s%s%s", es, ERR_error_string(l, buf), file, line,
-                   (flags & ERR_TXT_STRING) ? ":" : "", (flags & ERR_TXT_STRING) ? data : "", vc ? ": peer address is " : "",
-                   ip_buf);
+      if (unlikely(diags()->on())) {
+        diags()->log("ssl-diag", DL_Debug, &loc, "SSL::%lu:%s:%s:%d%s%s%s%s", es, ERR_error_string(l, buf), file, line,
+                     (flags & ERR_TXT_STRING) ? ":" : "", (flags & ERR_TXT_STRING) ? data : "", vc ? ": peer address is " : "",
+                     ip_buf);
       }
     } else {
-      diags->error(DL_Error, &loc, "SSL::%lu:%s:%s:%d%s%s%s%s", es, ERR_error_string(l, buf), file, line,
-                   (flags & ERR_TXT_STRING) ? ":" : "", (flags & ERR_TXT_STRING) ? data : "", vc ? ": peer address is " : "",
-                   ip_buf);
+      diags()->error(DL_Error, &loc, "SSL::%lu:%s:%s:%d%s%s%s%s", es, ERR_error_string(l, buf), file, line,
+                     (flags & ERR_TXT_STRING) ? ":" : "", (flags & ERR_TXT_STRING) ? data : "", vc ? ": peer address is " : "",
+                     ip_buf);
     }
 
     // Tally desired stats (only client/server connection stats, not init
@@ -169,9 +169,9 @@ SSLDiagnostic(const SourceLocation &loc, bool debug, SSLNetVConnection *vc, cons
 
   va_start(ap, fmt);
   if (debug) {
-    diags->log_va("ssl-diag", DL_Debug, &loc, fmt, ap);
+    diags()->log_va("ssl-diag", DL_Debug, &loc, fmt, ap);
   } else {
-    diags->error_va(DL_Error, &loc, fmt, ap);
+    diags()->error_va(DL_Error, &loc, fmt, ap);
   }
   va_end(ap);
 }

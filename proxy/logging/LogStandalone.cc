@@ -60,7 +60,6 @@ char error_tags[1024]    = "";
 char action_tags[1024]   = "";
 char command_string[512] = "";
 
-// Diags *diags = NULL;
 DiagsConfig *diagsConfig      = nullptr;
 HttpBodyFactory *body_factory = nullptr;
 AppVersionInfo appVersionInfo;
@@ -104,9 +103,9 @@ initialize_process_manager()
   }
 
   // diags should have been initialized by caller, e.g.: sac.cc
-  ink_assert(diags);
+  ink_assert(diags());
 
-  RecProcessInit(remote_management_flag ? RECM_CLIENT : RECM_STAND_ALONE, diags);
+  RecProcessInit(remote_management_flag ? RECM_CLIENT : RECM_STAND_ALONE, diags());
   LibRecordsConfigInit();
 
   // Start up manager
@@ -209,7 +208,7 @@ init_log_standalone(const char *pgm_name, bool one_copy)
   init_system(true);
   initialize_process_manager();
   diagsConfig = new DiagsConfig(pgm_name, logfile, error_tags, action_tags);
-  diags       = diagsConfig->diags;
+  DiagsPtr::set(diagsConfig->diags());
 }
 
 /*-------------------------------------------------------------------------
@@ -237,7 +236,7 @@ init_log_standalone_basic(const char *pgm_name)
   init_system(false);
   const bool use_records = false;
   diagsConfig            = new DiagsConfig(pgm_name, logfile, error_tags, action_tags, use_records);
-  diags                  = diagsConfig->diags;
+  DiagsPtr::set(diagsConfig->diags());
   // set stdin/stdout to be unbuffered
   //
   setbuf(stdin, nullptr);

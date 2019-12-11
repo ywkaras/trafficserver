@@ -47,11 +47,30 @@
 #include "tscore/BufferWriter.h"
 #include "tscore/Diags.h"
 
-int diags_on_for_plugins         = 0;
-int DiagsConfigState::enabled[2] = {0, 0};
+int diags_on_for_plugins          = 0;
+int DiagsConfigState::_enabled[2] = {0, 0};
 
-// Global, used for all diagnostics
-inkcoreapi Diags *diags = nullptr;
+void
+DiagsConfigState::enabled(DiagsTagType dtt, int new_value)
+{
+  if (new_value != _enabled[dtt]) {
+    _enabled[dtt] = new_value;
+
+    if ((DiagsTagType_Debug == dtt) && diags()) {
+      DbgCtl::update();
+    }
+  }
+}
+
+Diags *DiagsPtr::_diags_ptr;
+
+void
+DiagsPtr::set(Diags *new_ptr)
+{
+  _diags_ptr = new_ptr;
+
+  DbgCtl::update();
+}
 
 static bool
 location(const SourceLocation *loc, DiagsShowLocation show, DiagsLevel level)
@@ -102,7 +121,6 @@ Diags::Diags(std::string_view prefix_string, const char *bdt, const char *bat, B
   int i;
 
   cleanup_func = nullptr;
-  ink_mutex_init(&tag_table_lock);
 
   ////////////////////////////////////////////////////////
   // initialize the default, base debugging/action tags //
@@ -115,9 +133,9 @@ Diags::Diags(std::string_view prefix_string, const char *bdt, const char *bat, B
     base_action_tags = ats_strdup(bat);
   }
 
-  config.enabled[DiagsTagType_Debug]  = (base_debug_tags != nullptr);
-  config.enabled[DiagsTagType_Action] = (base_action_tags != nullptr);
-  diags_on_for_plugins                = config.enabled[DiagsTagType_Debug];
+  config.enabled(DiagsTagType_Debug, base_debug_tags != nullptr ? 1 : 0);
+  config.enabled(DiagsTagType_Action, base_action_tags != nullptr ? 1 : 0);
+  diags_on_for_plugins = config.enabled(DiagsTagType_Debug);
 
   // The caller must always provide a non-empty prefix.
 
@@ -247,7 +265,7 @@ Diags::print_va(const char *debug_tag, DiagsLevel diags_level, const SourceLocat
   // now, finally, output the message //
   //////////////////////////////////////
 
-  lock();
+  general_mutex.lock();
   if (config.outputs[diags_level].to_diagslog) {
     if (diags_log && diags_log->m_fp) {
       va_list tmp;
@@ -276,7 +294,7 @@ Diags::print_va(const char *debug_tag, DiagsLevel diags_level, const SourceLocat
   }
 
 #if !defined(freebsd)
-  unlock();
+  general_mutex.unlock();
 #endif
 
   if (config.outputs[diags_level].to_syslog) {
@@ -319,7 +337,7 @@ Diags::print_va(const char *debug_tag, DiagsLevel diags_level, const SourceLocat
   }
 
 #if defined(freebsd)
-  unlock();
+  general_mutex.unlock();
 #endif
 }
 
@@ -343,13 +361,15 @@ Diags::tag_activated(const char *tag, DiagsTagType mode) const
     return (true);
   }
 
-  lock();
-  if (activated_tags[mode]) {
-    activated = (activated_tags[mode]->match(tag) != -1);
-  }
-  unlock();
+  {
+    ts::ExclusiveWriterMultiReader::ReadLock rl{tag_table_lock};
 
-  return (activated);
+    if (activated_tags[mode]) {
+      activated = (activated_tags[mode]->match(tag) != -1);
+    }
+
+    return (activated);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -367,13 +387,18 @@ void
 Diags::activate_taglist(const char *taglist, DiagsTagType mode)
 {
   if (taglist) {
-    lock();
-    if (activated_tags[mode]) {
-      delete activated_tags[mode];
+    {
+      ts::ExclusiveWriterMultiReader::WriteLock wl{tag_table_lock};
+
+      if (activated_tags[mode]) {
+        delete activated_tags[mode];
+      }
+      activated_tags[mode] = new DFA;
+      activated_tags[mode]->compile(taglist);
     }
-    activated_tags[mode] = new DFA;
-    activated_tags[mode]->compile(taglist);
-    unlock();
+    if ((DiagsTagType_Debug == mode) && (::diags() == this)) {
+      DbgCtl::update();
+    }
   }
 }
 
@@ -390,12 +415,11 @@ Diags::activate_taglist(const char *taglist, DiagsTagType mode)
 void
 Diags::deactivate_all(DiagsTagType mode)
 {
-  lock();
+  ts::ExclusiveWriterMultiReader::WriteLock wl{tag_table_lock};
   if (activated_tags[mode]) {
     delete activated_tags[mode];
     activated_tags[mode] = nullptr;
   }
-  unlock();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -446,9 +470,9 @@ Diags::dump(FILE *fp) const
   int i;
 
   fprintf(fp, "Diags:\n");
-  fprintf(fp, "  debug.enabled: %d\n", config.enabled[DiagsTagType_Debug]);
+  fprintf(fp, "  debug.enabled: %d\n", config.enabled(DiagsTagType_Debug));
   fprintf(fp, "  debug default tags: '%s'\n", (base_debug_tags ? base_debug_tags : "NULL"));
-  fprintf(fp, "  action.enabled: %d\n", config.enabled[DiagsTagType_Action]);
+  fprintf(fp, "  action.enabled: %d\n", config.enabled(DiagsTagType_Action));
   fprintf(fp, "  action default tags: '%s'\n", (base_action_tags ? base_action_tags : "NULL"));
   fprintf(fp, "  outputs:\n");
   for (i = 0; i < DiagsLevel_Count; i++) {
@@ -541,9 +565,9 @@ Diags::reseat_diagslog()
   BaseLogFile *n = new BaseLogFile(oldname);
   if (setup_diagslog(n)) {
     BaseLogFile *old_diags = diags_log;
-    lock();
+    general_mutex.lock();
     diags_log = n;
-    unlock();
+    general_mutex.unlock();
     delete old_diags;
   }
   ats_free(oldname);
@@ -593,9 +617,9 @@ Diags::should_roll_diagslog()
           BaseLogFile *n = new BaseLogFile(oldname);
           if (setup_diagslog(n)) {
             BaseLogFile *old_diags = diags_log;
-            lock();
+            general_mutex.lock();
             diags_log = n;
-            unlock();
+            general_mutex.unlock();
             delete old_diags;
           }
           ats_free(oldname);
@@ -616,9 +640,9 @@ Diags::should_roll_diagslog()
           BaseLogFile *n = new BaseLogFile(oldname);
           if (setup_diagslog(n)) {
             BaseLogFile *old_diags = diags_log;
-            lock();
+            general_mutex.lock();
             diags_log = n;
-            unlock();
+            general_mutex.unlock();
             delete old_diags;
           }
           ats_free(oldname);
@@ -780,26 +804,26 @@ Diags::set_std_output(StdStream stream, const char *file)
     log_log_error("[Warning]: unable to open file=%s to bind %s to\n", file, target_stream);
     log_log_error("[Warning]: %s is currently not bound to anything\n", target_stream);
     delete new_log;
-    lock();
+    general_mutex.lock();
     *current = nullptr;
-    unlock();
+    general_mutex.unlock();
     return false;
   }
   if (!new_log->is_open()) {
     log_log_error("[Warning]: file pointer for %s %s = nullptr\n", target_stream, file);
     log_log_error("[Warning]: %s is currently not bound to anything\n", target_stream);
     delete new_log;
-    lock();
+    general_mutex.lock();
     *current = nullptr;
-    unlock();
+    general_mutex.unlock();
     return false;
   }
 
   // Now exchange the pointer to the standard stream in question
-  lock();
+  general_mutex.lock();
   *current = new_log;
   bool ret = rebind_std_stream(stream, fileno(new_log->m_fp));
-  unlock();
+  general_mutex.unlock();
 
   // Free the BaseLogFile we rotated out
   if (old_log) {

@@ -34,7 +34,9 @@
 #pragma once
 
 #include <cstdarg>
-#include "ink_mutex.h"
+#include <mutex>
+#include "DbgCtl.h"
+#include "OneWriterMultiReader.h"
 #include "Regex.h"
 #include "ink_apidefs.h"
 #include "ContFlags.h"
@@ -44,8 +46,6 @@
 
 #define DIAGS_MAGIC 0x12345678
 #define BYTES_IN_MB 1000000
-
-class Diags;
 
 // extern int diags_on_for_plugins;
 enum DiagsTagType {
@@ -87,10 +87,21 @@ enum DiagsShowLocation { SHOW_LOCATION_NONE = 0, SHOW_LOCATION_DEBUG, SHOW_LOCAT
 //   cleanup process state
 typedef void (*DiagsCleanupFunc)();
 
-struct DiagsConfigState {
-  // this is static to eliminate many loads from the critical path
-  static int enabled[2];                     // one debug, one action
+class DiagsConfigState
+{
+public:
+  static int
+  enabled(DiagsTagType dtt)
+  {
+    return _enabled[dtt];
+  }
+
+  static void enabled(DiagsTagType dtt, int new_value);
+
   DiagsModeOutput outputs[DiagsLevel_Count]; // where each level prints
+
+private:
+  static int _enabled[2]; // one debug, one action
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -143,7 +154,7 @@ public:
   bool
   on(DiagsTagType mode = DiagsTagType_Debug) const
   {
-    return ((config.enabled[mode] == 1) || (config.enabled[mode] == 2 && this->get_override()));
+    return ((config.enabled(mode) == 1) || (config.enabled(mode) == 2 && this->get_override()));
   }
 
   bool
@@ -169,6 +180,7 @@ public:
   // on the value of the enable flag, and the state of the debug tags. //
   ///////////////////////////////////////////////////////////////////////
 
+  /// Print the log message without respect to whether the tag is enabled.
   void
   print(const char *tag, DiagsLevel level, const SourceLocation *loc, const char *fmt, ...) const TS_PRINTFLIKE(5, 6)
   {
@@ -180,6 +192,7 @@ public:
 
   void print_va(const char *tag, DiagsLevel level, const SourceLocation *loc, const char *fmt, va_list ap) const;
 
+  /// Print the log message only if tag is enabled.
   void
   log(const char *tag, DiagsLevel level, const SourceLocation *loc, const char *fmt, ...) const TS_PRINTFLIKE(5, 6)
   {
@@ -232,8 +245,10 @@ public:
 
 private:
   const std::string prefix_str;
-  mutable ink_mutex tag_table_lock; // prevents reconfig/read races
-  DFA *activated_tags[2];           // 1 table for debug, 1 for action
+  mutable ts::ExclusiveWriterMultiReader tag_table_lock; // prevents reconfig/read races
+  DFA *activated_tags[2];                                // 1 table for debug, 1 for action
+
+  mutable std::mutex general_mutex;
 
   // These are the default logfile permissions
   int diags_logfile_perm  = -1;
@@ -250,18 +265,6 @@ private:
   time_t diagslog_time_last_roll;
 
   bool rebind_std_stream(StdStream stream, int new_fd);
-
-  void
-  lock() const
-  {
-    ink_mutex_acquire(&tag_table_lock);
-  }
-
-  void
-  unlock() const
-  {
-    ink_mutex_release(&tag_table_lock);
-  }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -283,12 +286,26 @@ private:
 #endif
 #endif
 
-extern inkcoreapi Diags *diags;
+class DiagsPtr
+{
+public:
+  friend Diags *diags();
+  static void set(Diags *new_ptr);
 
-#define DiagsError(level, fmt, ...)                \
-  do {                                             \
-    SourceLocation loc = MakeSourceLocation();     \
-    diags->error(level, &loc, fmt, ##__VA_ARGS__); \
+private:
+  static Diags *_diags_ptr;
+};
+
+inline Diags *
+diags()
+{
+  return DiagsPtr::_diags_ptr;
+}
+
+#define DiagsError(level, fmt, ...)                  \
+  do {                                               \
+    SourceLocation loc = MakeSourceLocation();       \
+    diags()->error(level, &loc, fmt, ##__VA_ARGS__); \
   } while (0)
 
 #define Status(...) DiagsError(DL_Status, __VA_ARGS__)       // Log information
@@ -302,7 +319,7 @@ extern inkcoreapi Diags *diags;
 #define DiagsErrorV(level, fmt, ap)                  \
   do {                                               \
     const SourceLocation loc = MakeSourceLocation(); \
-    diags->error_va(level, &loc, fmt, ap);           \
+    diags()->error_va(level, &loc, fmt, ap);         \
   } while (0)
 
 #define StatusV(fmt, ap) DiagsErrorV(DL_Status, fmt, ap)
@@ -317,33 +334,74 @@ extern inkcoreapi Diags *diags;
 
 #define Diag(tag, ...)                                 \
   do {                                                 \
-    if (unlikely(diags->on())) {                       \
+    if (unlikely(diags()->on())) {                     \
       const SourceLocation loc = MakeSourceLocation(); \
-      diags->log(tag, DL_Diag, &loc, __VA_ARGS__);     \
+      diags()->log(tag, DL_Diag, &loc, __VA_ARGS__);   \
     }                                                  \
   } while (0)
 
-#define Debug(tag, ...)                                \
-  do {                                                 \
-    if (unlikely(diags->on())) {                       \
-      const SourceLocation loc = MakeSourceLocation(); \
-      diags->log(tag, DL_Debug, &loc, __VA_ARGS__);    \
-    }                                                  \
+inline bool
+diags_debug_on(DbgCtl const &ctl)
+{
+  return unlikely(diags()->config.enabled(DiagsTagType_Debug) & 1) && unlikely(ctl.ptr()->on);
+}
+
+inline bool
+diags_debug_on(char const *)
+{
+  return unlikely(diags()->on());
+}
+
+using diags_debug_output_mbr_func_type = void (Diags::*)(char const *, DiagsLevel, SourceLocation const *, char const *, ...) const;
+
+inline diags_debug_output_mbr_func_type
+diags_debug_output_mbr_func(DbgCtl const &)
+{
+  return &Diags::print;
+}
+
+inline diags_debug_output_mbr_func_type
+diags_debug_output_mbr_func(char const *)
+{
+  return &Diags::log;
+}
+
+inline char const *
+diags_debug_tag(DbgCtl const &ctl)
+{
+  return ctl.ptr()->tag;
+}
+
+inline char const *
+diags_debug_tag(char const *tag)
+{
+  return tag;
+}
+
+// printf-like debug output.  First parameter must be debug tag as a null-terminated C-string, or a instance of DbgCtl.
+// (Using DbgCtl is better for performance.)  ... is a printf format string followed by (optional) parameters.
+//
+#define Debug(tag_or_ctl, ...)                                                                                         \
+  do {                                                                                                                 \
+    if (diags_debug_on(tag_or_ctl)) {                                                                                  \
+      static const SourceLocation loc__ = MakeSourceLocation();                                                        \
+      (diags()->*diags_debug_output_mbr_func(tag_or_ctl))(diags_debug_tag(tag_or_ctl), DL_Debug, &loc__, __VA_ARGS__); \
+    }                                                                                                                  \
   } while (0)
 
-#define SpecificDebug(flag, tag, ...)                                                                       \
-  do {                                                                                                      \
-    if (unlikely(diags->on())) {                                                                            \
-      const SourceLocation loc = MakeSourceLocation();                                                      \
-      flag ? diags->print(tag, DL_Debug, &loc, __VA_ARGS__) : diags->log(tag, DL_Debug, &loc, __VA_ARGS__); \
-    }                                                                                                       \
+#define SpecificDebug(flag, tag, ...)                                                                           \
+  do {                                                                                                          \
+    if (unlikely(diags()->on())) {                                                                              \
+      const SourceLocation loc = MakeSourceLocation();                                                          \
+      flag ? diags()->print(tag, DL_Debug, &loc, __VA_ARGS__) : diags()->log(tag, DL_Debug, &loc, __VA_ARGS__); \
+    }                                                                                                           \
   } while (0)
 
-#define is_debug_tag_set(_t) unlikely(diags->on(_t, DiagsTagType_Debug))
-#define is_action_tag_set(_t) unlikely(diags->on(_t, DiagsTagType_Action))
+#define is_debug_tag_set(_t) unlikely(diags()->on(_t, DiagsTagType_Debug))
+#define is_action_tag_set(_t) unlikely(diags()->on(_t, DiagsTagType_Action))
 #define debug_tag_assert(_t, _a) (is_debug_tag_set(_t) ? (ink_release_assert(_a), 0) : 0)
 #define action_tag_assert(_t, _a) (is_action_tag_set(_t) ? (ink_release_assert(_a), 0) : 0)
-#define is_diags_on(_t) unlikely(diags->on(_t))
+#define is_diags_on(_t) unlikely(diags()->on(_t))
 
 #else // TS_USE_DIAGS
 
