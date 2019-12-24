@@ -27,8 +27,12 @@ def make_id(s):
 
 # this forms is for the global process define
 
-
-def MakeATSProcess(obj, name, command='traffic_server', select_ports=True, enable_tls=False):
+# The 'extra_ports' parameter allows for the selection of additional available ports, for test-specific purposes.
+# If not None (which means no extra ports), it can be either a string containing a single variable name, or an
+# array of variables names.  The variable names are the names of new member variables of the Variables member of
+# the returned process object, whose values are the numbers of the addtional ports.
+#
+def MakeATSProcess(obj, name, command='traffic_server', select_ports=True, enable_tls=False, extra_ports=None):
     #####################################
     # common locations
 
@@ -276,6 +280,13 @@ def MakeATSProcess(obj, name, command='traffic_server', select_ports=True, enabl
 
     get_port(p, "manager_port")
     get_port(p, "admin_port")
+
+    if extra_ports:
+        if isinstance(extra_ports, str):
+            get_port(p, extra_ports)
+        else: # Should be an array of string.
+            for extra_port in extra_ports:
+                get_port(p, extra_port)
 
     if enable_tls:
         p.Ready = When.PortsOpen([p.Variables.port, p.Variables.ssl_port])
