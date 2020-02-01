@@ -27,9 +27,9 @@
 
 #pragma once
 
-#include <atomic>
+#include <pthread.h>
 #include <mutex>
-#include <condition_variable>
+#include <stdexcept>
 
 namespace ts
 {
@@ -40,9 +40,17 @@ protected:
   {
     BasicWriteLock(OneWriterMultiReader &owmr_) : owmr(owmr_) {}
 
-    void lock();
+    void
+    lock()
+    {
+      owmr._check(pthread_rwlock_wrlock(&owmr._rwlock));
+    }
 
-    void unlock();
+    void
+    unlock()
+    {
+      owmr._check(pthread_rwlock_unlock(&owmr._rwlock));
+    }
 
     OneWriterMultiReader &owmr;
 
@@ -54,6 +62,16 @@ protected:
   };
 
 public:
+  OneWriterMultiReader()
+  {
+    pthread_rwlockattr_t attr;
+    _check(pthread_rwlockattr_init(&attr));
+    _check(pthread_rwlock_init(&_rwlock, &attr));
+    _check(pthread_rwlockattr_destroy(&attr));
+  }
+
+  ~OneWriterMultiReader() { _check(pthread_rwlock_destroy(&_rwlock)); }
+
   class ReadLock // Meets Lockable Standard Library requirements.
   {
   public:
@@ -61,11 +79,26 @@ public:
 
     ReadLock(OneWriterMultiReader &owmr, std::defer_lock_t) : _owmr{owmr} {}
 
-    bool try_lock();
+    bool
+    try_lock()
+    {
+      locked = (pthread_rwlock_tryrdlock(&_owmr._rwlock) == 0);
+      return locked;
+    }
 
-    void lock();
+    void
+    lock()
+    {
+      _owmr._check(pthread_rwlock_rdlock(&_owmr._rwlock));
+      locked = true;
+    }
 
-    void unlock();
+    void
+    unlock()
+    {
+      _owmr._check(pthread_rwlock_unlock(&_owmr._rwlock));
+      locked = true;
+    }
 
     bool
     is_locked() const
@@ -128,27 +161,15 @@ public:
   };
 
 private:
-  // The most significant bit of _status is a write pending flag, set by a writer to indicate a pending write,
-  // and cleared when the write is completed.  The other bits hold a count of active readers.
-  //
-  std::atomic<unsigned> _status{0};
+  pthread_rwlock_t _rwlock;
 
-  static const unsigned Reader_count_mask  = (~static_cast<unsigned>(0)) >> 1;
-  static const unsigned Write_pending_mask = ~Reader_count_mask;
-
-  // This mutex is to allow a writer to check that the reader count is non-zero and block on the clear
-  // condition variable as an atomic operation.
-  //
-  std::mutex _clear_reader_count;
-
-  std::condition_variable _reader_count_cleared;
-
-  // This mutex is to allow a readaer to check that the write pending flag is set and block on the clear
-  // condition variable as an atomic operation.
-  //
-  std::mutex _clear_write_pending;
-
-  std::condition_variable _write_pending_cleared;
+  static void
+  _check(int pthread_result)
+  {
+    if (pthread_result != 0) {
+      throw std::runtime_error("pthread error");
+    }
+  }
 };
 
 class ExclusiveWriterMultiReader : private OneWriterMultiReader
