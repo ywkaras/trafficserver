@@ -1822,6 +1822,15 @@ tsapi TSCont TSNetInvokingContGet(TSVConn conn);
  */
 tsapi TSHttpTxn TSNetInvokingTxnGet(TSVConn conn);
 
+/**
+  WARNING: If you cannot guarantee that two connections on the port will not
+  happen at about the same time, then contp should not have a mutex, and the
+  continuation function must be reentrant.
+
+  'domain' should be AF_NET or AF_NET6.  It's unlikely that any living person
+  can tell you what will happen if you use a value other than 0 for
+  accept_threads.
+*/
 tsapi TSAction TSNetAccept(TSCont contp, int port, int domain, int accept_threads);
 
 /**

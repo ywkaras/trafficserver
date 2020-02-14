@@ -34,6 +34,7 @@ include gold_tests/continuations/plugins/Makefile.inc
 include gold_tests/chunked_encoding/Makefile.inc
 include gold_tests/timeout/Makefile.inc
 include gold_tests/tls/Makefile.inc
+include gold_tests/pluginTest/tsapi/Makefile.inc
 include tools/plugins/Makefile.inc
 
 TESTS = $(check_PROGRAMS)

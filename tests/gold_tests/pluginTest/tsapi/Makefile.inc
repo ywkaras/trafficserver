@@ -1,4 +1,3 @@
-#
 #  Licensed to the Apache Software Foundation (ASF) under one
 #  or more contributor license agreements.  See the NOTICE file
 #  distributed with this work for additional information
@@ -15,34 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-library_includedir = $(includedir)/tscpp/api
+# This file is included in test/Makefile.am under repo root directory.
 
-library_include_HEADERS = \
-        Async.h \
-        AsyncHttpFetch.h \
-        AsyncTimer.h \
-        CaseInsensitiveStringComparator.h \
-        Cleanup.h \
-        ClientRequest.h \
-        Continuation.h \
-        GlobalPlugin.h \
-        GzipDeflateTransformation.h \
-        GzipInflateTransformation.h \
-        Headers.h \
-        HttpMethod.h \
-        HttpStatus.h \
-        HttpVersion.h \
-        InterceptPlugin.h \
-        Logger.h \
-        Plugin.h \
-        PluginInit.h \
-        RemapPlugin.h \
-        Request.h \
-        Response.h \
-        Stat.h \
-        Transaction.h \
-        TransactionPlugin.h \
-        TransformationPlugin.h \
-        Url.h \
-        noncopyable.h \
-        utils.h
+noinst_LTLIBRARIES += gold_tests/pluginTest/tsapi/test_tsapi.la
+gold_tests_pluginTest_tsapi_test_tsapi_la_SOURCES = \
+  gold_tests/pluginTest/tsapi/test_tsapi.cc \
+  gold_tests/pluginTest/tsapi/ports_ready.h \
+  gold_tests/pluginTest/tsapi/ts_tcp.h

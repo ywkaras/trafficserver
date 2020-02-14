@@ -56,7 +56,16 @@ EventProcessor::assign_thread(EventType etype)
 
   ink_assert(etype < MAX_EVENT_TYPES);
   if (tg->_count > 1) {
-    next = ++tg->_next_round_robin % tg->_count;
+    for (;;) {
+      int curr = tg->_next_round_robin;
+      next     = curr + 1;
+      if (next >= tg->_count) {
+        next = 0;
+      }
+      if (tg->_next_round_robin.compare_exchange_weak(curr, next)) {
+        break;
+      }
+    }
   } else {
     next = 0;
   }

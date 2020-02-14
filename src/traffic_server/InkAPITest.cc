@@ -80,9 +80,6 @@
 #define X_REQUEST_ID "X-Request-ID"
 #define X_RESPONSE_ID "X-Response-ID"
 
-#define ERROR_BODY "TESTING ERROR PAGE"
-#define TRANSFORM_APPEND_STRING "This is a transformed response"
-
 //////////////////////////////////////////////////////////////////////////////
 // STRUCTURES
 //////////////////////////////////////////////////////////////////////////////
@@ -164,7 +161,6 @@ static int get_request_id(TSHttpTxn txnp);
 static ClientTxn *synclient_txn_create();
 static int synclient_txn_delete(ClientTxn *txn);
 static void synclient_txn_close(ClientTxn *txn);
-static int synclient_txn_send_request(ClientTxn *txn, char *request);
 static int synclient_txn_send_request_to_vc(ClientTxn *txn, char *request, TSVConn vc);
 static int synclient_txn_read_response(TSCont contp);
 static int synclient_txn_read_response_handler(TSCont contp, TSEvent event, void *data);
@@ -175,11 +171,9 @@ static int synclient_txn_main_handler(TSCont contp, TSEvent event, void *data);
 
 /* Server side */
 SocketServer *synserver_create(int port);
-static int synserver_start(SocketServer *s);
 static int synserver_stop(SocketServer *s);
 static int synserver_delete(SocketServer *s);
 static int synserver_vc_accept(TSCont contp, TSEvent event, void *data);
-static int synserver_vc_refuse(TSCont contp, TSEvent event, void *data);
 static int synserver_txn_close(TSCont contp);
 static int synserver_txn_write_response(TSCont contp);
 static int synserver_txn_write_response_handler(TSCont contp, TSEvent event, void *data);
@@ -204,51 +198,6 @@ generate_request(int test_case)
 {
 // We define request formats.
 // Each format has an X-Request-ID field that contains the id of the testcase
-#define HTTP_REQUEST_DEFAULT_FORMAT                   \
-  "GET http://127.0.0.1:%d/default.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                              \
-  "\r\n"
-
-#define HTTP_REQUEST_FORMAT1                          \
-  "GET http://127.0.0.1:%d/format1.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                              \
-  "\r\n"
-
-#define HTTP_REQUEST_FORMAT2                          \
-  "GET http://127.0.0.1:%d/format2.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                              \
-  "Content-Type: text/html\r\n"                       \
-  "\r\n"
-#define HTTP_REQUEST_FORMAT3                          \
-  "GET http://127.0.0.1:%d/format3.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                              \
-  "Response: Error\r\n"                               \
-  "\r\n"
-#define HTTP_REQUEST_FORMAT4                          \
-  "GET http://127.0.0.1:%d/format4.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                              \
-  "Request:%d\r\n"                                    \
-  "\r\n"
-#define HTTP_REQUEST_FORMAT5                          \
-  "GET http://127.0.0.1:%d/format5.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                              \
-  "Request:%d\r\n"                                    \
-  "\r\n"
-#define HTTP_REQUEST_FORMAT6                         \
-  "GET http://127.0.0.1:%d/format.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                             \
-  "Accept-Language: English\r\n"                     \
-  "\r\n"
-#define HTTP_REQUEST_FORMAT7                         \
-  "GET http://127.0.0.1:%d/format.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                             \
-  "Accept-Language: French\r\n"                      \
-  "\r\n"
-#define HTTP_REQUEST_FORMAT8                         \
-  "GET http://127.0.0.1:%d/format.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                             \
-  "Accept-Language: English,French\r\n"              \
-  "\r\n"
 #define HTTP_REQUEST_FORMAT9                                      \
   "GET http://trafficserver.apache.org/format9.html HTTP/1.0\r\n" \
   "X-Request-ID: %d\r\n"                                          \
@@ -257,49 +206,18 @@ generate_request(int test_case)
   "GET http://trafficserver.apache.org/format10.html HTTP/1.0\r\n" \
   "X-Request-ID: %d\r\n"                                           \
   "\r\n"
-#define HTTP_REQUEST_FORMAT11                                      \
-  "GET http://trafficserver.apache.org/format11.html HTTP/1.0\r\n" \
-  "X-Request-ID: %d\r\n"                                           \
-  "\r\n"
+
   char *request = static_cast<char *>(TSmalloc(REQUEST_MAX_SIZE + 1));
 
   switch (test_case) {
-  case 1:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT1, SYNSERVER_LISTEN_PORT, test_case);
-    break;
-  case 2:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT2, SYNSERVER_LISTEN_PORT, test_case);
-    break;
-  case 3:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT3, SYNSERVER_LISTEN_PORT, test_case);
-    break;
-  case 4:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT4, SYNSERVER_LISTEN_PORT, test_case, 1);
-    break;
-  case 5:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT5, SYNSERVER_LISTEN_PORT, test_case, 2);
-    break;
-  case 6:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT6, SYNSERVER_LISTEN_PORT, test_case);
-    break;
-  case 7:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT7, SYNSERVER_LISTEN_PORT, test_case - 1);
-    break;
-  case 8:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT8, SYNSERVER_LISTEN_PORT, test_case - 2);
-    break;
   case 9:
     snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT9, test_case);
     break;
   case 10:
     snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT10, test_case);
     break;
-  case 11:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT11, test_case);
-    break;
   default:
-    snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_DEFAULT_FORMAT, SYNSERVER_LISTEN_PORT, test_case);
-    break;
+    ink_release_assert(false);
   }
 
   return request;
@@ -323,57 +241,6 @@ generate_response(const char *request)
   "\r\n"                             \
   "Default body"
 
-#define HTTP_RESPONSE_FORMAT1   \
-  "HTTP/1.0 200 OK\r\n"         \
-  "X-Response-ID: %d\r\n"       \
-  "Content-Type: text/html\r\n" \
-  "Cache-Control: no-cache\r\n" \
-  "\r\n"                        \
-  "Body for response 1"
-
-#define HTTP_RESPONSE_FORMAT2        \
-  "HTTP/1.0 200 OK\r\n"              \
-  "X-Response-ID: %d\r\n"            \
-  "Cache-Control: max-age=86400\r\n" \
-  "Content-Type: text/html\r\n"      \
-  "\r\n"                             \
-  "Body for response 2"
-#define HTTP_RESPONSE_FORMAT4        \
-  "HTTP/1.0 200 OK\r\n"              \
-  "X-Response-ID: %d\r\n"            \
-  "Cache-Control: max-age=86400\r\n" \
-  "Content-Type: text/html\r\n"      \
-  "\r\n"                             \
-  "Body for response 4"
-#define HTTP_RESPONSE_FORMAT5   \
-  "HTTP/1.0 200 OK\r\n"         \
-  "X-Response-ID: %d\r\n"       \
-  "Content-Type: text/html\r\n" \
-  "\r\n"                        \
-  "Body for response 5"
-#define HTTP_RESPONSE_FORMAT6        \
-  "HTTP/1.0 200 OK\r\n"              \
-  "X-Response-ID: %d\r\n"            \
-  "Cache-Control: max-age=86400\r\n" \
-  "Content-Language: English\r\n"    \
-  "\r\n"                             \
-  "Body for response 6"
-#define HTTP_RESPONSE_FORMAT7        \
-  "HTTP/1.0 200 OK\r\n"              \
-  "X-Response-ID: %d\r\n"            \
-  "Cache-Control: max-age=86400\r\n" \
-  "Content-Language: French\r\n"     \
-  "\r\n"                             \
-  "Body for response 7"
-
-#define HTTP_RESPONSE_FORMAT8             \
-  "HTTP/1.0 200 OK\r\n"                   \
-  "X-Response-ID: %d\r\n"                 \
-  "Cache-Control: max-age=86400\r\n"      \
-  "Content-Language: French, English\r\n" \
-  "\r\n"                                  \
-  "Body for response 8"
-
 #define HTTP_RESPONSE_FORMAT9        \
   "HTTP/1.0 200 OK\r\n"              \
   "Cache-Control: max-age=86400\r\n" \
@@ -388,13 +255,6 @@ generate_response(const char *request)
   "\r\n"                             \
   "Body for response 10"
 
-#define HTTP_RESPONSE_FORMAT11          \
-  "HTTP/1.0 200 OK\r\n"                 \
-  "Cache-Control: private,no-store\r\n" \
-  "X-Response-ID: %d\r\n"               \
-  "\r\n"                                \
-  "Body for response 11"
-
   int test_case, match, http_version;
 
   char *response = static_cast<char *>(TSmalloc(RESPONSE_MAX_SIZE + 1));
@@ -404,39 +264,14 @@ generate_response(const char *request)
   match = sscanf(request, HTTP_REQUEST_TESTCASE_FORMAT, url, &http_version, &test_case);
   if (match == 3) {
     switch (test_case) {
-    case 1:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT1, test_case);
-      break;
-    case 2:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT2, test_case);
-      break;
-    case 4:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT4, test_case);
-      break;
-    case 5:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT5, test_case);
-      break;
-    case 6:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT6, test_case);
-      break;
-    case 7:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT7, test_case);
-      break;
-    case 8:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT8, test_case);
-      break;
     case 9:
       snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT9, test_case);
       break;
     case 10:
       snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT10, test_case);
       break;
-    case 11:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT11, test_case);
-      break;
     default:
-      snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_DEFAULT_FORMAT, test_case);
-      break;
+      ink_release_assert(false);
     }
   } else {
     /* Didn't recognize a testcase request. send the default response */
@@ -476,25 +311,6 @@ get_request_id(TSHttpTxn txnp)
   }
 
   id = get_request_id_value(X_REQUEST_ID, bufp, hdr_loc);
-  TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
-  return id;
-}
-
-// This routine can be called by tests, from the READ_RESPONSE_HDR_HOOK
-// to figure out the id of a test message
-// Returns id/-1 in case of error
-static int
-get_response_id(TSHttpTxn txnp)
-{
-  TSMBuffer bufp;
-  TSMLoc hdr_loc;
-  int id = -1;
-
-  if (TSHttpTxnClientRespGet(txnp, &bufp, &hdr_loc) != TS_SUCCESS) {
-    return -1;
-  }
-
-  id = get_request_id_value(X_RESPONSE_ID, bufp, hdr_loc);
   TSHandleMLocRelease(bufp, TS_NULL_MLOC, hdr_loc);
   return id;
 }
@@ -562,24 +378,6 @@ synclient_txn_close(ClientTxn *txn)
 
     TSDebug(CDBG_TAG, "Client Txn destroyed");
   }
-}
-
-static int
-synclient_txn_send_request(ClientTxn *txn, char *request)
-{
-  TSCont cont;
-  sockaddr_in addr;
-
-  TSAssert(txn->magic == MAGIC_ALIVE);
-  txn->request = ats_strdup(request);
-  SET_TEST_HANDLER(txn->current_handler, synclient_txn_connect_handler);
-
-  cont = TSContCreate(synclient_txn_main_handler, TSMutexCreate());
-  TSContDataSet(cont, txn);
-
-  ats_ip4_set(&addr, txn->connect_ip, htons(txn->connect_port));
-  TSNetConnect(cont, ats_ip_sa_cast(&addr));
-  return 1;
 }
 
 /* This can be used to send a request to a specific VC */
@@ -827,22 +625,6 @@ synserver_create(int port)
 }
 
 static int
-synserver_start(SocketServer *s)
-{
-  TSAssert(s->magic == MAGIC_ALIVE);
-  TSAssert(s->accept_action == nullptr);
-
-  if (s->accept_port != SYNSERVER_DUMMY_PORT) {
-    TSAssert(s->accept_port > 0);
-    TSAssert(s->accept_port < INT16_MAX);
-
-    s->accept_action = TSNetAccept(s->accept_cont, s->accept_port, AF_INET, 0);
-  }
-
-  return 1;
-}
-
-static int
 synserver_stop(SocketServer *s)
 {
   TSAssert(s->magic == MAGIC_ALIVE);
@@ -874,27 +656,6 @@ synserver_delete(SocketServer *s)
   }
 
   return 1;
-}
-
-static int
-synserver_vc_refuse(TSCont contp, TSEvent event, void *data)
-{
-  TSAssert((event == TS_EVENT_NET_ACCEPT) || (event == TS_EVENT_NET_ACCEPT_FAILED));
-
-  SocketServer *s = static_cast<SocketServer *>(TSContDataGet(contp));
-  TSAssert(s->magic == MAGIC_ALIVE);
-
-  TSDebug(SDBG_TAG, "%s: NET_ACCEPT", __func__);
-
-  if (event == TS_EVENT_NET_ACCEPT_FAILED) {
-    Warning("Synserver failed to bind to port %d.", ntohs(s->accept_port));
-    ink_release_assert(!"Synserver must be able to bind to a port, check system netstat");
-    TSDebug(SDBG_TAG, "%s: NET_ACCEPT_FAILED", __func__);
-    return TS_EVENT_IMMEDIATE;
-  }
-
-  TSVConnClose(static_cast<TSVConn>(data));
-  return TS_EVENT_IMMEDIATE;
 }
 
 static int
@@ -1356,6 +1117,8 @@ REGRESSION_TEST(SDK_API_TSConfig)(RegressionTest *test, int /* atype ATS_UNUSED 
   return;
 }
 
+#define TEMP 1
+#if TEMP
 /* TSNetVConn */
 //////////////////////////////////////////////
 //       SDK_API_TSNetVConn
@@ -1549,6 +1312,7 @@ REGRESSION_TEST(SDK_API_TSPortDescriptor)(RegressionTest *test, int /* atype ATS
   ats_ip4_set(&addr, htonl(INADDR_LOOPBACK), htons(params->port));
   TSNetConnect(client_cont, &addr.sa);
 }
+#endif
 
 /* TSCache, TSVConn, TSVIO */
 //////////////////////////////////////////////
@@ -3018,571 +2782,6 @@ REGRESSION_TEST(SDK_API_TSContSchedule)(RegressionTest *test, int /* atype ATS_U
   TSContScheduleOnPool(contp2, 10, TS_THREAD_POOL_NET);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//     SDK_API_HttpHookAdd
-//
-// Unit Test for API: TSHttpHookAdd
-//                    TSHttpTxnReenable
-//                    TSHttpTxnClientIPGet
-//                    TSHttpTxnServerIPGet
-//                    TSHttpTxnIncomingAddrGet
-//                    TSHttpTxnClientAddrGet
-//                    TSHttpTxnClientReqGet
-//                    TSHttpTxnClientRespGet
-//                    TSHttpTxnServerReqGet
-//                    TSHttpTxnServerRespGet
-//                    TSHttpTxnNextHopAddrGet
-//                    TSHttpTxnClientProtocolStackGet
-//                    TSHttpTxnClientProtocolStackContains
-//////////////////////////////////////////////////////////////////////////////
-
-#define HTTP_HOOK_TEST_REQUEST_ID 1
-
-struct SocketTest {
-  RegressionTest *regtest;
-  int *pstatus;
-  SocketServer *os;
-  ClientTxn *browser;
-  int hook_mask;
-  int reenable_mask;
-  bool test_client_ip_get;
-  bool test_client_incoming_port_get;
-  bool test_client_remote_port_get;
-  bool test_client_req_get;
-  bool test_client_resp_get;
-  bool test_server_ip_get;
-  bool test_server_req_get;
-  bool test_server_resp_get;
-  bool test_next_hop_ip_get;
-  bool test_client_protocol_stack_get;
-  bool test_client_protocol_stack_contains;
-
-  unsigned int magic;
-};
-
-// This func is called by us from mytest_handler to test TSHttpTxnClientIPGet
-static int
-checkHttpTxnClientIPGet(SocketTest *test, void *data)
-{
-  sockaddr const *ptr;
-  in_addr_t ip;
-  TSHttpTxn txnp      = static_cast<TSHttpTxn>(data);
-  in_addr_t actual_ip = htonl(INADDR_LOOPBACK); /* 127.0.0.1 is expected because the client is on the same machine */
-
-  ptr = TSHttpTxnClientAddrGet(txnp);
-  if (ptr == nullptr || INADDR_ANY == (ip = ats_ip4_addr_cast(ptr))) {
-    test->test_client_ip_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientIPGet", "TestCase1", TC_FAIL, "TSHttpTxnClientIPGet returns 0 %s",
-               ptr ? "address" : "pointer");
-    return TS_EVENT_CONTINUE;
-  }
-
-  if (ip == actual_ip) {
-    test->test_client_ip_get = true;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientIPGet", "TestCase1", TC_PASS, "ok [%0.8x]", ip);
-  } else {
-    test->test_client_ip_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientIPGet", "TestCase1", TC_FAIL, "Value's Mismatch [expected %.8x got %.8x]", actual_ip,
-               ip);
-  }
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to check for TSHttpTxnClientProtocolStackGet
-static int
-checkHttpTxnClientProtocolStackGet(SocketTest *test, void *data)
-{
-  TSHttpTxn txnp = static_cast<TSHttpTxn>(data);
-  const char *results[10];
-  int count = 0;
-  TSHttpTxnClientProtocolStackGet(txnp, 10, results, &count);
-  // Should return results[0] = "http/1.0", results[1] = "tcp", results[2] = "ipv4"
-  test->test_client_protocol_stack_get = true;
-  if (count != 3) {
-    test->test_client_protocol_stack_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackGet", "TestCase1", TC_FAIL, "count should be 3 is %d", count);
-  } else if (strcmp(results[0], "http/1.0") != 0) {
-    test->test_client_protocol_stack_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackGet", "TestCase1", TC_FAIL, "results[0] should be http/1.0 is %s",
-               results[0]);
-  } else if (strcmp(results[1], "tcp") != 0) {
-    test->test_client_protocol_stack_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackGet", "TestCase1", TC_FAIL, "results[1] should be tcp is %s",
-               results[1]);
-  } else if (strcmp(results[2], "ipv4") != 0) {
-    test->test_client_protocol_stack_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackGet", "TestCase1", TC_FAIL, "results[2] should be ipv4 is %s",
-               results[2]);
-  } else {
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackGet", "TestCase1", TC_PASS, "ok stack_size=%d", count);
-  }
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to check for TSHttpTxnClientProtocolStackContains
-static int
-checkHttpTxnClientProtocolStackContains(SocketTest *test, void *data)
-{
-  TSHttpTxn txnp                            = static_cast<TSHttpTxn>(data);
-  const char *ret_tag                       = TSHttpTxnClientProtocolStackContains(txnp, "tcp");
-  test->test_client_protocol_stack_contains = true;
-  if (ret_tag) {
-    const char *normalized_tag = TSNormalizedProtocolTag("tcp");
-    if (normalized_tag != ret_tag) {
-      SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackContains", "TestCase1", TC_FAIL,
-                 "contains tcp, but normalized tag is wrong");
-    } else {
-      SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackContains", "TestCase1", TC_PASS, "ok tcp");
-    }
-  } else {
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackContains", "TestCase1", TC_FAIL, "missing tcp");
-    test->test_client_protocol_stack_contains = false;
-  }
-  ret_tag = TSHttpTxnClientProtocolStackContains(txnp, "udp");
-  if (!ret_tag) {
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackContains", "TestCase2", TC_PASS, "ok no udp");
-  } else {
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientProtocolStackContains", "TestCase2", TC_FAIL, "faulty udp report");
-    test->test_client_protocol_stack_contains = false;
-  }
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to check for TSHttpTxnNextHopIPGet
-static int
-checkHttpTxnNextHopIPGet(SocketTest *test, void *data)
-{
-  TSHttpTxn txnp      = static_cast<TSHttpTxn>(data);
-  in_addr_t actual_ip = htonl(INADDR_LOOPBACK); /* 127.0.0.1 is expected because the client is on the same machine */
-  sockaddr const *ptr;
-  in_addr_t nexthopip;
-
-  ptr = TSHttpTxnNextHopAddrGet(txnp);
-  if (ptr == nullptr || (nexthopip = ats_ip4_addr_cast(ptr)) == 0) {
-    test->test_next_hop_ip_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnNextHopIPGet", "TestCase1", TC_FAIL, "TSHttpTxnNextHopIPGet returns 0 %s",
-               ptr ? "address" : "pointer");
-    return TS_EVENT_CONTINUE;
-  }
-
-  if (nexthopip == actual_ip) {
-    test->test_next_hop_ip_get = true;
-    SDK_RPRINT(test->regtest, "TSHttpTxnNextHopIPGet", "TestCase1", TC_PASS, "ok");
-  } else {
-    test->test_next_hop_ip_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnNextHopIPGet", "TestCase1", TC_FAIL, "Value's Mismatch [expected %0.8x got %0.8x]",
-               actual_ip, nexthopip);
-  }
-
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to test TSHttpTxnServerIPGet
-static int
-checkHttpTxnServerIPGet(SocketTest *test, void *data)
-{
-  sockaddr const *ptr;
-  in_addr_t ip;
-  TSHttpTxn txnp      = static_cast<TSHttpTxn>(data);
-  in_addr_t actual_ip = htonl(INADDR_LOOPBACK); /* 127.0.0.1 is expected because the client is on the same machine */
-
-  ptr = TSHttpTxnServerAddrGet(txnp);
-  if (nullptr == ptr || 0 == (ip = ats_ip4_addr_cast(ptr))) {
-    test->test_server_ip_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerIPGet", "TestCase1", TC_FAIL, "TSHttpTxnServerIPGet returns 0 %s",
-               ptr ? "address" : "pointer");
-    return TS_EVENT_CONTINUE;
-  }
-
-  if (ip == actual_ip) {
-    test->test_server_ip_get = true;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerIPGet", "TestCase1", TC_PASS, "ok");
-  } else {
-    test->test_server_ip_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerIPGet", "TestCase1", TC_FAIL, "Value's Mismatch");
-  }
-
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to test TSHttpTxnIncomingAddrGet
-static int
-checkHttpTxnIncomingAddrGet(SocketTest *test, void *data)
-{
-  uint16_t port;
-  const HttpProxyPort *proxy_port = HttpProxyPort::findHttp(AF_INET);
-  TSHttpTxn txnp                  = static_cast<TSHttpTxn>(data);
-  sockaddr const *ptr             = TSHttpTxnIncomingAddrGet(txnp);
-
-  if (nullptr == proxy_port) {
-    SDK_RPRINT(test->regtest, "TSHttpTxnIncomingPortGet", "TestCase1", TC_FAIL,
-               "TSHttpTxnIncomingAddrGet failed to find configured HTTP port.");
-    test->test_client_incoming_port_get = false;
-    return TS_EVENT_CONTINUE;
-  }
-  if (nullptr == ptr) {
-    SDK_RPRINT(test->regtest, "TSHttpTxnIncomingPortGet", "TestCase1", TC_FAIL, "TSHttpTxnIncomingAddrGet returns 0 pointer");
-    test->test_client_incoming_port_get = false;
-    return TS_EVENT_CONTINUE;
-  }
-  port = ats_ip_port_host_order(ptr);
-
-  TSDebug(UTDBG_TAG, "TS HTTP port = %x, Txn incoming client port %x", proxy_port->m_port, port);
-
-  if (port == proxy_port->m_port) {
-    SDK_RPRINT(test->regtest, "TSHttpTxnIncomingAddrGet", "TestCase1", TC_PASS, "ok");
-    test->test_client_incoming_port_get = true;
-  } else {
-    SDK_RPRINT(test->regtest, "TSHttpTxnIncomingAddrGet", "TestCase1", TC_FAIL,
-               "Value's Mismatch. From Function: %d  Expected value: %d", port, proxy_port->m_port);
-    test->test_client_incoming_port_get = false;
-  }
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to test TSHttpTxnClientAddrGet
-static int
-checkHttpTxnClientAddrGet(SocketTest *test, void *data)
-{
-  uint16_t port;
-  uint16_t browser_port;
-  TSHttpTxn txnp      = static_cast<TSHttpTxn>(data);
-  sockaddr const *ptr = TSHttpTxnClientAddrGet(txnp);
-
-  browser_port = test->browser->local_port;
-
-  if (nullptr == ptr) {
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientClientAddrGet", "TestCase2", TC_FAIL, "TSHttpTxnClientAddrGet returned 0 pointer.");
-    test->test_client_remote_port_get = false;
-    return TS_EVENT_CONTINUE;
-  }
-
-  port = ats_ip_port_host_order(ptr);
-  TSDebug(UTDBG_TAG, "Browser port = %x, Txn remote port = %x", browser_port, port);
-
-  if (port == browser_port) {
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientAddrGet", "TestCase1", TC_PASS, "ok");
-    test->test_client_remote_port_get = true;
-  } else {
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientAddrGet", "TestCase1", TC_FAIL,
-               "Value's Mismatch. From Function: %d Expected Value: %d", port, browser_port);
-    test->test_client_remote_port_get = false;
-  }
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to test TSHttpTxnClientReqGet
-static int
-checkHttpTxnClientReqGet(SocketTest *test, void *data)
-{
-  TSMBuffer bufp;
-  TSMLoc mloc;
-  TSHttpTxn txnp = static_cast<TSHttpTxn>(data);
-
-  if (TSHttpTxnClientReqGet(txnp, &bufp, &mloc) != TS_SUCCESS) {
-    test->test_client_req_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientReqGet", "TestCase1", TC_FAIL, "Unable to get handle to client request");
-    return TS_EVENT_CONTINUE;
-  }
-
-  if ((bufp == reinterpret_cast<TSMBuffer>(&((HttpSM *)txnp)->t_state.hdr_info.client_request)) &&
-      (mloc == reinterpret_cast<TSMLoc>(((HttpSM *)txnp)->t_state.hdr_info.client_request.m_http))) {
-    test->test_client_req_get = true;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientReqGet", "TestCase1", TC_PASS, "ok");
-  } else {
-    test->test_client_req_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientReqGet", "TestCase1", TC_FAIL, "Value's Mismatch");
-  }
-
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to test TSHttpTxnClientRespGet
-static int
-checkHttpTxnClientRespGet(SocketTest *test, void *data)
-{
-  TSMBuffer bufp;
-  TSMLoc mloc;
-  TSHttpTxn txnp = static_cast<TSHttpTxn>(data);
-
-  if (TSHttpTxnClientRespGet(txnp, &bufp, &mloc) != TS_SUCCESS) {
-    test->test_client_resp_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientRespGet", "TestCase1", TC_FAIL, "Unable to get handle to client response");
-    return TS_EVENT_CONTINUE;
-  }
-
-  if ((bufp == reinterpret_cast<TSMBuffer>(&((HttpSM *)txnp)->t_state.hdr_info.client_response)) &&
-      (mloc == reinterpret_cast<TSMLoc>(((HttpSM *)txnp)->t_state.hdr_info.client_response.m_http))) {
-    test->test_client_resp_get = true;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientRespGet", "TestCase1", TC_PASS, "ok");
-  } else {
-    test->test_client_resp_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnClientRespGet", "TestCase1", TC_FAIL, "Value's Mismatch");
-  }
-
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to test TSHttpTxnServerReqGet
-static int
-checkHttpTxnServerReqGet(SocketTest *test, void *data)
-{
-  TSMBuffer bufp;
-  TSMLoc mloc;
-  TSHttpTxn txnp = static_cast<TSHttpTxn>(data);
-
-  if (TSHttpTxnServerReqGet(txnp, &bufp, &mloc) != TS_SUCCESS) {
-    test->test_server_req_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerReqGet", "TestCase1", TC_FAIL, "Unable to get handle to server request");
-    return TS_EVENT_CONTINUE;
-  }
-
-  if ((bufp == reinterpret_cast<TSMBuffer>(&((HttpSM *)txnp)->t_state.hdr_info.server_request)) &&
-      (mloc == reinterpret_cast<TSMLoc>(((HttpSM *)txnp)->t_state.hdr_info.server_request.m_http))) {
-    test->test_server_req_get = true;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerReqGet", "TestCase1", TC_PASS, "ok");
-  } else {
-    test->test_server_req_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerReqGet", "TestCase1", TC_FAIL, "Value's Mismatch");
-  }
-
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called by us from mytest_handler to test TSHttpTxnServerRespGet
-static int
-checkHttpTxnServerRespGet(SocketTest *test, void *data)
-{
-  TSMBuffer bufp;
-  TSMLoc mloc;
-  TSHttpTxn txnp = static_cast<TSHttpTxn>(data);
-
-  if (TSHttpTxnServerRespGet(txnp, &bufp, &mloc) != TS_SUCCESS) {
-    test->test_server_resp_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerRespGet", "TestCase1", TC_FAIL, "Unable to get handle to server response");
-    return TS_EVENT_CONTINUE;
-  }
-
-  if ((bufp == reinterpret_cast<TSMBuffer>(&((HttpSM *)txnp)->t_state.hdr_info.server_response)) &&
-      (mloc == reinterpret_cast<TSMLoc>(((HttpSM *)txnp)->t_state.hdr_info.server_response.m_http))) {
-    test->test_server_resp_get = true;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerRespGet", "TestCase1", TC_PASS, "ok");
-  } else {
-    test->test_server_resp_get = false;
-    SDK_RPRINT(test->regtest, "TSHttpTxnServerRespGet", "TestCase1", TC_FAIL, "Value's Mismatch");
-  }
-
-  return TS_EVENT_CONTINUE;
-}
-
-// This func is called both by us when scheduling EVENT_IMMEDIATE
-// And by HTTP SM for registered hooks
-// Depending on the timing of the DNS response, OS_DNS can happen before or after CACHE_LOOKUP.
-static int
-mytest_handler(TSCont contp, TSEvent event, void *data)
-{
-  SocketTest *test = static_cast<SocketTest *>(TSContDataGet(contp));
-  if (test == nullptr) {
-    if ((event == TS_EVENT_IMMEDIATE) || (event == TS_EVENT_TIMEOUT)) {
-      return 0;
-    }
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    return 0;
-  }
-  TSAssert(test->magic == MAGIC_ALIVE);
-  TSAssert(test->browser->magic == MAGIC_ALIVE);
-
-  switch (event) {
-  case TS_EVENT_HTTP_TXN_START:
-    if (test->hook_mask == 0) {
-      test->hook_mask |= 1;
-    }
-
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    test->reenable_mask |= 1;
-    break;
-
-  case TS_EVENT_HTTP_READ_REQUEST_HDR:
-    if (test->hook_mask == 1) {
-      test->hook_mask |= 2;
-    }
-    TSSkipRemappingSet(static_cast<TSHttpTxn>(data), 1);
-    checkHttpTxnClientReqGet(test, data);
-
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    test->reenable_mask |= 2;
-    break;
-
-  case TS_EVENT_HTTP_OS_DNS:
-    if (test->hook_mask == 3 || test->hook_mask == 7) {
-      test->hook_mask |= 8;
-    }
-
-    checkHttpTxnIncomingAddrGet(test, data);
-    checkHttpTxnClientAddrGet(test, data);
-
-    checkHttpTxnClientIPGet(test, data);
-    checkHttpTxnServerIPGet(test, data);
-
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    test->reenable_mask |= 8;
-    break;
-
-  case TS_EVENT_HTTP_CACHE_LOOKUP_COMPLETE:
-    if (test->hook_mask == 3 || test->hook_mask == 11) {
-      test->hook_mask |= 4;
-    }
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    test->reenable_mask |= 4;
-    break;
-
-  case TS_EVENT_HTTP_SEND_REQUEST_HDR:
-    if (test->hook_mask == 15) {
-      test->hook_mask |= 16;
-    }
-
-    checkHttpTxnServerReqGet(test, data);
-    checkHttpTxnNextHopIPGet(test, data);
-    checkHttpTxnClientProtocolStackContains(test, data);
-    checkHttpTxnClientProtocolStackGet(test, data);
-
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    test->reenable_mask |= 16;
-    break;
-
-  case TS_EVENT_HTTP_READ_RESPONSE_HDR:
-    if (test->hook_mask == 31) {
-      test->hook_mask |= 32;
-    }
-    checkHttpTxnServerRespGet(test, data);
-
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    test->reenable_mask |= 32;
-    break;
-
-  case TS_EVENT_HTTP_SEND_RESPONSE_HDR:
-    if (test->hook_mask == 63) {
-      test->hook_mask |= 64;
-    }
-
-    checkHttpTxnClientRespGet(test, data);
-
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    test->reenable_mask |= 64;
-    break;
-
-  case TS_EVENT_HTTP_TXN_CLOSE:
-    if (test->hook_mask == 127) {
-      test->hook_mask |= 128;
-    }
-
-    TSHttpTxnReenable(static_cast<TSHttpTxn>(data), TS_EVENT_HTTP_CONTINUE);
-    test->reenable_mask |= 128;
-    break;
-
-  case TS_EVENT_IMMEDIATE:
-  case TS_EVENT_TIMEOUT:
-    /* Browser still waiting the response ? */
-    if (test->browser->status == REQUEST_INPROGRESS) {
-      TSContScheduleOnPool(contp, 25, TS_THREAD_POOL_NET);
-    }
-    /* Browser got the response. test is over. clean up */
-    else {
-      /* Note: response is available using test->browser->response pointer */
-      if ((test->browser->status == REQUEST_SUCCESS) && (test->hook_mask == 255)) {
-        *(test->pstatus) = REGRESSION_TEST_PASSED;
-        SDK_RPRINT(test->regtest, "TSHttpHookAdd", "TestCase1", TC_PASS, "ok");
-
-      } else {
-        *(test->pstatus) = REGRESSION_TEST_FAILED;
-        SDK_RPRINT(test->regtest, "TSHttpHookAdd", "TestCase1", TC_FAIL, "Hooks not called or request failure. Hook mask = %d\n %s",
-                   test->hook_mask, test->browser->response);
-      }
-
-      if (test->reenable_mask == 255) {
-        SDK_RPRINT(test->regtest, "TSHttpTxnReenable", "TestCase1", TC_PASS, "ok");
-
-      } else {
-        *(test->pstatus) = REGRESSION_TEST_FAILED;
-        SDK_RPRINT(test->regtest, "TSHttpTxnReenable", "TestCase1", TC_FAIL, "Txn not re-enabled properly");
-      }
-
-      if ((test->test_client_ip_get != true) || (test->test_client_incoming_port_get != true) ||
-          (test->test_client_remote_port_get != true) || (test->test_client_req_get != true) ||
-          (test->test_client_resp_get != true) || (test->test_server_ip_get != true) || (test->test_server_req_get != true) ||
-          (test->test_server_resp_get != true) || (test->test_next_hop_ip_get != true)) {
-        *(test->pstatus) = REGRESSION_TEST_FAILED;
-      }
-      // transaction is over. clean up.
-      synclient_txn_delete(test->browser);
-      synserver_delete(test->os);
-      test->os = nullptr;
-
-      test->magic = MAGIC_DEAD;
-      TSfree(test);
-      TSContDataSet(contp, nullptr);
-    }
-    break;
-
-  default:
-    *(test->pstatus) = REGRESSION_TEST_FAILED;
-    SDK_RPRINT(test->regtest, "TSHttpHookAdd", "TestCase1", TC_FAIL, "Unexpected event %d", event);
-    break;
-  }
-
-  return TS_EVENT_IMMEDIATE;
-}
-
-EXCLUSIVE_REGRESSION_TEST(SDK_API_HttpHookAdd)(RegressionTest *test, int /* atype ATS_UNUSED */, int *pstatus)
-{
-  *pstatus = REGRESSION_TEST_INPROGRESS;
-
-  TSCont cont          = TSContCreate(mytest_handler, TSMutexCreate());
-  SocketTest *socktest = static_cast<SocketTest *>(TSmalloc(sizeof(SocketTest)));
-
-  socktest->regtest                       = test;
-  socktest->pstatus                       = pstatus;
-  socktest->hook_mask                     = 0;
-  socktest->reenable_mask                 = 0;
-  socktest->test_client_ip_get            = false;
-  socktest->test_client_incoming_port_get = false;
-  socktest->test_client_req_get           = false;
-  socktest->test_client_resp_get          = false;
-  socktest->test_server_ip_get            = false;
-  socktest->test_server_req_get           = false;
-  socktest->test_server_resp_get          = false;
-  socktest->test_next_hop_ip_get          = false;
-  socktest->magic                         = MAGIC_ALIVE;
-  TSContDataSet(cont, socktest);
-
-  /* Register to HTTP hooks that are called in case of a cache MISS */
-  TSHttpHookAdd(TS_HTTP_TXN_START_HOOK, cont);
-  TSHttpHookAdd(TS_HTTP_READ_REQUEST_HDR_HOOK, cont);
-  TSHttpHookAdd(TS_HTTP_OS_DNS_HOOK, cont);
-  TSHttpHookAdd(TS_HTTP_CACHE_LOOKUP_COMPLETE_HOOK, cont);
-  TSHttpHookAdd(TS_HTTP_SEND_REQUEST_HDR_HOOK, cont);
-  TSHttpHookAdd(TS_HTTP_READ_RESPONSE_HDR_HOOK, cont);
-  TSHttpHookAdd(TS_HTTP_SEND_RESPONSE_HDR_HOOK, cont);
-  TSHttpHookAdd(TS_HTTP_TXN_CLOSE_HOOK, cont);
-
-  /* Create a new synthetic server */
-  socktest->os = synserver_create(SYNSERVER_LISTEN_PORT);
-  synserver_start(socktest->os);
-
-  /* Create a client transaction */
-  socktest->browser = synclient_txn_create();
-  char *request     = generate_request(HTTP_HOOK_TEST_REQUEST_ID); // this request has a no-cache that prevents caching
-  synclient_txn_send_request(socktest->browser, request);
-  TSfree(request);
-
-  /* Wait until transaction is done */
-  if (socktest->browser->status == REQUEST_INPROGRESS) {
-    TSContScheduleOnPool(cont, 25, TS_THREAD_POOL_NET);
-  }
-
-  return;
-}
-
 //////////////////////////////////////////////
 //       SDK_API_TSUrl
 //
@@ -3621,12 +2820,36 @@ test_url_print(TSMBuffer bufp, TSMLoc hdr_loc)
   TSIOBufferReader reader;
   int64_t total_avail;
 
+#if 0 // TEMP
+struct SocketTest {
+  RegressionTest *regtest;
+  int *pstatus;
+  SocketServer *os;
+  ClientTxn *browser;
+  int hook_mask;
+  int reenable_mask;
+  bool test_client_ip_get;
+  bool test_client_incoming_port_get;
+  bool test_client_remote_port_get;
+  bool test_client_req_get;
+  bool test_client_resp_get;
+  bool test_server_ip_get;
+  bool test_server_req_get;
+  bool test_server_resp_get;
+  bool test_next_hop_ip_get;
+  bool test_client_protocol_stack_get;
+  bool test_client_protocol_stack_contains;
+
+  unsigned int magic;
+};
+#else
   TSIOBufferBlock block;
   const char *block_start;
   int64_t block_avail;
 
   char *output_string;
   int output_len;
+#endif
 
   output_buffer = TSIOBufferCreate();
 
@@ -6857,6 +6080,7 @@ REGRESSION_TEST(SDK_API_TSConstant)(RegressionTest *test, int /* atype ATS_UNUSE
   }
 }
 
+#if 0 // TEMP
 //////////////////////////////////////////////
 //       SDK_API_TSHttpSsn
 //
@@ -8309,6 +7533,7 @@ EXCLUSIVE_REGRESSION_TEST(SDK_API_HttpAltInfo)(RegressionTest *test, int /* atyp
 
   return;
 }
+#endif
 
 //////////////////////////////////////////////
 //       SDK_API_TSHttpConnect
