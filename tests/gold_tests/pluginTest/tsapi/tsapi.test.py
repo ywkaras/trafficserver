@@ -26,9 +26,6 @@ Test.SkipUnless(
 )
 Test.ContinueOnFail = True
 
-# test_tsapi.so will output test logging to this file.
-Test.Env["OUTPUT_FILE"] = Test.RunDirectory + "/log.txt"
-
 server = Test.MakeOriginServer("server")
 
 request_header = {
@@ -52,9 +49,10 @@ ts.Disk.records_config.update({
     'proxy.config.proxy_name': 'Poxy_Proxy',  # This will be the server name.
     'proxy.config.ssl.server.cert.path': '{0}'.format(ts.Variables.SSLDir),
     'proxy.config.ssl.server.private_key.path': '{0}'.format(ts.Variables.SSLDir),
-    'proxy.config.url_remap.remap_required': 1,
+    'proxy.config.url_remap.remap_required': 0,
     'proxy.config.diags.debug.enabled': 1,
-    'proxy.config.diags.debug.tags': 'http|test_tsapi',
+    # 'proxy.config.diags.debug.tags': 'http|iocore_net|test_tsapi',
+    'proxy.config.diags.debug.tags': 'test_tsapi',
 })
 
 ts.Disk.ssl_multicert_config.AddLine(
@@ -63,12 +61,33 @@ ts.Disk.ssl_multicert_config.AddLine(
 
 rp = os.path.join(Test.TestDirectory, '.libs', 'test_tsapi.so')
 
+Test.GetTcpPort("tcp_port")
+Test.GetTcpPort("tcp_port2")
+
+# File to be deleted when tests are fully completed.
+#
+InProgressFilePathspec = os.path.join(Test.RunDirectory, "in_progress")
+
+first_pparams = (
+    "@pparam=" + os.path.join(Test.RunDirectory, "log.txt") +
+    f" @pparam={ts.Variables.tcp_port} @pparam={ts.Variables.tcp_port2} " +
+    "@pparam=" + InProgressFilePathspec
+)
+
 ts.Disk.remap_config.AddLine(
-    "map http://myhost.test http://127.0.0.1:{0} @plugin={1} @plugin={1}".format(server.Variables.Port, rp)
+    "map http://myhost.test http://127.0.0.1:{0} @plugin={1} {2} @plugin={1}".format(
+        server.Variables.Port, rp, first_pparams
+    )
 )
 ts.Disk.remap_config.AddLine(
     "map https://myhost.test:123 http://127.0.0.1:{0} @plugin={1} @plugin={1}".format(server.Variables.Port, rp)
 )
+
+# Create file to be deleted when tests are fully completed.
+#
+tr = Test.AddTestRun()
+tr.Processes.Default.Command = "touch " + InProgressFilePathspec
+tr.Processes.Default.ReturnCode = 0
 
 tr = Test.AddTestRun()
 # Probe server port to check if ready.
@@ -93,7 +112,18 @@ tr.Processes.Default.Command = (
 )
 tr.Processes.Default.ReturnCode = 0
 
+# Give tests up to 5 seconds to complete.
+#
 tr = Test.AddTestRun()
+tr.Processes.Default.Command = (
+    "N=5 ; while ((N > 0 )) ; do " +
+    "if [[ ! -f " + InProgressFilePathspec + " ]] ; then exit 0 ; fi ; sleep 1 ; let N=N-1 ; " +
+    "done ; echo 'TIMEOUT' ; exit 1"
+)
+tr.Processes.Default.ReturnCode = 0
+
+tr = Test.AddTestRun()
+tr.StillRunningAfter = ts
 # Change server port number (which can vary) to a fixed string for compare to gold file.
 tr.Processes.Default.Command = "sed 's/{}/SERVER_PORT/' < log.txt > log2.txt".format(server.Variables.Port)
 tr.Processes.Default.ReturnCode = 0
