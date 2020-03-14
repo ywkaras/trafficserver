@@ -78,8 +78,7 @@ libhttp_a_SOURCES = \
 	ForwardedConfig.cc
 
 if BUILD_TESTS
-libhttp_a_SOURCES += HttpUpdateTester.cc \
-	RegressionHttpTransact.cc
+libhttp_a_SOURCES += HttpUpdateTester.cc
 endif
 
 check_PROGRAMS = test_proxy_http
@@ -93,6 +92,10 @@ test_proxy_http_SOURCES = \
 	unit_tests/unit_test_main.cc \
 	unit_tests/test_ForwardedConfig.cc \
 	ForwardedConfig.cc \
+	unit_tests/test_HttpTransact.cc \
+	HttpSM.cc \
+	HttpTransact.cc \
+	HttpTransactHeaders.cc \
 	unit_tests/test_error_page_selection.cc \
 	HttpBodyFactory.cc \
 	HttpBodyFactory.h

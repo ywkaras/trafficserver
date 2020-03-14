@@ -1,6 +1,6 @@
 /** @file
 
-  A brief file description
+  Catch-based tests for HttpTransact.
 
   @section license License
 
@@ -21,23 +21,25 @@
   limitations under the License.
  */
 
-#include "tscore/Regression.h"
+// TEMP #define UNIT_TEST_HTTP_PROXY
+
 #include "HttpTransact.h"
 #include "HttpSM.h"
 
-void
-forceLinkRegressionHttpTransact()
-{
-}
+#include <cstdio>
 
-static void
+#include "catch.hpp"
+
+namespace
+{
+void
 init_sm(HttpSM *sm)
 {
   sm->init();
   sm->t_state.hdr_info.client_request.create(HTTP_TYPE_REQUEST, nullptr);
 }
 
-static void
+void
 setup_client_request(HttpSM *sm, const char *scheme, const char *request)
 {
   init_sm(sm);
@@ -55,18 +57,12 @@ setup_client_request(HttpSM *sm, const char *scheme, const char *request)
   free_MIOBuffer(read_buffer);
 }
 
-/*
-pstatus return values
-REGRESSION_TEST_PASSED
-REGRESSION_TEST_INPROGRESS
-REGRESSION_TEST_FAILED
-REGRESSION_TEST_NOT_RUN
- */
-REGRESSION_TEST(HttpTransact_is_request_valid)(RegressionTest *t, int /* level */, int *pstatus)
+} // end anonymous namespace
+
+TEST_CASE("HttpTransact_is_request_valid", "[proxy][httptransactreq]")
 {
   HttpTransact transaction;
   HttpSM sm;
-  *pstatus = REGRESSION_TEST_PASSED;
 
   struct {
     const char *scheme;
@@ -95,18 +91,17 @@ REGRESSION_TEST(HttpTransact_is_request_valid)(RegressionTest *t, int /* level *
     setup_client_request(&sm, requests[i].scheme, requests[i].req);
 
     if (requests[i].result != transaction.is_request_valid(&sm.t_state, &sm.t_state.hdr_info.client_request)) {
-      rprintf(t, "HttpTransact::is_request_valid - failed for request = '%s'.  Expected result was %s request\n", requests[i].req,
-              (requests[i].result ? "valid" : "invalid"));
-      *pstatus = REGRESSION_TEST_FAILED;
+      std::printf("HttpTransact::is_request_valid - failed for request = '%s'.  Expected result was %s request\n", requests[i].req,
+                  (requests[i].result ? "valid" : "invalid"));
+      CHECK(false);
     }
   }
 }
 
-REGRESSION_TEST(HttpTransact_handle_trace_and_options_requests)(RegressionTest *t, int /* level */, int *pstatus)
+TEST_CASE("HttpTransact_handle_trace_and_options_requests", "[proxy][httptransacttrace]")
 {
   HttpTransact transaction;
   HttpSM sm;
-  *pstatus = REGRESSION_TEST_PASSED;
 
   struct {
     const char *scheme;
@@ -119,20 +114,14 @@ REGRESSION_TEST(HttpTransact_handle_trace_and_options_requests)(RegressionTest *
     setup_client_request(&sm, requests[i].scheme, requests[i].req);
 
     if (requests[i].result != transaction.is_request_valid(&sm.t_state, &sm.t_state.hdr_info.client_request)) {
-      rprintf(t, "HttpTransact::is_request_valid - failed for request = '%s'.  Expected result was %s request\n", requests[i].req,
-              (requests[i].result ? "valid" : "invalid"));
-      *pstatus = REGRESSION_TEST_FAILED;
+      std::printf("HttpTransact::is_request_valid - failed for request = '%s'.  Expected result was %s request\n", requests[i].req,
+                  (requests[i].result ? "valid" : "invalid"));
+      CHECK(false);
     }
     if (requests[i].result != transaction.handle_trace_and_options_requests(&sm.t_state, &sm.t_state.hdr_info.client_request)) {
-      rprintf(t, "HttpTransact::handle_trace_and_options - failed for request = '%s'.  Expected result was %s request\n",
-              requests[i].req, (requests[i].result ? "true" : "false"));
-      *pstatus = REGRESSION_TEST_FAILED;
+      std::printf("HttpTransact::handle_trace_and_options - failed for request = '%s'.  Expected result was %s request\n",
+                  requests[i].req, (requests[i].result ? "true" : "false"));
+      CHECK(false);
     }
   }
-}
-
-REGRESSION_TEST(HttpTransact_handle_request)(RegressionTest * /* t */, int /* level */, int *pstatus)
-{
-  // To be added..
-  *pstatus = REGRESSION_TEST_PASSED;
 }
