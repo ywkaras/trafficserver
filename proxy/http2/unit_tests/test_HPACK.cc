@@ -1,6 +1,6 @@
 /** @file
 
-    Test runner for HPACK encoding and decoding.
+    Catch tests for HPACK encoding and decoding.
 
     @section license License
 
@@ -29,21 +29,26 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cstdio>
 #include "tscore/ink_args.h"
-#include "tscore/TestBox.h"
 
-const static int MAX_REQUEST_HEADER_SIZE = 131072;
-const static int MAX_TABLE_SIZE          = 4096;
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
 
 using namespace std;
 
+namespace
+{
+const static int MAX_REQUEST_HEADER_SIZE = 131072;
+const static int MAX_TABLE_SIZE          = 4096;
+
 AppVersionInfo appVersionInfo;
 
-static int cmd_disable_freelist = 0;
-static char cmd_input_dir[512]  = "";
-static char cmd_output_dir[512] = "";
+int cmd_disable_freelist = 0;
+char cmd_input_dir[512]  = "";
+char cmd_output_dir[512] = "";
 
-static const ArgumentDescription argument_descriptions[] = {
+const ArgumentDescription argument_descriptions[] = {
   {"disable_freelist", 'f', "Disable the freelist memory allocator", "T", &cmd_disable_freelist, nullptr, nullptr},
   {"disable_pfreelist", 'F', "Disable the freelist memory allocator in ProxyAllocator", "T", &cmd_disable_pfreelist,
    "PROXY_DPRINTF_LEVEL", nullptr},
@@ -52,7 +57,7 @@ static const ArgumentDescription argument_descriptions[] = {
   HELP_ARGUMENT_DESCRIPTION(),
   VERSION_ARGUMENT_DESCRIPTION()};
 
-const static uint32_t INITIAL_TABLE_SIZE = 4096;
+const uint32_t INITIAL_TABLE_SIZE = 4096;
 
 string input_dir  = "./hpack-tests/";
 string output_dir = "./hpack-tests/results/";
@@ -119,10 +124,10 @@ parse_line(string &line, int offset, string &name, string &value)
 void
 print_difference(const char *a_str, const int a_str_len, const char *b_str, const int b_str_len)
 {
-  fprintf(stderr, "%.*s", b_str_len, b_str);
-  fprintf(stderr, " <-> ");
-  fprintf(stderr, "%.*s", a_str_len, a_str);
-  fprintf(stderr, "\n");
+  printf("%.*s", b_str_len, b_str);
+  printf(" <-> ");
+  printf("%.*s", a_str_len, a_str);
+  printf("\n");
 }
 
 int
@@ -357,46 +362,9 @@ prepare()
   return 0;
 }
 
-REGRESSION_TEST(HPACK_Decoding)(RegressionTest *t, int /* atype ATS_UNUSED */, int *pstatus)
-{
-  TestBox box(t, pstatus);
-  box = REGRESSION_TEST_PASSED;
+} // end anonymous namespace
 
-  int result = -1;
-
-  for (int i = first; i < last; ++i) {
-    filename_in[offset_in + 0] = '0' + i / 10;
-    filename_in[offset_in + 1] = '0' + i % 10;
-    result                     = test_decoding(filename_in);
-    box.check(result == -1, "Story %d sequence %d failed.", i, result);
-    if (result != -1) {
-      break;
-    }
-  }
-}
-
-REGRESSION_TEST(HPACK_Encoding)(RegressionTest *t, int /* atype ATS_UNUSED */, int *pstatus)
-{
-  TestBox box(t, pstatus);
-  box = REGRESSION_TEST_PASSED;
-
-  int result = -1;
-
-  for (int i = first; i < last; ++i) {
-    filename_in[offset_in + 0]   = '0' + i / 10;
-    filename_in[offset_in + 1]   = '0' + i % 10;
-    filename_out[offset_out + 0] = '0' + i / 10;
-    filename_out[offset_out + 1] = '0' + i % 10;
-    result                       = test_encoding(filename_in, filename_out);
-    box.check(result == -1, "Story %d sequence %d failed.", i, result);
-    if (result != -1) {
-      break;
-    }
-  }
-}
-
-int
-main(int argc, const char **argv)
+TEST_CASE("HPACK", "[hpack]")
 {
   appVersionInfo.setup(PACKAGE_NAME, "test_HPACK", PACKAGE_VERSION, __DATE__, __TIME__, BUILD_MACHINE, BUILD_PERSON, "");
   process_args(&appVersionInfo, argument_descriptions, countof(argument_descriptions), argv);
@@ -424,8 +392,44 @@ main(int argc, const char **argv)
   hpack_huffman_init();
 
   prepare();
-  int status = RegressionTest::main(argc, argv, REGRESSION_TEST_QUICK);
+
+  SECTION(HPACK_Decoding)(RegressionTest * t, int /* atype ATS_UNUSED */, int *pstatus)
+  {
+    TestBox box(t, pstatus);
+    box = SECTION_PASSED;
+
+    int result = -1;
+
+    for (int i = first; i < last; ++i) {
+      filename_in[offset_in + 0] = '0' + i / 10;
+      filename_in[offset_in + 1] = '0' + i % 10;
+      result                     = test_decoding(filename_in);
+      box.check(result == -1, "Story %d sequence %d failed.", i, result);
+      if (result != -1) {
+        break;
+      }
+    }
+  }
+
+  SECTION(HPACK_Encoding)(RegressionTest * t, int /* atype ATS_UNUSED */, int *pstatus)
+  {
+    TestBox box(t, pstatus);
+    box = SECTION_PASSED;
+
+    int result = -1;
+
+    for (int i = first; i < last; ++i) {
+      filename_in[offset_in + 0]   = '0' + i / 10;
+      filename_in[offset_in + 1]   = '0' + i % 10;
+      filename_out[offset_out + 0] = '0' + i / 10;
+      filename_out[offset_out + 1] = '0' + i % 10;
+      result                       = test_encoding(filename_in, filename_out);
+      box.check(result == -1, "Story %d sequence %d failed.", i, result);
+      if (result != -1) {
+        break;
+      }
+    }
+  }
 
   hpack_huffman_fin();
-  return status;
 }
