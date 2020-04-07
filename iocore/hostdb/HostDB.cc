@@ -2059,44 +2059,7 @@ register_ShowHostDB(Continuation *c, HTTPHdr *h)
   return &s->action;
 }
 
-RecRawStatBlock *hostdb_rsb;
-
-void
-ink_hostdb_init(ts::ModuleVersion v)
-{
-  static int init_called = 0;
-
-  ink_release_assert(v.check(HOSTDB_MODULE_INTERNAL_VERSION));
-  if (init_called) {
-    return;
-  }
-
-  init_called = 1;
-  // do one time stuff
-  // create a stat block for HostDBStats
-  hostdb_rsb = RecAllocateRawStatBlock(static_cast<int>(HostDB_Stat_Count));
-
-  //
-  // Register stats
-  //
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.total_lookups", RECD_INT, RECP_PERSISTENT,
-                     (int)hostdb_total_lookups_stat, RecRawStatSyncSum);
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.total_hits", RECD_INT, RECP_PERSISTENT,
-                     (int)hostdb_total_hits_stat, RecRawStatSyncSum);
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.ttl", RECD_FLOAT, RECP_PERSISTENT, (int)hostdb_ttl_stat,
-                     RecRawStatSyncAvg);
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.ttl_expires", RECD_INT, RECP_PERSISTENT,
-                     (int)hostdb_ttl_expires_stat, RecRawStatSyncSum);
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.re_dns_on_reload", RECD_INT, RECP_PERSISTENT,
-                     (int)hostdb_re_dns_on_reload_stat, RecRawStatSyncSum);
-
-  ts_host_res_global_init();
-}
+#if 0 // TEMP
 
 /// Pair of IP address and host name from a host file.
 struct HostFilePair {
@@ -2131,6 +2094,8 @@ HostDBFileContinuation::destroy()
   this->~HostDBFileContinuation();
   hostDBFileContAllocator.free(this);
 }
+
+#endif
 
 // Host file processing globals.
 
@@ -2225,4 +2190,43 @@ ParseHostFile(const char *path, unsigned int hostdb_hostfile_check_interval_pars
   }
   // Mark this one as completed, so we can allow another update to happen
   HostDBFileUpdateActive = 0;
+}
+
+RecRawStatBlock *hostdb_rsb;
+
+void
+ink_hostdb_init(ts::ModuleVersion v)
+{
+  static int init_called = 0;
+
+  ink_release_assert(v.check(HOSTDB_MODULE_INTERNAL_VERSION));
+  if (init_called) {
+    return;
+  }
+
+  init_called = 1;
+  // do one time stuff
+  // create a stat block for HostDBStats
+  hostdb_rsb = RecAllocateRawStatBlock(static_cast<int>(HostDB_Stat_Count));
+
+  //
+  // Register stats
+  //
+
+  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.total_lookups", RECD_INT, RECP_PERSISTENT,
+                     (int)hostdb_total_lookups_stat, RecRawStatSyncSum);
+
+  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.total_hits", RECD_INT, RECP_PERSISTENT,
+                     (int)hostdb_total_hits_stat, RecRawStatSyncSum);
+
+  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.ttl", RECD_FLOAT, RECP_PERSISTENT, (int)hostdb_ttl_stat,
+                     RecRawStatSyncAvg);
+
+  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.ttl_expires", RECD_INT, RECP_PERSISTENT,
+                     (int)hostdb_ttl_expires_stat, RecRawStatSyncSum);
+
+  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.re_dns_on_reload", RECD_INT, RECP_PERSISTENT,
+                     (int)hostdb_re_dns_on_reload_stat, RecRawStatSyncSum);
+
+  ts_host_res_global_init();
 }

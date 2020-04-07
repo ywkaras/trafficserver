@@ -26,6 +26,10 @@
 
 #include <I_EventSystem.h>
 #include <I_HostDBProcessor.h>
+#include <RecordsConfig.h>
+#include <tscore/I_Layout.h>
+
+#include "P_HostDB.h"
 
 static constexpr int HOSTDB_TEST_MAX_OUTSTANDING = 20;
 static constexpr int HOSTDB_TEST_LENGTH          = 200;
@@ -76,46 +80,7 @@ TEST_CASE("HostDBTests", "[hostdb][tests]]")
   eventProcessor.schedule_imm(new HostDBTestReverse(), ET_CALL);
 }
 
-#if 0 // TS_HAS_TESTS
-RecRawStatBlock *hostdb_rsb;
-
-void
-ink_hostdb_init(ts::ModuleVersion v)
-{
-  static int init_called = 0;
-
-  ink_release_assert(v.check(HOSTDB_MODULE_INTERNAL_VERSION));
-  if (init_called) {
-    return;
-  }
-
-  init_called = 1;
-  // do one time stuff
-  // create a stat block for HostDBStats
-  hostdb_rsb = RecAllocateRawStatBlock(static_cast<int>(HostDB_Stat_Count));
-
-  //
-  // Register stats
-  //
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.total_lookups", RECD_INT, RECP_PERSISTENT,
-                     (int)hostdb_total_lookups_stat, RecRawStatSyncSum);
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.total_hits", RECD_INT, RECP_PERSISTENT,
-                     (int)hostdb_total_hits_stat, RecRawStatSyncSum);
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.ttl", RECD_FLOAT, RECP_PERSISTENT, (int)hostdb_ttl_stat,
-                     RecRawStatSyncAvg);
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.ttl_expires", RECD_INT, RECP_PERSISTENT,
-                     (int)hostdb_ttl_expires_stat, RecRawStatSyncSum);
-
-  RecRegisterRawStat(hostdb_rsb, RECT_PROCESS, "proxy.process.hostdb.re_dns_on_reload", RECD_INT, RECP_PERSISTENT,
-                     (int)hostdb_re_dns_on_reload_stat, RecRawStatSyncSum);
-
-  ts_host_res_global_init();
-}
-
+#if 0  // TEMP
 /// Pair of IP address and host name from a host file.
 struct HostFilePair {
   using self = HostFilePair;
@@ -244,9 +209,6 @@ ParseHostFile(const char *path, unsigned int hostdb_hostfile_check_interval_pars
   // Mark this one as completed, so we can allow another update to happen
   HostDBFileUpdateActive = 0;
 }
-#endif
-
-#if 0  // TEMP
 
 // Take a started hostDB and fill it up and make sure it doesn't explode
 // TEMP struct HostDBRegressionContinuation;
@@ -348,14 +310,15 @@ struct EventProcessorListener : Catch::TestEventListenerBase {
   void
   testRunStarting(Catch::TestRunInfo const &testRunInfo) override
   {
-#if 0 // TEMP
     Layout::create();
+#if 0 // TEMP
     init_diags("", nullptr);
+#endif
     RecProcessInit(RECM_STAND_ALONE);
 
-    // Initialize LibRecordsConfig for `proxy.config.io.max_buffer_size` (32K)
     LibRecordsConfigInit();
-#endif
+
+    ink_hostdb_init(HOSTDB_MODULE_PUBLIC_VERSION);
 
     ink_event_system_init(EVENT_SYSTEM_MODULE_PUBLIC_VERSION);
     eventProcessor.start(TEST_THREADS);
