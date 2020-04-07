@@ -24,6 +24,9 @@
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
 
+#include <future>
+#include <chrono>
+
 #include <I_EventSystem.h>
 #include <I_HostDBProcessor.h>
 #include <RecordsConfig.h>
@@ -31,21 +34,21 @@
 
 #include "P_HostDB.h"
 
-static constexpr int HOSTDB_TEST_MAX_OUTSTANDING = 20;
-static constexpr int HOSTDB_TEST_LENGTH          = 200;
+namespace
+{
+constexpr int HOSTDB_TEST_MAX_OUTSTANDING = 20;
+constexpr int HOSTDB_TEST_LENGTH          = 200;
 
-struct HostDBTestReverse;
-using HostDBTestReverseHandler = int (HostDBTestReverse::*)(int, void *);
 struct HostDBTestReverse : public Continuation {
   int outstanding = 0;
   int total       = 0;
   std::ranlux48 randu;
 
   int
-  mainEvent(int event, Event *e)
+  mainEvent(int event, void *e)
   {
     if (event == EVENT_HOST_DB_LOOKUP) {
-      HostDBInfo *i = reinterpret_cast<HostDBInfo *>(e);
+      HostDBInfo *i = static_cast<HostDBInfo *>(e);
       if (i) {
         std::printf("HostDBTestReverse: reversed %s\n", i->hostname());
       }
@@ -63,21 +66,29 @@ struct HostDBTestReverse : public Continuation {
     }
     if (!outstanding) {
       std::printf("HostDBTestReverse: done\n");
-      //  TEMP TODO: actually verify it passed
+      _prom.set_value();
       delete this;
     }
     return EVENT_CONT;
   }
-  HostDBTestReverse() : Continuation(new_ProxyMutex())
+  HostDBTestReverse(std::promise<void> &prom) : Continuation(new_ProxyMutex()), _prom(prom)
   {
-    SET_HANDLER((HostDBTestReverseHandler)&HostDBTestReverse::mainEvent);
+    SET_HANDLER(&HostDBTestReverse::mainEvent);
     randu.seed(std::chrono::system_clock::now().time_since_epoch().count());
   }
+
+private:
+  std::promise<void> &_prom;
 };
 
-TEST_CASE("HostDBTests", "[hostdb][tests]]")
+} // end anonymous namespace
+
+TEST_CASE("HostDBTests", "[hostdb][tests]")
 {
-  eventProcessor.schedule_imm(new HostDBTestReverse(), ET_CALL);
+  std::promise<void> prom;
+  auto fut = prom.get_future();
+  eventProcessor.schedule_imm(new HostDBTestReverse(prom), ET_CALL);
+  REQUIRE(std::future_status::ready == fut.wait_for(std::chrono::seconds(3)));
 }
 
 #if 0  // TEMP
