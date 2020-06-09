@@ -23,9 +23,12 @@
 //
 namespace TransformTest
 {
+enum class TxnID { TRANSFORM1, TRANSFORM2, TRANSFORM1_DUP, TRANSFORM2_DUP, SIZE };
+
 Logger log;
 
 struct ContData {
+  TxnID txn_id{TxnID::TRANSFORM1};
   bool good{true};
   void
   test(bool result)
@@ -38,11 +41,11 @@ struct ContData {
 
 /** Append Transform Data Structure **/
 struct AppendTransformTestData {
-  TSVIO output_vio               = nullptr;
-  TSIOBuffer output_buffer       = nullptr;
-  TSIOBufferReader output_reader = nullptr;
-  ContData *test_data            = nullptr;
-  int append_needed              = 1;
+  TSVIO output_vio{nullptr};
+  TSIOBuffer output_buffer{nullptr};
+  TSIOBufferReader output_reader{nullptr};
+  ContData *test_data{nullptr};
+  bool append_needed{true};
 
   ~AppendTransformTestData()
   {
@@ -99,7 +102,7 @@ handle_transform(TSCont contp)
      data to our output connection. */
   if (!TSVIOBufferGet(write_vio)) {
     if (data->append_needed) {
-      data->append_needed = 0;
+      data->append_needed = false;
       TSIOBufferCopy(TSVIOBufferGet(data->output_vio), append_buffer_reader, append_buffer_length, 0);
     }
 
@@ -150,7 +153,7 @@ handle_transform(TSCont contp)
     }
   } else {
     if (data->append_needed) {
-      data->append_needed = 0;
+      data->append_needed = false;
       TSIOBufferCopy(TSVIOBufferGet(data->output_vio), append_buffer_reader, append_buffer_length, 0);
     }
 
@@ -285,20 +288,31 @@ load(const char *append_string)
 
 TSCont cont{nullptr};
 
+void *test_data;
+
 // Depending on the timing of the DNS response, OS_DNS can happen before or after CACHE_LOOKUP.
 //
 int
 contFunc(TSCont contp, TSEvent event, void *event_data)
 {
+  if (TSContDataGet(contp) != test_data) {
+    // Ignore events for global hooks for other tests.
+    //
+    reenable(event, event_data);
+    return 0;
+  }
+
+  TSReleaseAssert(contp == cont);
+
+  auto data = static_cast<ContData *>(test_data);
+
   TSReleaseAssert(event_data != nullptr);
 
   auto txn = static_cast<TSHttpTxn>(event_data);
 
-  auto txn_id = GetTxnID(txn);
-
   int txn_number;
 
-  switch (txn_id) {
+  switch (data->txn_id) {
   case TxnID::TRANSFORM1:
   case TxnID::TRANSFORM1_DUP:
     txn_number = 4;
@@ -313,10 +327,6 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }
-
-  TSReleaseAssert(contp == cont);
-
-  auto data = static_cast<ContData *>(TSContDataGet(contp));
 
   switch (event) {
   case TS_EVENT_HTTP_READ_REQUEST_HDR: {
@@ -338,7 +348,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
         log("TSHttpTxnTransform -- TSHttpTxnClientReqGet did not return TS_SUCCESS -- fail");
       } else {
         if (TS_NULL_MLOC == (field = TSMimeHdrFieldFind(bufp, hdr, "Request", -1))) {
-          log("TSHttpTxnTransform -- Didn't find field request -- ");
+          log("TSHttpTxnTransform -- Didn't find field request -- fail");
         } else {
           int reqid = TSMimeHdrFieldValueIntGet(bufp, hdr, field, 0);
           if (reqid == 1) {
@@ -377,8 +387,11 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
       log("Transform creation -- falied");
     }
 
-    log(data->good ? "Transform test -- ok" : "Transform test -- failed");
-    log.flush();
+    incrementEnum(data->txn_id);
+    if (TxnID::SIZE == data->txn_id) {
+      log(data->good ? "Transform test -- ok" : "Transform test -- failed");
+      log.flush();
+    }
   } break;
 
   default:
@@ -398,11 +411,11 @@ init()
 
   cont = TSContCreate(contFunc, nullptr);
 
-  auto data = static_cast<ContData *>(TSmalloc(sizeof(ContData)));
+  test_data = TSmalloc(sizeof(ContData));
 
-  ::new (data) ContData;
+  ::new (test_data) ContData;
 
-  TSContDataSet(cont, data);
+  TSContDataSet(cont, test_data);
 
   /* Prepare the buffer to be appended to responses */
   load("\nThis is a transformed response");
@@ -416,7 +429,7 @@ init()
 void
 cleanup()
 {
-  TSfree(TSContDataGet(cont));
+  TSfree(test_data);
 
   TSContDestroy(cont);
 

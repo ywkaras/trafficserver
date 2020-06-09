@@ -15,18 +15,21 @@
  * limitations under the License.
  */
 
-//#include <ParentSelection.h>
-
 namespace ParentProxyTest
 {
+enum TxnID { PARENT_PROXY, PARENT_PROXY_FAIL, SIZE };
+
 Logger log;
 
 TSCont cont{nullptr};
+
+void *test_data;
 
 // The continuatation data will be an array of two instances of this class.  The first is for the successful
 // transaction, the second is for the transaction that should fail.
 //
 struct ContData {
+  TxnID txn_id{PARENT_PROXY};
   bool good{true};
   void
   test(bool result)
@@ -38,32 +41,20 @@ struct ContData {
 int
 contFunc(TSCont contp, TSEvent event, void *event_data)
 {
-  TSReleaseAssert(event_data != nullptr);
-
-  auto txn = static_cast<TSHttpTxn>(event_data);
-
-  int data_idx;
-  auto txn_id = GetTxnID(txn);
-  switch (txn_id) {
-  case TxnID::PARENT_PROXY:
-    data_idx = 0;
-    break;
-
-  case TxnID::PARENT_PROXY_FAIL:
-    data_idx = 1;
-    break;
-
-  default:
-    if (event != TS_EVENT_HTTP_READ_REQUEST_HDR) {
-      log("Bad event %d", static_cast<int>(event));
-    }
-    TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  if (TSContDataGet(contp) != test_data) {
+    // Ignore events for global hooks for other tests.
+    //
+    reenable(event, event_data);
     return 0;
   }
 
   TSReleaseAssert(contp == cont);
 
-  auto data = static_cast<ContData *>(TSContDataGet(contp)) + data_idx;
+  auto data = static_cast<ContData *>(test_data);
+
+  TSReleaseAssert(event_data != nullptr);
+
+  auto txn = static_cast<TSHttpTxn>(event_data);
 
   switch (event) {
   case TS_EVENT_HTTP_READ_REQUEST_HDR: {
@@ -71,7 +62,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 
     // Since we chose a request format with an invalid hostname, it won't get sent to the userver unless we set
     // a parent proxy.
-    TSHttpTxnParentProxySet(txn, "127.0.0.1", TxnID::PARENT_PROXY_FAIL == txn_id ? Mute_server_port : Server_port);
+    TSHttpTxnParentProxySet(txn, "127.0.0.1", TxnID::PARENT_PROXY_FAIL == data->txn_id ? Mute_server_port : Server_port);
 
     TSHttpTxnHookAdd(txn, TS_HTTP_SEND_RESPONSE_HDR_HOOK, cont);
     TSHttpTxnHookAdd(txn, TS_HTTP_TXN_CLOSE_HOOK, cont);
@@ -80,7 +71,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
   } break;
 
   case TS_EVENT_HTTP_SEND_RESPONSE_HDR: {
-    if (TxnID::PARENT_PROXY_FAIL == txn_id) {
+    if (TxnID::PARENT_PROXY_FAIL == data->txn_id) {
       data->test(checkHttpTxnReqOrResp(log, txn, TSHttpTxnClientRespGet, "response to client", -1, TS_HTTP_STATUS_BAD_GATEWAY));
     } else {
       data->test(checkHttpTxnReqOrResp(log, txn, TSHttpTxnClientRespGet, "response to client", 11, TS_HTTP_STATUS_OK));
@@ -88,8 +79,11 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
   } break;
 
   case TS_EVENT_HTTP_TXN_CLOSE: {
-    log(data->good ? "parent proxy test ok" : "parent proxy test failed");
-    log.flush();
+    incrementEnum(data->txn_id);
+    if (TxnID::SIZE == data->txn_id) {
+      log(data->good ? "parent proxy test ok" : "parent proxy test failed");
+      log.flush();
+    }
   } break;
 
   default: {
@@ -109,12 +103,11 @@ init()
 
   cont = TSContCreate(contFunc, nullptr);
 
-  auto data = static_cast<ContData *>(TSmalloc(2 * sizeof(ContData)));
+  test_data = TSmalloc(sizeof(ContData));
 
-  ::new (data) ContData;
-  ::new (data + 1) ContData;
+  ::new (test_data) ContData;
 
-  TSContDataSet(cont, data);
+  TSContDataSet(cont, test_data);
 
   TSHttpHookAdd(TS_HTTP_READ_REQUEST_HDR_HOOK, cont);
 }
@@ -122,7 +115,7 @@ init()
 void
 cleanup()
 {
-  TSfree(TSContDataGet(cont));
+  TSfree(test_data);
 
   TSContDestroy(cont);
 

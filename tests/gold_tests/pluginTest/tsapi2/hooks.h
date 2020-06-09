@@ -37,6 +37,8 @@ Logger log;
 
 TSCont cont{nullptr};
 
+void *test_data;
+
 struct ContData {
   int hook_mask{0};
   bool good{true};
@@ -134,18 +136,20 @@ checkHttpTxnClientProtocolStackContains(TSHttpTxn txn)
 int
 contFunc(TSCont contp, TSEvent event, void *event_data)
 {
-  TSReleaseAssert(event_data != nullptr);
-
-  auto txn = static_cast<TSHttpTxn>(event_data);
-
-  if (GetTxnID(txn) != TxnID::HOOKS) {
-    TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  if (TSContDataGet(contp) != test_data) {
+    // Ignore events for global hooks for other tests.
+    //
+    reenable(event, event_data);
     return 0;
   }
 
   TSReleaseAssert(contp == cont);
 
-  auto data = static_cast<ContData *>(TSContDataGet(contp));
+  auto data = static_cast<ContData *>(test_data);
+
+  TSReleaseAssert(event_data != nullptr);
+
+  auto txn = static_cast<TSHttpTxn>(event_data);
 
   switch (event) {
   case TS_EVENT_HTTP_TXN_START: {
@@ -235,11 +239,11 @@ init()
 
   cont = TSContCreate(contFunc, nullptr);
 
-  auto data = static_cast<ContData *>(TSmalloc(sizeof(ContData)));
+  test_data = TSmalloc(sizeof(ContData));
 
-  ::new (data) ContData;
+  ::new (test_data) ContData;
 
-  TSContDataSet(cont, data);
+  TSContDataSet(cont, test_data);
 
   /* Register to HTTP hooks that are called in case of a cache MISS */
   TSHttpHookAdd(TS_HTTP_TXN_START_HOOK, cont);
@@ -255,7 +259,7 @@ init()
 void
 cleanup()
 {
-  TSfree(TSContDataGet(cont));
+  TSfree(test_data);
 
   TSContDestroy(cont);
 

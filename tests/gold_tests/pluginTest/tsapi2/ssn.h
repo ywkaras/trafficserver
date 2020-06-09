@@ -30,6 +30,8 @@ Logger log;
 
 TSCont cont{nullptr};
 
+void *test_data;
+
 struct ContData {
   TSHttpSsn ssn{nullptr};
   int hooks_added{0};
@@ -65,38 +67,33 @@ checkHttpTxnParentProxy(TSHttpTxn txn)
 int
 contFunc(TSCont contp, TSEvent event, void *event_data)
 {
-  TSReleaseAssert(event_data != nullptr);
-
-  if (TS_EVENT_HTTP_SSN_START == event) {
-    auto ssn = static_cast<TSHttpSsn>(event_data);
-    if (GetTxnID(ssn) == TxnID::SSN) {
-      TSReleaseAssert(contp == cont);
-
-      log("SSN_START hook trigger -- ok");
-
-      auto data = static_cast<ContData *>(TSContDataGet(contp));
-      ++data->hooks_triggered;
-      data->ssn = ssn;
-      TSHttpSsnHookAdd(ssn, TS_HTTP_TXN_START_HOOK, contp);
-      ++data->hooks_added;
-    }
-    TSHttpSsnReenable(ssn, TS_EVENT_HTTP_CONTINUE);
-    return 0;
-  }
-
-  auto txn = static_cast<TSHttpTxn>(event_data);
-
-  if (GetTxnID(txn) != TxnID::SSN) {
-    log("Failure -- SSN test continuation is not global for event %d", static_cast<int>(event));
-    TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  if (TSContDataGet(contp) != test_data) {
+    // Ignore events for global hooks for other tests.
+    //
+    reenable(event, event_data);
     return 0;
   }
 
   TSReleaseAssert(contp == cont);
 
-  auto data = static_cast<ContData *>(TSContDataGet(contp));
-
+  auto data = static_cast<ContData *>(test_data);
   ++data->hooks_triggered;
+
+  TSReleaseAssert(event_data != nullptr);
+
+  if (TS_EVENT_HTTP_SSN_START == event) {
+    auto ssn = static_cast<TSHttpSsn>(event_data);
+
+    log("SSN_START hook trigger -- ok");
+    data->ssn = ssn;
+    TSHttpSsnHookAdd(ssn, TS_HTTP_TXN_START_HOOK, contp);
+    ++data->hooks_added;
+
+    TSHttpSsnReenable(ssn, TS_EVENT_HTTP_CONTINUE);
+    return 0;
+  }
+
+  auto txn = static_cast<TSHttpTxn>(event_data);
 
   if (TSHttpTxnSsnGet(txn) != data->ssn) {
     log("TSHttpTxnSsnGet failed");
@@ -142,9 +139,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
     if (data->hooks_triggered != data->hooks_added) {
       log("Failure : API hooks triggered (%d) not equal to API hooks added (%d)", data->hooks_triggered, data->hooks_added);
     }
-    if (!data->good) {
-      log("SSN test : failed");
-    }
+    log(data->good ? "SSN test : ok" : "SSN test : failed");
     log.flush();
   } break;
 
@@ -165,21 +160,21 @@ init()
 
   cont = TSContCreate(contFunc, nullptr);
 
-  auto data = static_cast<ContData *>(TSmalloc(sizeof(ContData)));
+  test_data = TSmalloc(sizeof(ContData));
 
-  ::new (data) ContData;
+  ::new (test_data) ContData;
 
-  TSContDataSet(cont, data);
+  TSContDataSet(cont, test_data);
 
   /* Register to HTTP hooks that are called in case of a cache MISS */
   TSHttpHookAdd(TS_HTTP_SSN_START_HOOK, cont);
-  ++data->hooks_added;
+  ++static_cast<ContData *>(test_data)->hooks_added;
 }
 
 void
 cleanup()
 {
-  TSfree(TSContDataGet(cont));
+  TSfree(test_data);
 
   TSContDestroy(cont);
 

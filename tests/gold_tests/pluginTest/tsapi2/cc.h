@@ -73,6 +73,48 @@ private:
   FILE *fp{nullptr};
 };
 
+// Reenable hook handling after a continuation is triggered on a global hook by an HTTP transaction for a different
+// test.
+//
+void
+reenable(TSEvent event, void *event_data)
+{
+  TSReleaseAssert(event_data != nullptr);
+
+  switch (event) {
+  case TS_EVENT_HTTP_TXN_START:
+  case TS_EVENT_HTTP_READ_REQUEST_HDR:
+  case TS_EVENT_HTTP_OS_DNS:
+  case TS_EVENT_HTTP_READ_CACHE_HDR:
+  case TS_EVENT_HTTP_CACHE_LOOKUP_COMPLETE:
+  case TS_EVENT_HTTP_SEND_REQUEST_HDR:
+  case TS_EVENT_HTTP_READ_RESPONSE_HDR:
+  case TS_EVENT_HTTP_SEND_RESPONSE_HDR:
+  case TS_EVENT_HTTP_TXN_CLOSE:
+    TSHttpTxnReenable(static_cast<TSHttpTxn>(event_data), TS_EVENT_HTTP_CONTINUE);
+    break;
+
+  case TS_EVENT_HTTP_SSN_START:
+    TSHttpSsnReenable(static_cast<TSHttpSsn>(event_data), TS_EVENT_HTTP_CONTINUE);
+    break;
+
+  case TS_EVENT_HTTP_SELECT_ALT:
+    break;
+
+  default:
+    // Unexepected event.
+    TSReleaseAssert(false);
+    break;
+  }
+}
+
+template <typename EnumT>
+void
+incrementEnum(EnumT &enum_val)
+{
+  enum_val = static_cast<EnumT>(static_cast<int>(enum_val) + 1);
+}
+
 // Global hooks will trigger for all tests.  This class returns the TxnID for a session or transaction, so
 // a hook continuation function can determine which test transaction triggered it.
 //
@@ -87,6 +129,7 @@ public:
     createPortToTxnIDMap(_port_to_test_id_map);
   }
 
+#if 0
   GetTxnID(TSHttpSsn ssnp) { _set_test_id(ssnp); }
 
   GetTxnID(TSHttpTxn txn)
@@ -97,19 +140,20 @@ public:
 
     _set_test_id(ssnp);
   }
+#endif
 
-  operator TxnID() const { return _test_id; }
+  operator TEMPTxnID() const { return _test_id; }
 
-  TxnID
+  TEMPTxnID
   test_id() const
   {
     return _test_id;
   }
 
 private:
-  TxnID _test_id;
+  TEMPTxnID _test_id{0};
 
-  static inline std::unordered_map<std::uint16_t, TxnID> _port_to_test_id_map;
+  static inline std::unordered_map<std::uint16_t, TEMPTxnID> _port_to_test_id_map;
 
   void
   _set_test_id(TSHttpSsn ssnp)
@@ -168,15 +212,20 @@ checkHttpTxnReqOrResp(Logger &log, TSHttpTxn txn, MsgGetFunc func, char const *l
       return false;
     }
 
-    bool value_is_test_id =
-      (TSMimeHdrFieldValuesCount(bufp, mloc, fld_loc) == 1) && (TSMimeHdrFieldValueIntGet(bufp, mloc, fld_loc, 0) == test_id);
+    int test_id_in_msg;
+    if (TSMimeHdrFieldValuesCount(bufp, mloc, fld_loc) != 1) {
+      test_id_in_msg = -666;
+
+    } else {
+      test_id_in_msg = TSMimeHdrFieldValueIntGet(bufp, mloc, fld_loc, 0);
+    }
 
     TSReleaseAssert(TSHandleMLocRelease(bufp, mloc, fld_loc) == TS_SUCCESS);
 
-    if (value_is_test_id) {
+    if (test_id_in_msg == test_id) {
       log("%s ok", label);
     } else {
-      log("value of %s field %s is not %d", label, checked_fld_name.data(), test_id);
+      log("value of %s field %s is %d, not %d", label, checked_fld_name.data(), test_id_in_msg, test_id);
       return false;
     }
   }
@@ -192,9 +241,9 @@ using namespace Tsapi2Test;
 //
 #include "hooks.h"
 #include "cache.h"
-#include "ssn.h"
-#include "transform.h"
-#include "parent_proxy.h"
+//#include "ssn.h"
+//#include "transform.h"
+//#include "parent_proxy.h"
 //#include "alt_info.h"
 
 void
@@ -217,10 +266,10 @@ TSPluginInit(int argc, const char *argv[])
   GetTxnID::init();
 
   HooksTest::init();
-  SsnTest::init();
+  // SsnTest::init();
   CacheTest::init();
-  TransformTest::init();
-  ParentProxyTest::init();
+  // TransformTest::init();
+  // ParentProxyTest::init();
   // AltInfoTest::init();
 }
 
@@ -232,10 +281,10 @@ public:
   ~Cleanup()
   {
     HooksTest::cleanup();
-    SsnTest::cleanup();
+    // SsnTest::cleanup();
     CacheTest::cleanup();
-    TransformTest::cleanup();
-    ParentProxyTest::cleanup();
+    // TransformTest::cleanup();
+    // ParentProxyTest::cleanup();
     // AltInfoTest::cleanup();
   }
 };

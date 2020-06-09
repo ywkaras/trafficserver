@@ -21,11 +21,16 @@
 //
 namespace CacheTest
 {
+enum class TxnID { CACHE, CACHE_DUP };
+
 Logger log;
 
 TSCont cont{nullptr};
 
+void *test_data;
+
 struct ContData {
+  TxnID txn_id{TxnID::CACHE};
   bool good{true};
   void
   test(bool result)
@@ -37,19 +42,20 @@ struct ContData {
 int
 contFunc(TSCont contp, TSEvent event, void *event_data)
 {
-  TSReleaseAssert(event_data != nullptr);
-
-  auto txn = static_cast<TSHttpTxn>(event_data);
-
-  auto test_id = GetTxnID(txn);
-  if ((test_id != TxnID::CACHE) && (test_id != TxnID::CACHE_DUP)) {
-    TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  if (TSContDataGet(contp) != test_data) {
+    // Ignore events for global hooks for other tests.
+    //
+    reenable(event, event_data);
     return 0;
   }
 
   TSReleaseAssert(contp == cont);
 
-  auto data = static_cast<ContData *>(TSContDataGet(contp));
+  auto data = static_cast<ContData *>(test_data);
+
+  TSReleaseAssert(event_data != nullptr);
+
+  auto txn = static_cast<TSHttpTxn>(event_data);
 
   switch (event) {
   case TS_EVENT_HTTP_READ_REQUEST_HDR: {
@@ -62,7 +68,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
       data->good = false;
       log("TSHttpTxnCacheLookupStatusGet() doesn't return TS_SUCCESS");
 
-    } else if (TxnID::CACHE == test_id) {
+    } else if (TxnID::CACHE == data->txn_id) {
       if (lookup_status == TS_CACHE_LOOKUP_MISS) {
         log("TSHttpTxnCacheLookupStatusGet() ok (miss)");
       } else {
@@ -85,10 +91,14 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
   } break;
 
   case TS_EVENT_HTTP_TXN_CLOSE: {
-    if (TxnID::CACHE_DUP == test_id) {
+    if (TxnID::CACHE_DUP == data->txn_id) {
       log(data->good ? "cache test ok" : "cache test failed");
+
+    } else {
+      incrementEnum(data->txn_id);
     }
     log.flush();
+
   } break;
 
   default: {
@@ -108,11 +118,11 @@ init()
 
   cont = TSContCreate(contFunc, nullptr);
 
-  auto data = static_cast<ContData *>(TSmalloc(sizeof(ContData)));
+  test_data = static_cast<ContData *>(TSmalloc(sizeof(ContData)));
 
-  ::new (data) ContData;
+  ::new (test_data) ContData;
 
-  TSContDataSet(cont, data);
+  TSContDataSet(cont, test_data);
 
   TSHttpHookAdd(TS_HTTP_READ_REQUEST_HDR_HOOK, cont);
   /* Register to HTTP hooks that are called in case of a cache MISS */
@@ -124,7 +134,7 @@ init()
 void
 cleanup()
 {
-  TSfree(TSContDataGet(cont));
+  TSfree(test_data);
 
   TSContDestroy(cont);
 

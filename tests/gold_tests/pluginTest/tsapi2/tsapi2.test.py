@@ -85,8 +85,9 @@ txns = [
             "Cache-Control: max-age=86400",
             "Content-Type: text/html"
         ],
-        userver_resp_body="Body for response 2"
-    ),
+        userver_resp_body="Body for response 2", last_in_wave=True
+    )]
+'''
     Txn(
         id="SSN",
         req_mime_fields=[
@@ -202,6 +203,7 @@ txns = [
         last_in_wave=True
     )
 ]
+'''
 
 port_list_str = ""
 port_list = []
@@ -234,7 +236,7 @@ cc_file.write(
     'std::string const Run_dir_path = "' + Test.RunDirectory + '";\n' +
     "std::uint16_t const Server_port = {};\n".format(server.Variables.Port) +
     "std::uint16_t const Mute_server_port = {};\n\n".format(Test.Variables.Mute_server_port) +
-    "enum class TxnID\n" +
+    "enum class TEMPTxnID\n" +
     "{\n"
 )
 
@@ -258,7 +260,7 @@ cc_file.write(
 )
 
 for txn in txns:
-    cc_file.write("m[{}] = TxnID::{};\n".format(txn.proxy_port, txn.id))
+    cc_file.write("m[{}] = TEMPTxnID::{};\n".format(txn.proxy_port, txn.id))
 
 cc_file.write(
     "}\n\n" + # end function
