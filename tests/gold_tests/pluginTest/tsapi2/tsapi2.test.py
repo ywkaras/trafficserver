@@ -109,6 +109,20 @@ txns = [
         userver_resp_body="Body for response 4",
     ),
     Txn(
+        id="ALT_INFO1",
+        req_mime_fields=[
+            "X-Request-ID: 6",
+            "Accept-Language: English"
+        ],
+        userver_resp_fields=[
+            "HTTP/1.1 200 OK",
+            "X-Response-ID: 6",
+            "Cache-Control: max-age=86400",
+            "Content-Language: English"
+        ],
+        userver_resp_body="Body for response 6"
+    ),
+    Txn(
         id="PARENT_PROXY",
         req_mime_fields=[
             "X-Request-ID: 11"
@@ -145,13 +159,41 @@ txns = [
         userver_resp_body="Body for response 5"
     ),
     Txn(
+        id="ALT_INFO2",
+        req_mime_fields=[
+            "X-Request-ID: 7",
+            "Accept-Language: French"
+        ],
+        userver_resp_fields=[
+            "HTTP/1.1 200 OK",
+            "X-Response-ID: 7",
+            "Cache-Control: max-age=86400",
+            "Content-Language: French"
+        ],
+        userver_resp_body="Body for response 7"
+    ),
+    Txn(
         id="CACHE_DUP",
         duplicate_of="CACHE",
         last_in_wave=True
     ),
     Txn(
         id="TRANSFORM1_DUP",
-        duplicate_of="TRANSFORM1",
+        duplicate_of="TRANSFORM1"
+    ),
+    Txn(
+        id="ALT_INFO3",
+        req_mime_fields=[
+            "X-Request-ID: 8",
+            "Accept-Language: French, English"
+        ],
+#        userver_resp_fields=[
+#            "HTTP/1.1 200 OK",
+#            "X-Response-ID: 8",
+#            "Cache-Control: max-age=86400",
+#            "Content-Language: French, English"
+#        ],
+#        userver_resp_body="Body for response 8",
         last_in_wave=True
     ),
     Txn(

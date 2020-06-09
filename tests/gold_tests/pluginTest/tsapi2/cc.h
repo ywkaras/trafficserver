@@ -195,6 +195,7 @@ using namespace Tsapi2Test;
 #include "ssn.h"
 #include "transform.h"
 #include "parent_proxy.h"
+//#include "alt_info.h"
 
 void
 TSPluginInit(int argc, const char *argv[])
@@ -220,6 +221,7 @@ TSPluginInit(int argc, const char *argv[])
   CacheTest::init();
   TransformTest::init();
   ParentProxyTest::init();
+  // AltInfoTest::init();
 }
 
 namespace
@@ -234,6 +236,7 @@ public:
     CacheTest::cleanup();
     TransformTest::cleanup();
     ParentProxyTest::cleanup();
+    // AltInfoTest::cleanup();
   }
 };
 

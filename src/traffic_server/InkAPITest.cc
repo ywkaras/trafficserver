@@ -200,6 +200,8 @@ generate_request(int test_case)
 {
 // We define request formats.
 // Each format has an X-Request-ID field that contains the id of the testcase
+#define TEMP 0
+#if TEMP
 #define HTTP_REQUEST_FORMAT6                         \
   "GET http://127.0.0.1:%d/format.html HTTP/1.0\r\n" \
   "X-Request-ID: %d\r\n"                             \
@@ -215,6 +217,7 @@ generate_request(int test_case)
   "X-Request-ID: %d\r\n"                             \
   "Accept-Language: English,French\r\n"              \
   "\r\n"
+#endif
 #define HTTP_REQUEST_FORMAT9                                      \
   "GET http://trafficserver.apache.org/format9.html HTTP/1.0\r\n" \
   "X-Request-ID: %d\r\n"                                          \
@@ -227,6 +230,7 @@ generate_request(int test_case)
   char *request = static_cast<char *>(TSmalloc(REQUEST_MAX_SIZE + 1));
 
   switch (test_case) {
+#if TEMP
   case 6:
     snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT6, SYNSERVER_LISTEN_PORT, test_case);
     break;
@@ -236,6 +240,7 @@ generate_request(int test_case)
   case 8:
     snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT8, SYNSERVER_LISTEN_PORT, test_case - 2);
     break;
+#endif
   case 9:
     snprintf(request, REQUEST_MAX_SIZE + 1, HTTP_REQUEST_FORMAT9, test_case);
     break;
@@ -266,6 +271,7 @@ generate_response(const char *request)
   "Content-Type: text/html\r\n"      \
   "\r\n"                             \
   "Default body"
+#if TEMP
 #define HTTP_RESPONSE_FORMAT6        \
   "HTTP/1.0 200 OK\r\n"              \
   "X-Response-ID: %d\r\n"            \
@@ -288,6 +294,7 @@ generate_response(const char *request)
   "Content-Language: French, English\r\n" \
   "\r\n"                                  \
   "Body for response 8"
+#endif
 
 #define HTTP_RESPONSE_FORMAT9        \
   "HTTP/1.0 200 OK\r\n"              \
@@ -312,6 +319,7 @@ generate_response(const char *request)
   match = sscanf(request, HTTP_REQUEST_TESTCASE_FORMAT, url, &http_version, &test_case);
   if (match == 3) {
     switch (test_case) {
+#if TEMP
     case 6:
       snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT6, test_case);
       break;
@@ -321,6 +329,7 @@ generate_response(const char *request)
     case 8:
       snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT8, test_case);
       break;
+#endif
     case 9:
       snprintf(response, RESPONSE_MAX_SIZE + 1, HTTP_RESPONSE_FORMAT9, test_case);
       break;
@@ -6143,6 +6152,7 @@ REGRESSION_TEST(SDK_API_TSConstant)(RegressionTest *test, int /* atype ATS_UNUSE
     *pstatus = REGRESSION_TEST_FAILED;
   }
 }
+#if TEMP
 
 //////////////////////////////////////////////
 //       SDK_API_TSHttpTxnAltInfo
@@ -6359,6 +6369,7 @@ EXCLUSIVE_REGRESSION_TEST(SDK_API_HttpAltInfo)(RegressionTest *test, int /* atyp
 
   return;
 }
+#endif
 
 //////////////////////////////////////////////
 //       SDK_API_TSHttpConnect

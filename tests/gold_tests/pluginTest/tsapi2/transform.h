@@ -377,9 +377,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
       log("Transform creation -- falied");
     }
 
-    if (!data->good) {
-      log("Transform test -- failed");
-    }
+    log(data->good ? "Transform test -- ok" : "Transform test -- failed");
     log.flush();
   } break;
 
