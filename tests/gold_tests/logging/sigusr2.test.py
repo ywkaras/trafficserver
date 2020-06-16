@@ -116,8 +116,17 @@ rotate_diags_log = tr1.Processes.Process("rotate_diags_log", "mv {} {}".format(
 rotate_manager_log = tr1.Processes.Process("rotate_manager_log", "mv {} {}".format(
     diags_test.manager_log, diags_test.rotated_manager_log))
 
+# When traffic_manager runs traffic_server, it uses the full path name, which includes a directory with the name
+# passed to MakeATSProcess().  This command uses this to return a bash command substitution string that will
+# expand to the process ID of traffic_manager.
+#
+def tm_pid_cmd(ts_name):
+    return ( r"$$( ps -ef | grep -Fv grep | grep -F /" + ts_name +
+        r"/ | grep -F /traffic_server | sed 's/[ \t][ \t]*/\t/g' | cut -f3 )"
+    )
+
 # Configure the signaling of SIGUSR2 to traffic_manaager.
-tr1.Processes.Default.Command = "pkill -n -SIGUSR2 traffic_manager"
+tr1.Processes.Default.Command = "kill -USR2 " + tm_pid_cmd("ts1")
 tr1.Processes.Default.Return = 0
 tr1.Processes.Default.Ready = When.FileExists(diags_test.diags_log)
 
@@ -175,7 +184,7 @@ second_curl_ready = tr2.Processes.Process("second_curl_ready", 'sleep 30')
 second_curl_ready.StartupTimeout = 30
 second_curl_ready.Ready = When.FileModified(configured_test.rotated_configured_log)
 
-send_pkill = tr2.Processes.Process("Send SIGUSR2", "pkill -n -SIGUSR2 traffic_manager")
+send_pkill = tr2.Processes.Process("Send SIGUSR2", "kill -USR2 " + tm_pid_cmd("ts2"))
 send_pkill_ready = tr2.Processes.Process("send_pkill_ready", 'sleep 30')
 send_pkill_ready.StartupTimeout = 30
 send_pkill_ready.Ready = When.FileExists(configured_test.configured_log)
