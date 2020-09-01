@@ -89,8 +89,8 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 
   auto txn = static_cast<TSHttpTxn>(event_data);
 
-  auto test_id = GetTxnID(txn);
-  if ((test_id != TxnID::ALT_INFO1) && (test_id != TxnID::ALT_INFO2) && (test_id != TxnID::ALT_INFO3)) {
+  auto test_id = GetTxnID(txn).test_id();
+  if ((test_id != "ALT_INFO1") && (test_id != "ALT_INFO2") && (test_id != "ALT_INFO3")) {
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }
@@ -106,11 +106,11 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
   } break;
 
   case TS_EVENT_HTTP_TXN_CLOSE: {
-    if (TxnID::ALT_INFO1 == test_id) {
+    if ("ALT_INFO1" == test_id) {
       TSHttpHookAdd(TS_HTTP_SELECT_ALT_HOOK, cont);
       log("Continuation added to TS_HTTP_SELECT_ALT_HOOK");
     }
-    if (TxnID::ALT_INFO3 == test_id) {
+    if ("ALT_INFO3" == test_id) {
       log(data->good ? "Alt Info test ok" : "Alt Info test failed");
     }
     log.flush();
@@ -129,7 +129,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 void
 init()
 {
-  log.open(Run_dir_path + "/AltInfoTest.tlog");
+  log.open(run_dir_path + "/AltInfoTest.tlog");
 
   cont = TSContCreate(contFunc, nullptr);
 

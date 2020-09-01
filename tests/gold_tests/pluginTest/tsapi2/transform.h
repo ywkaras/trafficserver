@@ -294,22 +294,17 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 
   auto txn = static_cast<TSHttpTxn>(event_data);
 
-  auto txn_id = GetTxnID(txn);
+  auto txn_id = GetTxnID(txn).test_id();
 
   int txn_number;
 
-  switch (txn_id) {
-  case TxnID::TRANSFORM1:
-  case TxnID::TRANSFORM1_DUP:
+  if (("TRANSFORM" == txn_id) || ("TRANSFORM_DUP" == txn_id)) {
     txn_number = 4;
-    break;
 
-  case TxnID::TRANSFORM2:
-  case TxnID::TRANSFORM2_DUP:
+  } else if (("TRANSFORM2" == txn_id) || ("TRANSFORM2_DUP" == txn_id)) {
     txn_number = 5;
-    break;
 
-  default:
+  } else {
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }
@@ -394,7 +389,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 void
 init()
 {
-  log.open(Run_dir_path + "/TransformTest.tlog");
+  log.open(run_dir_path + "/TransformTest.tlog");
 
   cont = TSContCreate(contFunc, nullptr);
 

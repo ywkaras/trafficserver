@@ -123,7 +123,7 @@ Http1ClientSession::free()
 
   if (_vc) {
     _vc->do_io_close();
-    _vc = nullptr;
+    PROXY_SSN_SET_VC(nullptr);
   }
 
   super::free();
@@ -135,7 +135,7 @@ Http1ClientSession::new_connection(NetVConnection *new_vc, MIOBuffer *iobuf, IOB
 {
   ink_assert(new_vc != nullptr);
   ink_assert(_vc == nullptr);
-  _vc            = new_vc;
+  PROXY_SSN_SET_VC(new_vc);
   magic          = HTTP_CS_MAGIC_ALIVE;
   mutex          = new_vc->mutex;
   trans.mutex    = mutex; // Share this mutex with the transaction
@@ -267,7 +267,7 @@ Http1ClientSession::do_io_close(int alerrno)
     // until all the transactions are closed
     if (_vc) {
       _vc->do_io_close();
-      _vc = nullptr;
+      PROXY_SSN_SET_VC(nullptr);
     }
   }
   if (transact_count == released_transactions) {

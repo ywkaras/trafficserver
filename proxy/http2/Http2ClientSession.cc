@@ -89,7 +89,7 @@ Http2ClientSession::free()
 
   if (_vc) {
     _vc->do_io_close();
-    _vc = nullptr;
+    PROXY_SSN_SET_VC(nullptr);
   }
 
   // Make sure the we are at the bottom of the stack
@@ -195,7 +195,7 @@ Http2ClientSession::new_connection(NetVConnection *new_vc, MIOBuffer *iobuf, IOB
 
   // Unique client session identifier.
   this->con_id = ProxySession::next_connection_id();
-  this->_vc    = new_vc;
+  PROXY_SSN_SET_VC(new_vc);
   _vc->set_inactivity_timeout(HRTIME_SECONDS(Http2::accept_no_activity_timeout));
   this->schedule_event = nullptr;
   this->mutex          = new_vc->mutex;

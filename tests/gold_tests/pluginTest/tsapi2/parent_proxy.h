@@ -41,17 +41,14 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
   auto txn = static_cast<TSHttpTxn>(event_data);
 
   int data_idx;
-  auto txn_id = GetTxnID(txn);
-  switch (txn_id) {
-  case TxnID::PARENT_PROXY:
+  auto txn_id = GetTxnID(txn).test_id();
+  if ("PARENT_PROXY" == txn_id) {
     data_idx = 0;
-    break;
 
-  case TxnID::PARENT_PROXY_FAIL:
+  } else if ("PARENT_PROXY_FAIL" == txn_id) {
     data_idx = 1;
-    break;
 
-  default:
+  } else {
     if (event != TS_EVENT_HTTP_READ_REQUEST_HDR) {
       log("Bad event %d", static_cast<int>(event));
     }
@@ -69,7 +66,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 
     // Since we chose a request format with an invalid hostname, it won't get sent to the userver unless we set
     // a parent proxy.
-    TSHttpTxnParentProxySet(txn, "127.0.0.1", TxnID::PARENT_PROXY_FAIL == txn_id ? Mute_server_port : Server_port);
+    TSHttpTxnParentProxySet(txn, "127.0.0.1", "PARENT_PROXY_FAIL" == txn_id ? mute_server_port : server_port);
 
     TSHttpTxnHookAdd(txn, TS_HTTP_SEND_RESPONSE_HDR_HOOK, cont);
     TSHttpTxnHookAdd(txn, TS_HTTP_TXN_CLOSE_HOOK, cont);
@@ -78,7 +75,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
   } break;
 
   case TS_EVENT_HTTP_SEND_RESPONSE_HDR: {
-    if (TxnID::PARENT_PROXY_FAIL == txn_id) {
+    if ("PARENT_PROXY_FAIL" == txn_id) {
       data->test(checkHttpTxnReqOrResp(log, txn, TSHttpTxnClientRespGet, "response to client", -1, TS_HTTP_STATUS_BAD_GATEWAY));
     } else {
       data->test(checkHttpTxnReqOrResp(log, txn, TSHttpTxnClientRespGet, "response to client", 11, TS_HTTP_STATUS_OK));
@@ -103,7 +100,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 void
 init()
 {
-  log.open(Run_dir_path + "/ParentProxyTest.tlog");
+  log.open(run_dir_path + "/ParentProxyTest.tlog");
 
   cont = TSContCreate(contFunc, nullptr);
 

@@ -138,7 +138,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 
   auto txn = static_cast<TSHttpTxn>(event_data);
 
-  if (GetTxnID(txn) != TxnID::HOOKS) {
+  if (GetTxnID(txn).test_id() != "HOOKS") {
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }
@@ -166,9 +166,11 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
     if (data->hook_mask == 3 || data->hook_mask == 7) {
       data->hook_mask |= 8;
     }
-    data->test(checkLoopbackSockAddr(txn, TSHttpTxnClientAddrGet, "TSHttpTxnClientAddrGet", HOOKS_src_port));
-    data->test(checkLoopbackSockAddr(txn, TSHttpTxnIncomingAddrGet, "TSHttpTxnIncomingAddrGet", HOOKS_proxy_port));
-    data->test(checkLoopbackSockAddr(txn, TSHttpTxnServerAddrGet, "TSHttpTxnServerAddrGet", Server_port));
+    data->test(checkLoopbackSockAddr(txn, TSHttpTxnClientAddrGet, "TSHttpTxnClientAddrGet",
+                                     yaml_data["HOOKS_src_port"].as<std::uint16_t>()));
+    data->test(checkLoopbackSockAddr(txn, TSHttpTxnIncomingAddrGet, "TSHttpTxnIncomingAddrGet",
+                                     txns["HOOKS"]["proxy_port"].as<std::uint16_t>()));
+    data->test(checkLoopbackSockAddr(txn, TSHttpTxnServerAddrGet, "TSHttpTxnServerAddrGet", server_port));
   } break;
 
   case TS_EVENT_HTTP_CACHE_LOOKUP_COMPLETE: {
@@ -184,7 +186,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
     data->test(checkLoopbackSockAddr(txn, TSHttpTxnOutgoingAddrGet, "TSHttpTxnOutgoingAddrGet"));
 
     data->test(checkHttpTxnReqOrResp(log, txn, TSHttpTxnServerReqGet, "request to server", 1));
-    data->test(checkLoopbackSockAddr(txn, TSHttpTxnNextHopAddrGet, "TSHttpTxnNextHopAddrGet", Server_port));
+    data->test(checkLoopbackSockAddr(txn, TSHttpTxnNextHopAddrGet, "TSHttpTxnNextHopAddrGet", server_port));
     data->test(checkHttpTxnClientProtocolStackContains(txn));
     data->test(checkHttpTxnClientProtocolStackGet(txn));
   } break;
@@ -231,7 +233,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 void
 init()
 {
-  log.open(Run_dir_path + "/HooksTest.tlog");
+  log.open(run_dir_path + "/HooksTest.tlog");
 
   cont = TSContCreate(contFunc, nullptr);
 

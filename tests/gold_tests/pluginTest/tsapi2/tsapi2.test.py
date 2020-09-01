@@ -17,6 +17,9 @@ Additional tests for TS plugin API.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import os
+import yaml
+
 Test.Summary = '''
 Additional tests for TS plugin API.
 '''
@@ -27,10 +30,8 @@ Test.GetTcpPort("HOOKS_src_port")
 
 # An HTTP GET Transaction (request and response).
 #
-
-
 class Txn:
-    # id - a string, C++ enum value unique to this transaction.
+    # id - a string, unique to this transaction.
     # req_mime_fields - list of string, request MIME fields.
     # userver_resp_fields - list of string, userver response MIME field lines (no userver object entry if None).
     # userver_resp_body - string, body of userver response.
@@ -213,51 +214,30 @@ mute_server = Test.Processes.Process(
     "mute_server", "bash -c 'echo -n | nc -l {}'".format(Test.Variables.Mute_server_port)
 )
 
-# Generate a C++ file with an enum of the transactions, and a function template to fill in a map from
-# a transaction's port to its enum value, and finally an include of the file containing the plugin code.
+# Generate a YAML file for the plugin.
 
-cc_file = open(Test.RunDirectory + "/test_tsapi2.cc", "w")
-cc_file.write(
-    "#include <cstdint>\n\n" +
-    "#include <string>\n\n" +
-    "namespace Tsapi2Test\n" +
-    "{\n" +
-    'std::string const Run_dir_path = "' + Test.RunDirectory + '";\n' +
-    "std::uint16_t const Server_port = {};\n".format(server.Variables.Port) +
-    "std::uint16_t const Mute_server_port = {};\n\n".format(Test.Variables.Mute_server_port) +
-    "enum class TxnID\n" +
-    "{\n"
-)
+class Empty:
+    def __init__(self):
+        0
+
+plugin_data = Empty()
+plugin_data.run_dir_path = Test.RunDirectory
+plugin_data.server_port = server.Variables.Port
+plugin_data.mute_server_port = Test.Variables.Mute_server_port
+plugin_data.HOOKS_src_port = Test.Variables.HOOKS_src_port
+plugin_data.txns = {}
+plugin_data.proxy_port_to_txn = {}
 
 for txn in txns:
-    cc_file.write(txn.id + ",\n")
-
-cc_file.write(
-    "SIZE\n" +
-    "};\n"  # end enum
-)
-
-for txn in txns:
-    cc_file.write("\nstd::uint16_t const {}_proxy_port = {};\n".format(txn.id, txn.proxy_port))
+    plugin_data.txns[txn.id] = { 'proxy_port': txn.proxy_port }
     if txn.client_src_port:
-        cc_file.write("const std::uint16_t {}_src_port = {};\n".format(txn.id, txn.client_src_port))
+        plugin_data.txns[txn.id]['src_port'] = txn.client_src_port
+    plugin_data.proxy_port_to_txn[txn.proxy_port] = txn.id
 
-cc_file.write(
-    "\n" +
-    "template <class Map> void createPortToTxnIDMap(Map &m)\n" +
-    "{\n"
-)
-
-for txn in txns:
-    cc_file.write("m[{}] = TxnID::{};\n".format(txn.proxy_port, txn.id))
-
-cc_file.write(
-    "}\n\n" +  # end function
-    "}\n\n" +  # end TestTsapi2 namespace
-    '#include "' + Test.TestDirectory + '/cc.h"\n'
-)
-
-cc_file.close()
+yaml_file_path = Test.RunDirectory + "/plugin.yaml"
+yaml_file = open(yaml_file_path, "w")
+yaml.dump(plugin_data, yaml_file)
+yaml_file.close()
 
 for txn in txns:
     if None is txn.duplicate_of:
@@ -308,7 +288,8 @@ for txn in txns:
         src_port_opt = ""
 
     script_file.write(
-        r'printf "$REQ\r\n" | nc {} 127.0.0.1 {} > {}.out &'.format(src_port_opt, txn.proxy_port, txn.id) + "\n"
+        r'printf "$REQ\r\n" | nc --idle-timeout 5 --no-shutdown {} 127.0.0.1 {} > {}.out &'.format(
+            src_port_opt, txn.proxy_port, txn.id) + "\n"
     )
     script_file.write('PIDS="$PIDS $!"\n\n')
     cat_out_all += "( cat " + txn.id + r".out ; printf '\n\n=====\n\n' )" + " >> all.out\n"
@@ -339,14 +320,17 @@ ts.Ready = When.PortsOpen(port_list)
 
 ts.Disk.records_config.update({
     'proxy.config.proxy_name': 'Poxy_Proxy',  # This will be the server name.
-    'proxy.config.diags.debug.enabled': 0,
+    'proxy.config.diags.debug.enabled': 1,
     'proxy.config.diags.debug.tags': 'http|dns',
     'proxy.config.http.server_ports': port_list_str[1:],
-    'proxy.config.url_reamp.remap_required': 1,
+    'proxy.config.url_remap.remap_required': 1,
     'proxy.config.http.wait_for_cache': 1,
 })
 
-Test.PreparePlugin(Test.RunDirectory + "/test_tsapi2.cc", ts)
+Test.PrepareTestPlugin(
+    os.path.join(os.path.join(Test.TestDirectory, ".libs"), "test_tsapi2.so"), ts,
+    plugin_args=(os.path.join(Test.RunDirectory, "plugin.yaml"))
+)
 
 tr = Test.AddTestRun()
 tr.Processes.Default.StartBefore(mute_server)

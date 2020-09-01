@@ -33,6 +33,13 @@
 #include "http/Http1ServerSession.h"
 #include "http/HttpSessionAccept.h"
 #include "IPAllow.h"
+
+#include <cstdlib>
+#include <atomic>
+
+extern "C" int backtrace(void **frame_list, int size);
+extern "C" char **backtrace_symbols(void *const *frame_list, int size);
+
 #include "private/SSLProxySession.h"
 
 // Emit a debug message conditional on whether this particular client session
@@ -182,7 +189,40 @@ protected:
   // the new_vc may be an SSLNetVConnection object.
   void _handle_if_ssl(NetVConnection *new_vc);
 
-  NetVConnection *_vc = nullptr; // The netvc associated with the concrete session class
+  NetVConnection *const _vc = nullptr; // The netvc associated with the concrete session class
+
+#define PROXY_SSN_SET_VC(VC) _set_vc(VC, __FILE__, __LINE__)
+  void
+  _set_vc(NetVConnection *new_vc, char const *file, int line)
+  {
+    if (!new_vc) {
+      printf("VC ZERO: %s line=%d\n", file, line);
+      static std::atomic<unsigned> file_num{0};
+
+      unsigned fn = file_num.fetch_add(1);
+
+      char file_path[100];
+      sprintf(file_path, "file%d.txt", fn);
+
+      FILE *fp = fopen(file_path, "w");
+
+      void *frame_list[200];
+      int num_frames = backtrace(frame_list, 200);
+      if (num_frames > 0) {
+        char **names      = backtrace_symbols(frame_list, num_frames);
+        char **save_names = names;
+
+        do {
+          printf("DUMP: %s\n", *names);
+          fprintf(fp, "%s\n", *(names++));
+        } while (--num_frames);
+
+        std::free(save_names);
+      }
+      fclose(fp);
+    }
+    const_cast<NetVConnection *&>(_vc) = new_vc;
+  }
 
 private:
   void handle_api_return(int event);

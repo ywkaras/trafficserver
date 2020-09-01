@@ -41,8 +41,8 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 
   auto txn = static_cast<TSHttpTxn>(event_data);
 
-  auto test_id = GetTxnID(txn);
-  if ((test_id != TxnID::CACHE) && (test_id != TxnID::CACHE_DUP)) {
+  auto test_id = GetTxnID(txn).test_id();
+  if ((test_id != "CACHE") && (test_id != "CACHE_DUP")) {
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }
@@ -62,7 +62,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
       data->good = false;
       log("TSHttpTxnCacheLookupStatusGet() doesn't return TS_SUCCESS");
 
-    } else if (TxnID::CACHE == test_id) {
+    } else if ("CACHE" == test_id) {
       if (lookup_status == TS_CACHE_LOOKUP_MISS) {
         log("TSHttpTxnCacheLookupStatusGet() ok (miss)");
       } else {
@@ -85,7 +85,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
   } break;
 
   case TS_EVENT_HTTP_TXN_CLOSE: {
-    if (TxnID::CACHE_DUP == test_id) {
+    if ("CACHE_DUP" == test_id) {
       log(data->good ? "cache test ok" : "cache test failed");
     }
     log.flush();
@@ -104,7 +104,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 void
 init()
 {
-  log.open(Run_dir_path + "/CacheTest.tlog");
+  log.open(run_dir_path + "/CacheTest.tlog");
 
   cont = TSContCreate(contFunc, nullptr);
 

@@ -69,7 +69,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 
   if (TS_EVENT_HTTP_SSN_START == event) {
     auto ssn = static_cast<TSHttpSsn>(event_data);
-    if (GetTxnID(ssn) == TxnID::SSN) {
+    if (GetTxnID(ssn).test_id() == "SSN") {
       TSReleaseAssert(contp == cont);
 
       log("SSN_START hook trigger -- ok");
@@ -86,7 +86,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 
   auto txn = static_cast<TSHttpTxn>(event_data);
 
-  if (GetTxnID(txn) != TxnID::SSN) {
+  if (GetTxnID(txn).test_id() != "SSN") {
     log("Failure -- SSN test continuation is not global for event %d", static_cast<int>(event));
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
@@ -161,7 +161,7 @@ contFunc(TSCont contp, TSEvent event, void *event_data)
 void
 init()
 {
-  log.open(Run_dir_path + "/SsnTest.tlog");
+  log.open(run_dir_path + "/SsnTest.tlog");
 
   cont = TSContCreate(contFunc, nullptr);
 
