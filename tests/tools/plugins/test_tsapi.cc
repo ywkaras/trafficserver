@@ -28,14 +28,6 @@ Regression testing code for TS API.  Not comprehensive, hopefully will be built 
 #include <ts/ts.h>
 #include <tscpp/util/PostScript.h>
 
-// TSReleaseAssert() doesn't seem to produce any logging output for a debug build, so do both kinds of assert.
-//
-#define ALWAYS_ASSERT(EXPR) \
-  {                         \
-    TSAssert(EXPR);         \
-    TSReleaseAssert(EXPR);  \
-  }
-
 namespace
 {
 #define PINAME "test_tsapi"
@@ -49,7 +41,66 @@ std::fstream logFile;
 TSCont tCont, gCont;
 
 void
-testsForReadReqHdrHook(TSHttpTxn txn)
+testsForReqHdr(char const *desc, TSMBuffer hbuf, TSMLoc hloc)
+{
+  logFile << desc << ':' << std::endl;
+  logFile << "TSHttpHdrEffectiveUrlBufGet():  ";
+  int64_t url_length;
+
+  if (TSHttpHdrEffectiveUrlBufGet(hbuf, hloc, nullptr, 0, &url_length) != TS_SUCCESS) {
+    logFile << "sizing call failed " << std::endl;
+
+  } else if (0 == url_length) {
+    logFile << "zero URL length returned" << std::endl;
+
+  } else {
+    std::string s(url_length, '?');
+
+    s += "yada";
+
+    int64_t url_length2;
+
+    if (TSHttpHdrEffectiveUrlBufGet(hbuf, hloc, s.data(), url_length + 4, &url_length2) != TS_SUCCESS) {
+      logFile << "data-obtaining call failed" << std::endl;
+
+    } else if (url_length2 != url_length) {
+      logFile << "second size does not match first" << std::endl;
+
+    } else if (s.substr(url_length, 4) != "yada") {
+      logFile << "overwrite" << std::endl;
+
+    } else {
+      logFile << s.substr(0, url_length) << std::endl;
+    }
+  }
+  logFile << "TSUrlSchemeGet():  ";
+  TSMLoc url_loc;
+  if (TSHttpHdrUrlGet(hbuf, hloc, &url_loc) != TS_SUCCESS) {
+    logFile << "failed to get URL loc" << std::endl;
+
+  } else {
+    ts::PostScript ps([=]() -> void { TSHandleMLocRelease(hbuf, TS_NULL_MLOC, url_loc); });
+
+    int scheme_len;
+    char const *scheme_data = TSUrlSchemeGet(hbuf, url_loc, &scheme_len);
+    if (!scheme_data || !scheme_len) {
+      logFile << "failed to get URL scheme" << std::endl;
+    } else {
+      logFile << std::string_view(scheme_data, scheme_len) << std::endl;
+    }
+    logFile << "TSUrlRawSchemeGet():  ";
+    scheme_data = TSUrlRawSchemeGet(hbuf, url_loc, &scheme_len);
+    if (!scheme_data || !scheme_len) {
+      logFile << "failed to get raw URL scheme" << std::endl;
+    } else {
+      logFile << std::string_view(scheme_data, scheme_len) << std::endl;
+    }
+    logFile << "TSUrlPortGet():  " << TSUrlPortGet(hbuf, url_loc) << std::endl;
+  }
+}
+
+void
+testsForEffectiveUrlStringGet(TSHttpTxn txn)
 {
   logFile << "TSHttpTxnEffectiveUrlStringGet():  ";
   int urlLength;
@@ -65,8 +116,13 @@ testsForReadReqHdrHook(TSHttpTxn txn)
 
     TSfree(urlStr);
   }
+}
 
-  logFile << "TSHttpHdrEffectiveUrlBufGet():  ";
+void
+testsForReadReqHdrHook(TSHttpTxn txn)
+{
+  testsForEffectiveUrlStringGet(txn);
+
   {
     TSMBuffer hbuf;
     TSMLoc hloc;
@@ -75,36 +131,27 @@ testsForReadReqHdrHook(TSHttpTxn txn)
       logFile << "failed to get client request" << std::endl;
 
     } else {
-      ts::PostScript ps([=]() -> void { TSHandleMLocRelease(hbuf, TS_NULL_MLOC, hloc); });
+      testsForReqHdr("Client Request", hbuf, hloc);
+      TSHandleMLocRelease(hbuf, TS_NULL_MLOC, hloc);
+    }
+  }
+}
 
-      int64_t url_length;
+void
+testsForSendReqHdrHook(TSHttpTxn txn)
+{
+  testsForEffectiveUrlStringGet(txn);
 
-      if (TSHttpHdrEffectiveUrlBufGet(hbuf, hloc, nullptr, 0, &url_length) != TS_SUCCESS) {
-        logFile << "sizing call failed " << std::endl;
+  {
+    TSMBuffer hbuf;
+    TSMLoc hloc;
 
-      } else if (0 == url_length) {
-        logFile << "zero URL length returned" << std::endl;
+    if (TSHttpTxnServerReqGet(txn, &hbuf, &hloc) != TS_SUCCESS) {
+      logFile << "failed to get server request" << std::endl;
 
-      } else {
-        std::string s(url_length, '?');
-
-        s += "yada";
-
-        int64_t url_length2;
-
-        if (TSHttpHdrEffectiveUrlBufGet(hbuf, hloc, s.data(), url_length + 4, &url_length2) != TS_SUCCESS) {
-          logFile << "data-obtaining call failed" << std::endl;
-
-        } else if (url_length2 != url_length) {
-          logFile << "second size does not match first" << std::endl;
-
-        } else if (s.substr(url_length, 4) != "yada") {
-          logFile << "overwrite" << std::endl;
-
-        } else {
-          logFile << s.substr(0, url_length) << std::endl;
-        }
-      }
+    } else {
+      testsForReqHdr("Request To Server", hbuf, hloc);
+      TSHandleMLocRelease(hbuf, TS_NULL_MLOC, hloc);
     }
   }
 }
@@ -125,8 +172,16 @@ transactionContFunc(TSCont, TSEvent event, void *eventData)
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
   } break;
 
+  case TS_EVENT_HTTP_SEND_REQUEST_HDR: {
+    auto txn = static_cast<TSHttpTxn>(eventData);
+
+    testsForSendReqHdrHook(txn);
+
+    TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  } break;
+
   default: {
-    ALWAYS_ASSERT(false)
+    TSReleaseAssert(false);
   } break;
 
   } // end switch
@@ -146,6 +201,7 @@ globalContFunc(TSCont, TSEvent event, void *eventData)
     auto txn = static_cast<TSHttpTxn>(eventData);
 
     TSHttpTxnHookAdd(txn, TS_HTTP_READ_REQUEST_HDR_HOOK, tCont);
+    TSHttpTxnHookAdd(txn, TS_HTTP_SEND_REQUEST_HDR_HOOK, tCont);
 
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
   } break;
@@ -158,8 +214,16 @@ globalContFunc(TSCont, TSEvent event, void *eventData)
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
   } break;
 
+  case TS_EVENT_HTTP_SEND_REQUEST_HDR: {
+    auto txn = static_cast<TSHttpTxn>(eventData);
+
+    testsForSendReqHdrHook(txn);
+
+    TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  } break;
+
   default: {
-    ALWAYS_ASSERT(false)
+    TSReleaseAssert(false);
   } break;
 
   } // end switch
@@ -212,6 +276,7 @@ TSPluginInit(int argc, const char *argv[])
 
   TSHttpHookAdd(TS_HTTP_TXN_START_HOOK, gCont);
   TSHttpHookAdd(TS_HTTP_READ_REQUEST_HDR_HOOK, gCont);
+  TSHttpHookAdd(TS_HTTP_SEND_REQUEST_HDR_HOOK, gCont);
 
   tCont = TSContCreate(transactionContFunc, mtx);
 }

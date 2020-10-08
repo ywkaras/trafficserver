@@ -47,8 +47,8 @@ ts.Disk.records_config.update({
     'proxy.config.proxy_name': 'Poxy_Proxy',  # This will be the server name.
     'proxy.config.ssl.server.cert.path': '{0}'.format(ts.Variables.SSLDir),
     'proxy.config.ssl.server.private_key.path': '{0}'.format(ts.Variables.SSLDir),
-    'proxy.config.url_remap.remap_required': 0,
-    'proxy.config.diags.debug.enabled': 0,
+    'proxy.config.url_remap.remap_required': 1,
+    'proxy.config.diags.debug.enabled': 1,
     'proxy.config.diags.debug.tags': 'http|test_tsapi',
 })
 
@@ -71,7 +71,15 @@ tr.Processes.Default.StartBefore(server, ready=When.PortOpen(server.Variables.Po
 tr.Processes.Default.StartBefore(Test.Processes.ts)
 #
 tr.Processes.Default.Command = (
-    'curl --verbose --ipv4 --header "Host: mYhOsT.teSt:{0}" hTtP://loCalhOst:{1}/'.format(server.Variables.Port, ts.Variables.port)
+    r'printf "GET / HTTP/1.1\r\nHost: mYhOsT.teSt:{0}\r\n\r\n" | nc localhost {1}'.format(
+        server.Variables.Port, ts.Variables.port)
+)
+tr.Processes.Default.ReturnCode = 0
+
+tr = Test.AddTestRun()
+tr.Processes.Default.Command = (
+    r'printf "GET http://mYhOsT.teSt:{0}/ HTTP/1.1\r\n\r\n" | nc localhost {1}'.format(
+        server.Variables.Port, ts.Variables.port)
 )
 tr.Processes.Default.ReturnCode = 0
 
@@ -84,8 +92,7 @@ tr.Processes.Default.ReturnCode = 0
 
 tr = Test.AddTestRun()
 # Change server port number (which can vary) to a fixed string for compare to gold file.
-tr.Processes.Default.Command = "sed 's/:{0}/:SERVER_PORT/' < {1}/log.txt > {1}/log2.txt".format(
-    server.Variables.Port, Test.RunDirectory)
+tr.Processes.Default.Command = "sed 's/{0}/SERVER_PORT/' < log.txt > log2.txt".format(server.Variables.Port)
 tr.Processes.Default.ReturnCode = 0
 f = tr.Disk.File("log2.txt")
 f.Content = "log.gold"
