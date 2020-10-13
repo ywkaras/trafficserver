@@ -22,10 +22,15 @@ Regression testing code for TS API.  Not comprehensive, hopefully will be built 
 
 #include <fstream>
 #include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cinttypes>
+#include <bitset>
 #include <string_view>
 #include <string>
 
 #include <ts/ts.h>
+#include <ts/remap.h>
 #include <tscpp/util/PostScript.h>
 
 namespace
@@ -231,6 +236,9 @@ globalContFunc(TSCont, TSEvent event, void *eventData)
   return 0;
 }
 
+std::uintptr_t remap_count;
+std::bitset<64> remap_mask;
+
 } // end anonymous namespace
 
 void
@@ -279,6 +287,64 @@ TSPluginInit(int argc, const char *argv[])
   TSHttpHookAdd(TS_HTTP_SEND_REQUEST_HDR_HOOK, gCont);
 
   tCont = TSContCreate(transactionContFunc, mtx);
+}
+
+// NOTE:  It is assumed that TSPluginInit will be called and finish before TSRemapInit() is called.
+
+TSReturnCode
+TSRemapInit(TSRemapInterface *api_info, char *errbuf, int errbuf_size)
+{
+  TSDebug(PIName, "TSRemapInit()");
+
+  TSReleaseAssert(errbuf && errbuf_size);
+
+  if (!api_info) {
+    std::strncpy(errbuf, "Invalid TSRemapInterface argument", errbuf_size - 1);
+    return TS_ERROR;
+  }
+  if (api_info->tsremap_version < TSREMAP_VERSION) {
+    std::snprintf(errbuf, errbuf_size, "Incorrect API version %ld.%ld", api_info->tsremap_version >> 16,
+                  (api_info->tsremap_version & 0xffff));
+    return TS_ERROR;
+  }
+  return TS_SUCCESS;
+}
+
+TSReturnCode
+TSRemapNewInstance(int argc, char *argv[], void **instance, char *errbuf, int errbuf_size)
+{
+  // TSReleaseAssert((1 == argc) && errbuf && errbuf_size);
+  TSReleaseAssert(remap_count < remap_mask.size());
+
+  remap_mask[remap_count++] = true;
+  *instance                 = reinterpret_cast<void *>(remap_count);
+
+  logFile << "TSRemapNewInstance(): argv[0]=" << argv[0] << std::endl;
+
+  return TS_SUCCESS;
+}
+
+void
+TSRemapDeleteInstance(void *instance)
+{
+  auto inum = reinterpret_cast<std::uintptr_t>(instance) - 1;
+  TSReleaseAssert(inum < remap_mask.size());
+  TSReleaseAssert(remap_mask[inum]);
+  remap_mask[inum] = false;
+}
+
+TSRemapStatus
+TSRemapDoRemap(void *instance, TSHttpTxn txnp, TSRemapRequestInfo *rri)
+{
+  TSReleaseAssert(txnp && rri);
+  auto inum = reinterpret_cast<std::uintptr_t>(instance) - 1;
+  TSReleaseAssert(inum < remap_mask.size());
+
+  logFile << "TSRemapDoRemap(): instance=" << inum << " redirect=" << rri->redirect << std::endl;
+
+  testsForReqHdr("Remap Request", rri->requestBufp, rri->requestHdrp);
+
+  return TSREMAP_NO_REMAP;
 }
 
 namespace
