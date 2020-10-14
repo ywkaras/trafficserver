@@ -291,13 +291,16 @@ TSRemapInit(TSRemapInterface *api_info, char *errbuf, int errbuf_size)
 TSReturnCode
 TSRemapNewInstance(int argc, char *argv[], void **instance, char *errbuf, int errbuf_size)
 {
-  TSReleaseAssert((3 == argc) && errbuf && errbuf_size);
+  TSReleaseAssert(errbuf && errbuf_size);
   TSReleaseAssert(remap_count < remap_mask.size());
 
   remap_mask[remap_count++] = true;
   *instance                 = reinterpret_cast<void *>(remap_count);
 
-  logFile << "TSRemapNewInstance(): argv[0]=" << argv[0] << std::endl;
+  logFile << "TSRemapNewInstance():" << std::endl;
+  for (int i = 0; i < argc; ++i) {
+    logFile << "argv[" << i << "]=" << argv[i] << std::endl;
+  }
 
   return TS_SUCCESS;
 }
@@ -305,7 +308,10 @@ TSRemapNewInstance(int argc, char *argv[], void **instance, char *errbuf, int er
 void
 TSRemapDeleteInstance(void *instance)
 {
+  // NOTE:  Currently this is never called.
+
   auto inum = reinterpret_cast<std::uintptr_t>(instance) - 1;
+  logFile << "TSRemapNewInstance(): instance=" << inum << std::endl;
   TSReleaseAssert(inum < remap_mask.size());
   TSReleaseAssert(remap_mask[inum]);
   remap_mask[inum] = false;

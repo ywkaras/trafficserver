@@ -59,10 +59,10 @@ ts.Disk.ssl_multicert_config.AddLine(
 rp = os.path.join(Test.TestDirectory, '.libs', 'test_tsapi.so')
 
 ts.Disk.remap_config.AddLine(
-    "map http://myhost.test:{0} http://127.0.0.1:{0} @plugin={1}".format(server.Variables.Port, rp)
+    "map http://myhost.test:{0} http://127.0.0.1:{0} @plugin={1} @plugin={1}".format(server.Variables.Port, rp)
 )
 ts.Disk.remap_config.AddLine(
-    "map https://myhost.test:{0} http://127.0.0.1:{0} @plugin={1}".format(server.Variables.Port, rp)
+    "map https://myhost.test:{0} http://127.0.0.1:{0} @plugin={1} @plugin={1}".format(server.Variables.Port, rp)
 )
 
 tr = Test.AddTestRun()
