@@ -56,14 +56,14 @@ ts.Disk.ssl_multicert_config.AddLine(
     'dest_ip=* ssl_cert_name=server.pem ssl_key_name=server.key'
 )
 
-ts.Disk.remap_config.AddLine(
-    "map http://myhost.test:{0} http://127.0.0.1:{0} @plugin=test_tsapi.so @pparam=x".format(server.Variables.Port)
-)
-ts.Disk.remap_config.AddLine(
-    "map https://myhost.test:{0} http://127.0.0.1:{0} @plugin=test_tsapi.so @pparam=x".format(server.Variables.Port)
-)
+rp = os.path.join(Test.TestDirectory, '.libs', 'test_tsapi.so')
 
-Test.PrepareTestPlugin(os.path.join(Test.Variables.AtsTestPluginsDir, 'test_tsapi.so'), ts)
+ts.Disk.remap_config.AddLine(
+    "map http://myhost.test:{0} http://127.0.0.1:{0} @plugin={1}".format(server.Variables.Port, rp)
+)
+ts.Disk.remap_config.AddLine(
+    "map https://myhost.test:{0} http://127.0.0.1:{0} @plugin={1}".format(server.Variables.Port, rp)
+)
 
 tr = Test.AddTestRun()
 # Probe server port to check if ready.

@@ -16,26 +16,28 @@
  * limitations under the License.
  */
 
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cinttypes>
+#include <fstream>
+#include <string_view>
+#include <string>
+#include <bitset>
+
+#include <tscpp/util/PostScript.h>
+
+#include <ts/ts.h>
+#include <ts/remap.h>
+
 /*
 Regression testing code for TS API.  Not comprehensive, hopefully will be built up over time.
 */
 
-#include <fstream>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <cinttypes>
-#include <bitset>
-#include <string_view>
-#include <string>
-
-#include <ts/ts.h>
-#include <ts/remap.h>
-#include <tscpp/util/PostScript.h>
+#define PINAME "test_tsapi"
 
 namespace
 {
-#define PINAME "test_tsapi"
 char PIName[] = PINAME;
 
 // NOTE:  It's important to flush this after writing so that a gold test using this plugin can examine the log before TS
@@ -44,6 +46,9 @@ char PIName[] = PINAME;
 std::fstream logFile;
 
 TSCont tCont, gCont;
+
+std::uintptr_t remap_count;
+std::bitset<64> remap_mask;
 
 void
 testsForReqHdr(char const *desc, TSMBuffer hbuf, TSMLoc hloc)
@@ -236,26 +241,19 @@ globalContFunc(TSCont, TSEvent event, void *eventData)
   return 0;
 }
 
-std::uintptr_t remap_count;
-std::bitset<64> remap_mask;
-
 } // end anonymous namespace
 
-void
-TSPluginInit(int argc, const char *argv[])
+TSReturnCode
+TSRemapInit(TSRemapInterface *api_info, char *errbuf, int errbuf_size)
 {
-  TSDebug(PIName, "TSPluginInit()");
+  TSDebug(PIName, "TSRemapInit()");
 
-  TSPluginRegistrationInfo info;
+  TSReleaseAssert(api_info && errbuf && errbuf_size);
 
-  info.plugin_name   = PIName;
-  info.vendor_name   = "Apache Software Foundation";
-  info.support_email = "dev@trafficserver.apache.org";
-
-  if (TSPluginRegister(&info) != TS_SUCCESS) {
-    TSError(PINAME ": Plugin registration failed");
-
-    return;
+  if (api_info->tsremap_version < TSREMAP_VERSION) {
+    std::snprintf(errbuf, errbuf_size, "Incorrect API version %ld.%ld", api_info->tsremap_version >> 16,
+                  (api_info->tsremap_version & 0xffff));
+    return TS_ERROR;
   }
 
   const char *fileSpec = std::getenv("OUTPUT_FILE");
@@ -263,7 +261,7 @@ TSPluginInit(int argc, const char *argv[])
   if (nullptr == fileSpec) {
     TSError(PINAME ": Environment variable OUTPUT_FILE not found.");
 
-    return;
+    return TS_ERROR;
   }
 
   // Disable output buffering for logFile, so that explicit flushing is not necessary.
@@ -273,7 +271,7 @@ TSPluginInit(int argc, const char *argv[])
   if (!logFile.is_open()) {
     TSError(PINAME ": could not open log file \"%s\"", fileSpec);
 
-    return;
+    return TS_ERROR;
   }
 
   // Mutex to protext the logFile object.
@@ -287,33 +285,13 @@ TSPluginInit(int argc, const char *argv[])
   TSHttpHookAdd(TS_HTTP_SEND_REQUEST_HDR_HOOK, gCont);
 
   tCont = TSContCreate(transactionContFunc, mtx);
-}
-
-// NOTE:  It is assumed that TSPluginInit will be called and finish before TSRemapInit() is called.
-
-TSReturnCode
-TSRemapInit(TSRemapInterface *api_info, char *errbuf, int errbuf_size)
-{
-  TSDebug(PIName, "TSRemapInit()");
-
-  TSReleaseAssert(errbuf && errbuf_size);
-
-  if (!api_info) {
-    std::strncpy(errbuf, "Invalid TSRemapInterface argument", errbuf_size - 1);
-    return TS_ERROR;
-  }
-  if (api_info->tsremap_version < TSREMAP_VERSION) {
-    std::snprintf(errbuf, errbuf_size, "Incorrect API version %ld.%ld", api_info->tsremap_version >> 16,
-                  (api_info->tsremap_version & 0xffff));
-    return TS_ERROR;
-  }
   return TS_SUCCESS;
 }
 
 TSReturnCode
 TSRemapNewInstance(int argc, char *argv[], void **instance, char *errbuf, int errbuf_size)
 {
-  // TSReleaseAssert((1 == argc) && errbuf && errbuf_size);
+  TSReleaseAssert((3 == argc) && errbuf && errbuf_size);
   TSReleaseAssert(remap_count < remap_mask.size());
 
   remap_mask[remap_count++] = true;
