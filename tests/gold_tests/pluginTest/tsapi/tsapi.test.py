@@ -21,9 +21,6 @@ Test.Summary = '''
 Test TS API.
 '''
 
-Test.SkipUnless(
-    Condition.HasCurlFeature('http2'),
-)
 Test.ContinueOnFail = True
 
 # test_tsapi.so will output test logging to this file.
@@ -48,7 +45,7 @@ ts.Disk.records_config.update({
     'proxy.config.ssl.server.cert.path': '{0}'.format(ts.Variables.SSLDir),
     'proxy.config.ssl.server.private_key.path': '{0}'.format(ts.Variables.SSLDir),
     'proxy.config.url_remap.remap_required': 0,
-    'proxy.config.diags.debug.enabled': 0,
+    'proxy.config.diags.debug.enabled': 1,
     'proxy.config.diags.debug.tags': 'http|test_tsapi',
 })
 
@@ -57,10 +54,10 @@ ts.Disk.ssl_multicert_config.AddLine(
 )
 
 ts.Disk.remap_config.AddLine(
-    "map http://myhost.test:{0}  http://127.0.0.1:{0}".format(server.Variables.Port)
+    "map http://myhost.test http://127.0.0.1:{0}".format(server.Variables.Port)
 )
 ts.Disk.remap_config.AddLine(
-    "map https://myhost.test:{0}  http://127.0.0.1:{0}".format(server.Variables.Port)
+    "map https://myhost.test http://127.0.0.1:{0}".format(server.Variables.Port)
 )
 
 Test.PrepareTestPlugin(os.path.join(Test.Variables.AtsTestPluginsDir, 'test_tsapi.so'), ts)
@@ -71,17 +68,20 @@ tr.Processes.Default.StartBefore(server, ready=When.PortOpen(server.Variables.Po
 tr.Processes.Default.StartBefore(Test.Processes.ts)
 #
 tr.Processes.Default.Command = (
-    'curl --verbose --ipv4 --header "Host: mYhOsT.teSt:{0}" hTtP://loCalhOst:{1}/'.format(server.Variables.Port, ts.Variables.port)
+    r"printf 'GET http:/// HTTP/1.1\r\nHost: mYhOsT.teSt\r\n\r\n' | nc -4 localhost {0}".format(ts.Variables.port)
 )
 tr.Processes.Default.ReturnCode = 0
 
 tr = Test.AddTestRun()
 tr.Processes.Default.Command = (
-    'curl --verbose --ipv4 --http2 --insecure --header ' +
-    '"Host: myhost.test:{0}" HttPs://LocalHost:{1}/'.format(server.Variables.Port, ts.Variables.ssl_port)
+    r"printf 'GET https://myhost.test/ HTTP/1.1\r\nHost: myhost.test\r\n\r\n' | " +
+    "openssl s_client -4 -tls1_3 localhost:{0}".format(ts.Variables.ssl_port)
 )
 tr.Processes.Default.ReturnCode = 0
+f = tr.Disk.File("log.txt")
+f.Content = "log.gold"
 
+'''
 tr = Test.AddTestRun()
 # Change server port number (which can vary) to a fixed string for compare to gold file.
 tr.Processes.Default.Command = "sed 's/:{0}/:SERVER_PORT/' < {1}/log.txt > {1}/log2.txt".format(
@@ -89,3 +89,4 @@ tr.Processes.Default.Command = "sed 's/:{0}/:SERVER_PORT/' < {1}/log.txt > {1}/l
 tr.Processes.Default.ReturnCode = 0
 f = tr.Disk.File("log2.txt")
 f.Content = "log.gold"
+'''
