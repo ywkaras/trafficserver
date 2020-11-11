@@ -33,6 +33,8 @@
 #include <fstream> /* std::ifstream */
 #include <string>
 #include <unordered_map>
+#include <atomic>
+#include <thread>
 
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
@@ -143,8 +145,31 @@ public:
   S3Config *get(const char *fname);
 
 private:
-  std::unordered_map<std::string, std::pair<S3Config *, int>> _cache;
-  static const int _ttl = 60;
+  struct _Data {
+    // This is incremented before and after cnf and load_tm are set.  Thus, an odd value indicates an update is
+    // in progress.
+    //
+    std::atomic<unsigned> upd_cnt{0};
+
+    // A config from a file and the last time it was loaded.  cnf should be written before load_tm.  That way,
+    // if cnf is read after load_tm, the load time will never indicate cnf is fresh when it isn't.
+    //
+    std::atomic<S3Config *> cnf;
+    std::atomic<time_t> load_tm;
+
+    _Data() {}
+
+    _Data(S3Config *cnf_, time_t load_tm_) : cnf(cnf_), load_tm(load_tm_) {}
+
+    _Data(_Data &&lhs)
+    {
+      upd_cnt = lhs.upd_cnt.load();
+      cnf     = lhs.cnf.load();
+      load_tm = lhs.load_tm.load();
+    }
+  };
+  std::unordered_map<std::string, _Data> _cache;
+  static const int _Ttl = 60;
 };
 
 ConfigCache gConfCache;
@@ -486,6 +511,8 @@ S3Config::parse_config(const std::string &config_fname)
 S3Config *
 ConfigCache::get(const char *fname)
 {
+  S3Config *s3;
+
   struct timeval tv;
 
   gettimeofday(&tv, nullptr);
@@ -496,40 +523,57 @@ ConfigCache::get(const char *fname)
   auto it = _cache.find(config_fname);
 
   if (it != _cache.end()) {
-    if (tv.tv_sec > (it->second.second + _ttl)) {
-      // Update the cached configuration file.
-      S3Config *s3 = new S3Config(false); // false == this config does not get the continuation
-
-      TSDebug(PLUGIN_NAME, "Configuration from %s is stale, reloading", config_fname.c_str());
-      it->second.second = tv.tv_sec;
-      if (s3->parse_config(config_fname)) {
-        it->second.first = s3;
-      } else {
-        // Failed the configuration parse... Set the cache response to nullptr
-        delete s3;
-        it->second.first = nullptr;
-      }
-    } else {
+    unsigned upd_cnt = it->second.upd_cnt;
+    if (tv.tv_sec <= (it->second.load_tm + _Ttl)) {
       TSDebug(PLUGIN_NAME, "Configuration from %s is fresh, reusing", config_fname.c_str());
+      s3 = it->second.cnf;
+
+    } else {
+      if (!(upd_cnt & 1) && it->second.upd_cnt.compare_exchange_strong(upd_cnt, upd_cnt + 1)) {
+        TSDebug(PLUGIN_NAME, "Configuration from %s is stale, reloading", config_fname.c_str());
+        s3 = new S3Config(false); // false == this config does not get the continuation
+        if (s3->parse_config(config_fname)) {
+          delete it->second.cnf;
+
+        } else {
+          delete s3;
+          TSAssert(!"Configuration parsing / caching failed");
+          s3 = nullptr;
+        }
+        it->second.cnf     = s3;
+        it->second.load_tm = tv.tv_sec;
+
+        // Update is complete.
+        //
+        ++it->second.upd_cnt;
+
+      } else {
+        // This thread lost the race with another thread that is also reloading the config for this file.
+        // Wait for the other thread to finish reloading.
+        //
+        while (it->second.upd_cnt & 1) {
+          // Hopefully yielding will sleep the thread at least until the next scheduler interrupt, preventing a
+          // busy wait.
+          //
+          std::this_thread::yield();
+        }
+        s3 = it->second.cnf;
+      }
     }
-    return it->second.first;
   } else {
     // Create a new cached file.
-    S3Config *s3 = new S3Config(false); // false == this config does not get the continuation
-
+    s3 = new S3Config(false); // false == this config does not get the continuation
+    TSDebug(PLUGIN_NAME, "Parsing and caching configuration from %s, version:%d", config_fname.c_str(), s3->version());
     if (s3->parse_config(config_fname)) {
-      _cache[config_fname] = std::make_pair(s3, tv.tv_sec);
-      TSDebug(PLUGIN_NAME, "Parsing and caching configuration from %s, version:%d", config_fname.c_str(), s3->version());
+      auto res = _cache.emplace(config_fname, _Data(s3, tv.tv_sec));
+      TSAssert(res.second);
     } else {
       delete s3;
-      return nullptr;
+      TSAssert(!"Configuration parsing / caching failed");
+      s3 = nullptr;
     }
-
-    return s3;
   }
-
-  TSAssert(!"Configuration parsing / caching failed");
-  return nullptr;
+  return s3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
