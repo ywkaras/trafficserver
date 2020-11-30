@@ -128,9 +128,13 @@ LogObject::LogObject(LogConfig *cfg, const LogFormat *format, const char *log_di
     m_logFile->open_file();
   }
 
+#ifndef __clang_analyzer__
+
   LogBuffer *b = new LogBuffer(cfg, this, cfg->log_buffer_size);
   ink_assert(b);
-  SET_FREELIST_POINTER_VERSION(m_log_buffer, b, 0);
+  m_log_buffer.store(ts::Versioned_ptr(b, 0)); // Clang Analyzer doesn't believe this keeps b from leaking.
+
+#endif
 
   _setup_rolling(cfg, rolling_enabled, rolling_interval_sec, rolling_offset_hr, rolling_size_mb);
 
@@ -174,11 +178,15 @@ LogObject::LogObject(LogObject &rhs)
     add_filter(filter);
   }
 
+#ifndef __clang_analyzer__
+
   // copy gets a fresh log buffer
   //
   LogBuffer *b = new LogBuffer(Log::config, this, Log::config->log_buffer_size);
   ink_assert(b);
-  SET_FREELIST_POINTER_VERSION(m_log_buffer, b, 0);
+  m_log_buffer.store(ts::Versioned_ptr(b, 0)); // Clang Analyzer doesn't believe this keeps b from leaking.
+
+#endif
 
   Debug("log-config",
         "exiting LogObject copy constructor, "
@@ -196,7 +204,7 @@ LogObject::~LogObject()
   ats_free(m_alt_filename);
   delete m_format;
   delete[] m_buffer_manager;
-  delete static_cast<LogBuffer *>(FREELIST_POINTER(m_log_buffer));
+  delete static_cast<LogBuffer *>(m_log_buffer.load().ptr());
 }
 
 //-----------------------------------------------------------------------------
@@ -344,27 +352,21 @@ LogObject::display(FILE *fd)
   fprintf(fd, "++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 }
 
-static head_p
-increment_pointer_version(head_p *dst)
+static ts::Versioned_ptr
+increment_pointer_version(ts::Atomic_versioned_ptr &dst)
 {
-  head_p h;
-  head_p new_h;
+  ts::Versioned_ptr h{dst.load()};
 
-  do {
-    INK_QUEUE_LD(h, *dst);
-    SET_FREELIST_POINTER_VERSION(new_h, FREELIST_POINTER(h), FREELIST_VERSION(h) + 1);
-  } while (ink_atomic_cas(&dst->data, h.data, new_h.data) == false);
+  while (!dst.compare_exchange_weak(h, h.ptr()))
+    ;
 
   return h;
 }
 
 static bool
-write_pointer_version(head_p *dst, head_p old_h, void *ptr, head_p::version_type vers)
+write_pointer_version(ts::Atomic_versioned_ptr &dst, ts::Versioned_ptr old_h, ts::Versioned_ptr new_h)
 {
-  head_p tmp_h;
-
-  SET_FREELIST_POINTER_VERSION(tmp_h, ptr, vers);
-  return ink_atomic_cas(&dst->data, old_h.data, tmp_h.data);
+  return dst.compare_exchange_weak(old_h, new_h);
 }
 
 LogBuffer *
@@ -374,16 +376,16 @@ LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
   LogBuffer *buffer;
   LogBuffer *new_buffer = nullptr;
   bool retry            = true;
-  head_p old_h;
+  ts::Versioned_ptr old_h;
 
   do {
     // To avoid a race condition, we keep a count of held references in
     // the pointer itself and add this to m_outstanding_references.
 
     // Increment the version of m_log_buffer, returning the previous version.
-    head_p h = increment_pointer_version(&m_log_buffer);
+    ts::Versioned_ptr h = increment_pointer_version(m_log_buffer);
 
-    buffer           = static_cast<LogBuffer *>(FREELIST_POINTER(h));
+    buffer           = static_cast<LogBuffer *>(h.ptr());
     result_code      = buffer->checkout_write(write_offset, bytes_needed);
     bool decremented = false;
 
@@ -398,15 +400,12 @@ LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
       // no more room in current buffer, create a new one
       new_buffer = new LogBuffer(Log::config, this, Log::config->log_buffer_size);
 
-      // swap the new buffer for the old one
-      INK_WRITE_MEMORY_BARRIER;
-
       do {
-        INK_QUEUE_LD(old_h, m_log_buffer);
+        old_h = m_log_buffer.load();
         // we may depend on comparing the old pointer to the new pointer to detect buffer swaps
         // without worrying about pointer collisions because we always allocate a new LogBuffer
         // before freeing the old one
-        if (FREELIST_POINTER(old_h) != FREELIST_POINTER(h)) {
+        if (old_h.ptr() != h.ptr()) {
           ink_atomic_increment(&buffer->m_references, -1);
 
           // another thread is already creating a new buffer,
@@ -415,10 +414,10 @@ LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
           new_buffer = nullptr;
           break;
         }
-      } while (write_pointer_version(&m_log_buffer, old_h, new_buffer, 0) == false);
+      } while (!write_pointer_version(m_log_buffer, old_h, ts::Versioned_ptr(new_buffer, 0)));
 
-      if (FREELIST_POINTER(old_h) == FREELIST_POINTER(h)) {
-        ink_atomic_increment(&buffer->m_references, FREELIST_VERSION(old_h) - 1);
+      if (old_h.ptr() == h.ptr()) {
+        ink_atomic_increment(&buffer->m_references, old_h.version() - 1);
 
         int idx = m_buffer_manager_idx++ % m_flush_threads;
         Debug("log-logbuffer", "adding buffer %d to flush list after checkout", buffer->get_id());
@@ -444,20 +443,20 @@ LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
     }
 
     if (!decremented) {
-      head_p old_h;
+      ts::Versioned_ptr old_h;
 
       // The do-while loop protects us from races while we're examining ptr(old_h) and ptr(h)
       // (essentially an optimistic lock)
       do {
-        INK_QUEUE_LD(old_h, m_log_buffer);
-        if (FREELIST_POINTER(old_h) != FREELIST_POINTER(h)) {
+        old_h = m_log_buffer.load();
+        if (old_h.ptr() != h.ptr()) {
           // Another thread's allocated a new LogBuffer, we don't need to do anything more
           break;
         }
 
-      } while (!write_pointer_version(&m_log_buffer, old_h, FREELIST_POINTER(h), FREELIST_VERSION(old_h) - 1));
+      } while (!write_pointer_version(m_log_buffer, old_h, ts::Versioned_ptr(h.ptr(), old_h.version() - 1)));
 
-      if (FREELIST_POINTER(old_h) != FREELIST_POINTER(h)) {
+      if (old_h.ptr() != h.ptr()) {
         // Another thread's allocated a new LogBuffer, meaning this LogObject is no longer referencing the old LogBuffer
         ink_atomic_increment(&buffer->m_references, -1);
       }
@@ -778,7 +777,7 @@ LogObject::_roll_files(long last_roll_time, long time_now)
 void
 LogObject::check_buffer_expiration(long time_now)
 {
-  LogBuffer *b = static_cast<LogBuffer *>(FREELIST_POINTER(m_log_buffer));
+  LogBuffer *b = static_cast<LogBuffer *>(m_log_buffer.load().ptr());
   if (b && time_now > b->expiration_time()) {
     force_new_buffer();
   }
