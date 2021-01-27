@@ -381,12 +381,20 @@ diags_debug_tag(char const *tag)
 // printf-like debug output.  First parameter must be debug tag as a null-terminated C-string, or a instance of DbgCtl.
 // (Using DbgCtl is better for performance.)  ... is a printf format string followed by (optional) parameters.
 //
-#define Debug(tag_or_ctl, ...)                                                                                         \
+#define Debug__(tag_or_ctl, ...)                                                                                       \
   do {                                                                                                                 \
     if (diags_debug_on(tag_or_ctl)) {                                                                                  \
       static const SourceLocation loc__ = MakeSourceLocation();                                                        \
       (diags()->*diags_debug_output_mbr_func(tag_or_ctl))(diags_debug_tag(tag_or_ctl), DL_Debug, &loc__, __VA_ARGS__); \
     }                                                                                                                  \
+  } while (0)
+
+#define Debug(tag, ...)          \
+  do {                           \
+    {                            \
+      static DbgCtl c__(tag);    \
+      Debug__(c__, __VA_ARGS__); \
+    }                            \
   } while (0)
 
 #define SpecificDebug(flag, tag, ...)                                                                           \
