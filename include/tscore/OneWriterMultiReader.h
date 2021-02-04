@@ -31,9 +31,9 @@
 
 #pragma once
 
-#include <atomic>
 #include <mutex>
-#include <condition_variable>
+
+#include <tscore/ink_rwlock.h>
 
 namespace ts
 {
@@ -44,9 +44,17 @@ protected:
   {
     BasicWriteLock(OneWriterMultiReader &owmr_) : owmr(owmr_) {}
 
-    void lock();
+    void
+    lock()
+    {
+      ink_rwlock_wrlock(&owmr._rwlock);
+    }
 
-    void unlock();
+    void
+    unlock()
+    {
+      ink_rwlock_unlock(&owmr._rwlock);
+    }
 
     OneWriterMultiReader &owmr;
 
@@ -65,11 +73,23 @@ public:
 
     ReadLock(OneWriterMultiReader &owmr, std::defer_lock_t) : _owmr{owmr} {}
 
-    bool try_lock();
+    // bool try_lock();
 
-    void lock();
+    void
+    lock()
+    {
+      ink_rwlock_rdlock(&_owmr._rwlock);
+      locked = true;
+    }
 
-    void unlock();
+    void
+    unlock()
+    {
+      if (locked) {
+        ink_rwlock_unlock(&_owmr._rwlock);
+        locked = false;
+      }
+    }
 
     bool
     is_locked() const
@@ -131,28 +151,11 @@ public:
     bool locked{false};
   };
 
+  OneWriterMultiReader() { ink_rwlock_init(&_rwlock); }
+  ~OneWriterMultiReader() { ink_rwlock_destroy(&_rwlock); }
+
 private:
-  // The most significant bit of _status is a write pending flag, set by a writer to indicate a pending write,
-  // and cleared when the write is completed.  The other bits hold a count of active readers.
-  //
-  std::atomic<unsigned> _status{0};
-
-  static const unsigned Reader_count_mask  = (~static_cast<unsigned>(0)) >> 1;
-  static const unsigned Write_pending_mask = ~Reader_count_mask;
-
-  // This mutex is to allow a writer to check that the reader count is non-zero and block on the clear
-  // condition variable as an atomic operation.
-  //
-  std::mutex _clear_reader_count;
-
-  std::condition_variable _reader_count_cleared;
-
-  // This mutex is to allow a readaer to check that the write pending flag is set and block on the clear
-  // condition variable as an atomic operation.
-  //
-  std::mutex _clear_write_pending;
-
-  std::condition_variable _write_pending_cleared;
+  ink_rwlock _rwlock;
 };
 
 class ExclusiveWriterMultiReader : private OneWriterMultiReader
