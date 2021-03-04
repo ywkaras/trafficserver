@@ -318,6 +318,13 @@ write_pointer_version(head_p *dst, head_p old_h, void *ptr, head_p::version_type
   return ink_atomic_cas(&dst->data, old_h.data, tmp_h.data);
 }
 
+#include <cstdlib>
+#include <thread>
+namespace
+{
+bool do_yield = std::getenv("TS_YIELD") != nullptr;
+}
+
 LogBuffer *
 LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
 {
@@ -383,6 +390,8 @@ LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
 
     case LogBuffer::LB_RETRY:
       // no more room, but another thread should be taking care of creating a new buffer, so try again
+      if (do_yield)
+        std::this_thread::yield();
       break;
 
     case LogBuffer::LB_BUFFER_TOO_SMALL:
