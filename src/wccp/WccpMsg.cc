@@ -1690,7 +1690,7 @@ HereIAmMsg::fill_caps(detail::cache::RouterData const &router)
 }
 
 int
-HereIAmMsg::parse(ts::Buffer const &buffer)
+HereIAmMsg::parse(ts::TextView const &buffer)
 {
   int zret;
   this->setBuffer(buffer);
@@ -1760,7 +1760,7 @@ ISeeYouMsg::fill(detail::router::GroupData const &group, SecurityOption sec_opt,
 }
 
 int
-ISeeYouMsg::parse(ts::Buffer const &buffer)
+ISeeYouMsg::parse(ts::TextView const &buffer)
 {
   int zret;
   this->setBuffer(buffer);
@@ -1814,7 +1814,7 @@ ISeeYouMsg::parse(ts::Buffer const &buffer)
 }
 // ------------------------------------------------------
 int
-RemovalQueryMsg::parse(ts::Buffer const &buffer)
+RemovalQueryMsg::parse(ts::TextView const &buffer)
 {
   int zret;
   this->setBuffer(buffer);
