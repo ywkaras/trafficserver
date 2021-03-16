@@ -115,6 +115,7 @@ ink_get16(const uint8_t *src)
 static inline unsigned int
 get_rcode(char *buff)
 {
+  ink_assert(buff != nullptr); // Suppress clang analyzer error.
   return reinterpret_cast<HEADER *>(buff)->rcode;
 }
 
