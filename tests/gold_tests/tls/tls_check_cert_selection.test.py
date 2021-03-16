@@ -57,7 +57,6 @@ ts.Disk.records_config.update({
     'proxy.config.dns.nameservers': '127.0.0.1:{0}'.format(dns.Variables.Port),
     'proxy.config.exec_thread.autoconfig.scale': 1.0,
     'proxy.config.dns.resolv_conf': 'NULL',
-    'proxy.config.ssl.client.verify.server.policy': 'PERMISSIVE',
 })
 
 dns.addRecords(records={"foo.com.": ["127.0.0.1"]})
