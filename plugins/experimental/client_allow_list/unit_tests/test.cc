@@ -355,6 +355,3 @@ main()
 
   return 0;
 }
-
-#include <../src/tscore/HashFNV.cc>
-#include <../src/tscore/Hash.cc>

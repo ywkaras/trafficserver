@@ -28,6 +28,7 @@
 
 #include <vector>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <algorithm>
@@ -46,8 +47,6 @@ struct ClientAllowListUTException {
 #include <ts/ts.h>
 
 #endif
-
-#include <string_view>
 
 #define PN "client_allow_list"
 
@@ -132,49 +131,8 @@ public:
   MapCStrToUVec &operator=(MapCStrToUVec const &) = delete;
 
 private:
-  struct _Hash {
-    std::size_t operator()(char const *key) const;
-  };
-
-  struct _Eq {
-    bool operator()(char const *lhs, char const *rhs) const;
-  };
-
-  std::unordered_map<char const *, std::vector<unsigned>, _Hash, _Eq> _map;
+  std::unordered_map<std::string_view, std::vector<unsigned>> _map;
 };
-
-inline std::size_t
-MapCStrToUVec::_Hash::operator()(char const *key) const
-{
-  static_assert(sizeof(std::size_t) >= sizeof(std::uint32_t), "size_t must have at least 32 bits of precision");
-
-  ATSHash32FNV1a h;
-
-  char c;
-
-  while (*key) {
-    c = std::tolower(*key);
-    h.update(&c, 1);
-    ++key;
-  }
-  // ATSHash32FNV1a::final() does nothing.
-  return (h.get());
-}
-
-inline bool
-MapCStrToUVec::_Eq::operator()(char const *lhs, char const *rhs) const
-{
-  // Check if two C-strings are equal, ignoring case differences.
-
-  while (*lhs && *rhs) {
-    if (std::tolower(*lhs) != std::tolower(*rhs)) {
-      return false;
-    }
-    ++lhs;
-    ++rhs;
-  }
-  return !(*lhs || *rhs);
-}
 
 inline std::vector<unsigned> *
 MapCStrToUVec::add(std::string_view key)
@@ -185,7 +143,7 @@ MapCStrToUVec::add(std::string_view key)
   std::transform(key.begin(), key.end(), key_, [](char c) -> int { return std::tolower(c); });
   key_[key.size()] = '\0';
 
-  auto result = _map.emplace(key_, std::vector<unsigned>());
+  auto result = _map.emplace(std::string_view(key_, key.size()), std::vector<unsigned>());
 
   if (!result.second) {
     // Entry with this key already exists.

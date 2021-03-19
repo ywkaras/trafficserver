@@ -101,7 +101,7 @@ MapCStrToUVec::~MapCStrToUVec()
   char const *key;
   auto it = _map.begin();
   while (it != _map.end()) {
-    key = it->first;
+    key = it->first.data();
     _map.erase(it);
     delete[] key;
     it = _map.begin();
