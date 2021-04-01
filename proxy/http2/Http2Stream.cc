@@ -74,6 +74,14 @@ Http2Stream::~Http2Stream()
 {
   REMEMBER(NO_EVENT, this->reentrancy_count);
   Http2StreamDebug("Destroy stream, sent %" PRIu64 " bytes", this->bytes_sent);
+
+  // In the case of a temporary stream used to parse the header to keep the HPACK
+  // up to date, there may not be a mutex.  Nothing was set up, so nothing to
+  // clean up in the destructor
+  if (this->mutex == nullptr) {
+    return;
+  }
+
   SCOPED_MUTEX_LOCK(lock, this->mutex, this_ethread());
   // Clean up after yourself if this was an EOS
   ink_release_assert(this->closed);
