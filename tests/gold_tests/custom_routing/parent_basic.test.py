@@ -16,15 +16,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import pop
-import util
 import os
 import sys
-sys.path += [Test.TestDirectory]  # allows importing other modules, autopep8 moves to after imports, which breaks util and pop
 
 Test.Summary = '''
 Basic Parent selection test.
 '''
+
+pop_file = open(Test.TestDirectory + "/util.py")
+exec(pop_file.read())
+pop_file.close()
+
+# pop.py depends on util.py being exec'ed first.
+#
+pop_file = open(Test.TestDirectory + "/pop.py")
+exec(pop_file.read())
+pop_file.close()
 
 pop.Test = Test
 pop.Testers = Testers
