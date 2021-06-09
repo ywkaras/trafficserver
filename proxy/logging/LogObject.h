@@ -32,6 +32,7 @@
 #include "LogAccess.h"
 #include "LogFilter.h"
 #include <vector>
+#include <mutex>
 
 /*-------------------------------------------------------------------------
   LogObject
@@ -283,6 +284,8 @@ private:
   bool m_reopen_after_rolling; // reopen log file after rolling (normally it is just renamed and closed)
 
   head_p m_log_buffer; // current work buffer
+  std::mutex _log_buffer_alloc_mutex;
+
   unsigned m_buffer_manager_idx;
   LogBufferManager *m_buffer_manager;
 

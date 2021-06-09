@@ -324,9 +324,7 @@ LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
 {
   LogBuffer::LB_ResultCode result_code;
   LogBuffer *buffer;
-  LogBuffer *new_buffer = nullptr;
-  bool retry            = true;
-  head_p old_h;
+  bool retry = true;
 
   do {
     // To avoid a race condition, we keep a count of held references in
@@ -348,44 +346,41 @@ LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
     case LogBuffer::LB_FULL_ACTIVE_WRITERS:
     case LogBuffer::LB_FULL_NO_WRITERS:
       // no more room in current buffer, create a new one
-      new_buffer = new LogBuffer(Log::config, this, Log::config->log_buffer_size);
+      decremented = true;
+      {
+        head_p old_h;
+        {
+          std::lock_guard<std::mutex> lg(_log_buffer_alloc_mutex);
 
-      // swap the new buffer for the old one
-      INK_WRITE_MEMORY_BARRIER;
+          if (buffer != static_cast<LogBuffer *>(FREELIST_POINTER(m_log_buffer))) {
+            // Another thread already allocated a new buffer.
+            break;
+          }
 
-      do {
-        INK_QUEUE_LD(old_h, m_log_buffer);
-        // we may depend on comparing the old pointer to the new pointer to detect buffer swaps
-        // without worrying about pointer collisions because we always allocate a new LogBuffer
-        // before freeing the old one
-        if (FREELIST_POINTER(old_h) != FREELIST_POINTER(h)) {
-          ink_atomic_increment(&buffer->m_references, -1);
+          auto new_buffer = new LogBuffer(Log::config, this, Log::config->log_buffer_size);
 
-          // another thread is already creating a new buffer,
-          // so delete new_buffer and try again next loop iteration
-          delete new_buffer;
-          new_buffer = nullptr;
-          break;
+          do {
+            INK_QUEUE_LD(old_h, m_log_buffer);
+          } while (!write_pointer_version(&m_log_buffer, old_h, new_buffer, 0));
         }
-      } while (write_pointer_version(&m_log_buffer, old_h, new_buffer, 0) == false);
-
-      if (FREELIST_POINTER(old_h) == FREELIST_POINTER(h)) {
         ink_atomic_increment(&buffer->m_references, FREELIST_VERSION(old_h) - 1);
-
+      }
+      {
         int idx = m_buffer_manager_idx++ % m_flush_threads;
         Debug("log-logbuffer", "adding buffer %d to flush list after checkout", buffer->get_id());
         m_buffer_manager[idx].add_to_flush_queue(buffer);
         Log::preproc_notify[idx].signal();
-        buffer = nullptr;
       }
+      buffer = nullptr;
 
-      decremented = true;
       break;
 
     case LogBuffer::LB_RETRY:
-      // no more room, but another thread should be taking care of creating a new buffer, so yield to let
-      // the other thread finish, then try again
-      std::this_thread::yield();
+      // no more room, but another thread should be taking care of creating a new buffer, so lock buffer
+      // allocation mutex to avoid busy waiting.
+      {
+        std::lock_guard<std::mutex> lg(_log_buffer_alloc_mutex);
+      }
       break;
 
     case LogBuffer::LB_BUFFER_TOO_SMALL:
@@ -415,12 +410,6 @@ LogObject::_checkout_write(size_t *write_offset, size_t bytes_needed)
         // Another thread's allocated a new LogBuffer, meaning this LogObject is no longer referencing the old LogBuffer
         ink_atomic_increment(&buffer->m_references, -1);
       }
-    } else {
-#ifdef __clang_analyzer__
-      if (new_buffer != nullptr) {
-        delete new_buffer;
-      }
-#endif
     }
 
   } while (retry && write_offset); // if write_offset is null, we do
