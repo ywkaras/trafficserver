@@ -116,7 +116,7 @@ for i in range(num_peer):
         "strategies:",
         "  - strategy: the-strategy",
         "    policy: consistent_hash",
-        "    hash_key: path",
+        "    hash_key: cache_key",
         "    go_direct: false",
         "    parent_is_proxy: true",
         "    cache_peer_result: false",
@@ -136,8 +136,8 @@ for i in range(num_peer):
     ])
 
     ts.Disk.remap_config.AddLines([
-        "map http://dummy.com http://not_used @strategy=the-strategy",
-        "map http://not_used http://also_not_used @strategy=the-strategy",
+        "map http://dummy.com http://not_used @strategy=the-strategy @plugin=cackekey.so",
+        "map http://not_used http://also_not_used @strategy=the-strategy @plugin=cackekey.so",
     ])
 
 tr = Test.AddTestRun()
