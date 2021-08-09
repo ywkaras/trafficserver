@@ -284,7 +284,7 @@ NextHopConsistentHash::findNextHop(TSHttpTxn txnp, void *ih, time_t now)
     // Do the initial parent look-up.
     hash_key = getHashKey(sm_id, &request_info, &hash);
 
-  do { // search until we've selected a different parent if !firstcall
+    do { // search until we've selected a different parent if !firstcall
       std::shared_ptr<ATSConsistentHash> r = rings[cur_ring];
       hostRec = chash_lookup(r, hash_key, &result->chashIter[cur_ring], &wrapped, &hash, &result->chash_init[cur_ring],
                              &result->mapWrapped[cur_ring], sm_id);
@@ -348,7 +348,7 @@ NextHopConsistentHash::findNextHop(TSHttpTxn txnp, void *ih, time_t now)
                 result->result      = PARENT_SPECIFIED;
                 NH_Debug(NH_DEBUG_TAG,
                          "[%" PRIu64 "] next hop %s is now retryable, marked it available, retriers: %d, max_retriers: %d.", sm_id,
-                     pRec->hostname.c_str(), pRec->retriers(), max_retriers);
+                         pRec->hostname.c_str(), pRec->retriers(), max_retriers);
                 break;
               }
             }
