@@ -55,7 +55,7 @@ unsigned int hostdb_ip_stale_interval          = HOST_DB_IP_STALE;
 unsigned int hostdb_ip_timeout_interval        = HOST_DB_IP_TIMEOUT;
 unsigned int hostdb_ip_fail_timeout_interval   = HOST_DB_IP_FAIL_TIMEOUT;
 unsigned int hostdb_serve_stale_but_revalidate = 0;
-static ts_seconds hostdb_hostfile_check_interval{std::chrono::hours(24)};
+static const ts_seconds hostdb_hostfile_check_interval{std::chrono::hours(24)};
 // Epoch timestamp of the current hosts file check. This also functions as a
 // cached version of ts_clock::now().
 ts_time hostdb_current_timestamp{TS_TIME_ZERO};
@@ -66,7 +66,7 @@ static ts_time hostdb_hostfile_update_timestamp{TS_TIME_ZERO};
 static char hostdb_filename[PATH_NAME_MAX] = DEFAULT_HOST_DB_FILENAME;
 int hostdb_max_count                       = DEFAULT_HOST_DB_SIZE;
 static ts::file::path hostdb_hostfile_path;
-ts_seconds hostdb_sync_frequency{0};
+const ts_seconds hostdb_sync_frequency{0};
 int hostdb_disable_reverse_lookup = 0;
 int hostdb_max_iobuf_index        = BUFFER_SIZE_INDEX_32K;
 
@@ -209,13 +209,13 @@ extern MgmtConverter const &HostDBDownServerCacheTimeConv;
 MgmtConverter const &HostDBDownServerCacheTimeConv = HostDBDownServerCacheTimeVar.Conversions;
 
 // Not run time configurable, therefore no support beyond this class needed.
-ConfigDuration HostDBSyncFrequencyVar{hostdb_sync_frequency};
+// ConfigDuration HostDBSyncFrequencyVar{hostdb_sync_frequency};
 
 void
 HostDB_Config_Init()
 {
   HostDBDownServerCacheTimeVar.Enable("proxy.config.http.down_server.cache_time");
-  HostDBSyncFrequencyVar.Enable("proxy.config.cache.hostdb.sync_frequency");
+  // HostDBSyncFrequencyVar.Enable("proxy.config.cache.hostdb.sync_frequency");
 }
 
 // Static configuration information

@@ -53,7 +53,7 @@ extern int hostdb_ttl_mode;
 extern int hostdb_srv_enabled;
 
 // extern int hostdb_timestamp;
-extern ts_seconds hostdb_sync_frequency;
+extern const ts_seconds hostdb_sync_frequency;
 extern int hostdb_disable_reverse_lookup;
 
 // Static configuration information
