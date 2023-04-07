@@ -27,13 +27,9 @@
 
 #include <ts/ts.h>
 
-#include <tscpp/api/Cleanup.h>
-
 namespace
 {
-atscppapi::TSDbgCtlUniqPtr dbg_ctl{TSDbgCtlCreate("ts_ssl")};
-
-#define DBG(...) TSDbg(dbg_ctl.get(), __VA_ARGS__)
+#define DBG(...) TSDebug("ts_ssl", __VA_ARGS__)
 
 char const Plugin_name[] = "test_ts_ssl";
 
@@ -46,7 +42,7 @@ File_path_and_data tls_cert_2050, tls_cert_2060, tls_key;
 
 int cont_func(TSCont, TSEvent, void *);
 
-atscppapi::TSContUniqPtr cont{TSContCreate(cont_func, nullptr)};
+TSCont cont{TSContCreate(cont_func, nullptr)};
 
 int txn_num, secret_hook_invocation_num;
 
@@ -56,7 +52,8 @@ void
 check_secret(std::string const &name, std::string const &nominal_data)
 {
   int actual_length;
-  char const *actual_data = TSSslSecretGet(name.c_str(), name.size(), &actual_length);
+  char const *actual_data;
+  TSReleaseAssert(TSSslSecretGet(name.c_str(), name.size(), &actual_data, &actual_length) == TS_SUCCESS);
   TSReleaseAssert(actual_data != nullptr);
   TSReleaseAssert(actual_length != 0);
   TSReleaseAssert(std::string_view(actual_data, actual_length) == nominal_data);
@@ -146,8 +143,8 @@ TSPluginInit(int n_arg, char const *arg[])
   tls_key.path = std::string(arg[1]) + "/2050_2060.key";
   tls_key.data = load_file(tls_key.path.c_str());
 
-  TSLifecycleHookAdd(TS_LIFECYCLE_SSL_SECRET_HOOK, cont.get());
-  TSHttpHookAdd(TS_HTTP_READ_REQUEST_HDR_HOOK, cont.get());
+  TSLifecycleHookAdd(TS_LIFECYCLE_SSL_SECRET_HOOK, cont);
+  TSHttpHookAdd(TS_HTTP_READ_REQUEST_HDR_HOOK, cont);
 
   DBG("TSPluginInit() completed.");
 

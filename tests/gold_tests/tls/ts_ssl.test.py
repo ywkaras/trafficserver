@@ -48,7 +48,7 @@ ts.Disk.records_config.update({
     'proxy.config.ssl.server.cert.path': ts.Variables.SSLDir,
     'proxy.config.ssl.server.private_key.path': ts.Variables.SSLDir,
     'proxy.config.diags.debug.tags': 'ssl|ts_ssl',
-    'proxy.config.diags.debug.enabled': 3,
+    'proxy.config.diags.debug.enabled': 1,
 })
 
 ts.addSSLfile("ssl/2050.crt")
