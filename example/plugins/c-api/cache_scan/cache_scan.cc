@@ -36,7 +36,7 @@
 
 #define PLUGIN_NAME "cache_scan"
 
-static const TSDbgCtl *const dbg_ctl = TSDbgCtlCreate(PLUGIN_NAME);
+static TSDbgCtl dbg_ctl{PLUGIN_NAME};
 
 static TSCont global_contp;
 

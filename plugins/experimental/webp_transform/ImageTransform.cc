@@ -49,7 +49,7 @@ namespace
 {
 GlobalPlugin *plugin;
 
-auto webp_dbg_ctl = TSDbgCtlCreate(TAG);
+TSDbgCtl webp_dbg_ctl{TAG};
 
 enum class ImageEncoding { webp, jpeg, png, unknown };
 

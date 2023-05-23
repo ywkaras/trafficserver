@@ -7435,50 +7435,6 @@ tsapi::c::TSStatFindName(const char *name, int *idp)
   }
 }
 
-/**************************   Tracing API   ****************************/
-// returns 1 or 0 to indicate whether TS is being run with a debug tag.
-int
-tsapi::c::TSIsDebugTagSet(const char *t)
-{
-  return diags()->on_for_TSDebug(t);
-}
-
-void
-tsapi::c::TSDebugSpecific(int debug_flag, const char *tag, const char *format_str, ...)
-{
-  if ((debug_flag && diags()->on_for_TSDebug()) || diags()->on_for_TSDebug(tag)) {
-    va_list ap;
-
-    va_start(ap, format_str);
-    diags()->print_va(tag, DL_Diag, nullptr, format_str, ap);
-    va_end(ap);
-  }
-}
-
-// Plugins would use TSDebug just as the TS internal uses Debug
-// e.g. TSDebug("plugin-cool", "Snoopy is a cool guy even after %d requests.", num_reqs);
-void
-tsapi::c::TSDebug(const char *tag, const char *format_str, ...)
-{
-  if (diags()->on_for_TSDebug() && diags()->tag_activated(tag)) {
-    va_list ap;
-
-    va_start(ap, format_str);
-    diags()->print_va(tag, DL_Diag, nullptr, format_str, ap);
-    va_end(ap);
-  }
-}
-
-void
-tsapi::c::_TSDbg(const char *tag, const char *format_str, ...)
-{
-  va_list ap;
-
-  va_start(ap, format_str);
-  diags()->print_va(tag, DL_Diag, nullptr, format_str, ap);
-  va_end(ap);
-}
-
 /**************************   Logging API   ****************************/
 
 TSReturnCode
@@ -10021,23 +9977,6 @@ tsapi::c::TSHttpTxnPostBufferReaderGet(TSHttpTxn txnp)
   sdk_assert(sdk_sanity_check_txn(txnp) == TS_SUCCESS);
   HttpSM *sm = (HttpSM *)txnp;
   return (TSIOBufferReader)sm->get_postbuf_clone_reader();
-}
-
-tsapi::c::TSDbgCtl const *
-tsapi::c::TSDbgCtlCreate(char const *tag)
-{
-  sdk_assert(tag != nullptr);
-  sdk_assert(*tag != '\0');
-
-  return DbgCtl::_new_reference(tag);
-}
-
-void
-tsapi::c::TSDbgCtlDestroy(TSDbgCtl const *dbg_ctl)
-{
-  sdk_assert(dbg_ctl != nullptr);
-
-  DbgCtl::_rm_reference();
 }
 
 namespace rpc

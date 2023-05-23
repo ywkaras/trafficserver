@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <ts/ts.h>
+class DiagsConfigState;
 
-// For use with TSDbg().
+// For use with TSDbg() or Dbg().
 //
 class DbgCtl
 {
@@ -37,26 +37,45 @@ public:
 
   ~DbgCtl() { _rm_reference(); }
 
-  TSDbgCtl const *
-  ptr() const
+  bool
+  on() const
   {
-    return _ptr;
+    return _ptr->on != 0;
   }
 
-  // Call this when the compiled regex to enable tags may have changed.
+  char const *
+  tag() const
+  {
+    return _ptr->tag;
+  }
+
+  static bool
+  global_on()
+  {
+    return _global_on;
+  }
+
+  // Call this when the compiled regex to enable tags may have changed.  Should not be called in plugins.
   //
   static void update();
 
-private:
-  TSDbgCtl const *const _ptr;
+  // For use in Dbg() macro only.
+  //
+  static void print(const char *tag, const char *format_str, ...);
 
-  static const TSDbgCtl *_new_reference(char const *tag);
+private:
+  struct _Data {
+    char volatile on; // Flag
+    char const *tag;
+  };
+
+  Data const *const _ptr;
+
+  static const Data *_new_reference(char const *tag);
 
   static void _rm_reference();
 
+  static bool _global_on;
+
   class _RegistryAccessor;
-
-  friend TSDbgCtl const *tsapi::c::TSDbgCtlCreate(char const *tag);
-
-  friend void tsapi::c::TSDbgCtlDestroy(TSDbgCtl const *dbg_ctl);
 };

@@ -40,8 +40,7 @@ namespace
 {
 char PIName[] = PINAME;
 
-atscppapi::TSDbgCtlUniqPtr dbg_ctl_guard{TSDbgCtlCreate(PIName)};
-TSDbgCtl const *const dbg_ctl{dbg_ctl_guard.get()};
+TSDbgCtl dbg_ctl{PIName};
 
 enum Test_step { BEGIN, GLOBAL_CONT_READ_HDRS, THREAD, TXN_CONT_READ_HDRS, END };
 
