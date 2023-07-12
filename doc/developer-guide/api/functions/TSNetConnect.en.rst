@@ -28,7 +28,7 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. function:: TSAction TSNetConnect(TSCont contp, sockaddr const * addr)
+.. c:function:: TSAction TSNetConnect(TSCont contp, sockaddr const * addr)
 
 Description
 ===========

@@ -37,7 +37,7 @@ Description
 ===========
 
 The plugin tells the transaction :arg:`txnp` to either continue
-(:data:`TS_EVENT_HTTP_CONTINUE`) or stop (:data:`TS_EVENT_HTTP_ERROR`).
+(:cpp:enumerator:`TS_EVENT_HTTP_CONTINUE`) or stop (:cpp:enumerator:`TS_EVENT_HTTP_ERROR`).
 
 .. important::
 

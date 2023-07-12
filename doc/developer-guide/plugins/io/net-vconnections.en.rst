@@ -30,6 +30,6 @@ the Traffic Server abstraction for doing asynchronous IO.
 
 The netvconnection functions are listed below:
 
--  :c:func:`TSNetAccept`
--  :c:func:`TSNetConnect`
+-  :cpp:func:`TSNetAccept`
+-  :cpp:func:`TSNetConnect`
 

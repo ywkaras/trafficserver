@@ -26,16 +26,16 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSVConnCloseFlags
+.. cpp:type:: TSVConnCloseFlags
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSVConnCloseFlags TS_VC_CLOSE_ABORT
+.. cpp:enumerator:: TS_VC_CLOSE_ABORT
 
-.. c:member:: TSVConnCloseFlags TS_VC_CLOSE_NORMAL
+.. cpp:enumerator:: TS_VC_CLOSE_NORMAL
 
 Description
 ===========

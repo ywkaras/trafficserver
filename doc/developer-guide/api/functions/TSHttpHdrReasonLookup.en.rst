@@ -25,7 +25,7 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. c:function:: const char* TSHttpHdrReasonLookup(TSHttpStatus status)
+.. cpp:function:: const char* TSHttpHdrReasonLookup(TSHttpStatus status)
 
 
 Description

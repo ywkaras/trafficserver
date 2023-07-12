@@ -123,10 +123,10 @@ The sequence of network activity for a Client connecting to ``service-2`` is
 
 Note the destination for the outbound TCP connection and the HTTP ``CONNECT`` is the same. If this
 is a problem (which it will be in general) a plugin is needed to change the URL in the ``CONNECT``.
-In this case the proxy request is available in the :c:macro:`TS_HTTP_TXN_START_HOOK` hook. This
+In this case the proxy request is available in the :cpp:enumerator:`TS_HTTP_TXN_START_HOOK` hook. This
 cannot be done using remap because for a ``CONNECT`` there is no remap phase. Note that for a
 tunneled connection like this, the only transaction hooks that will be triggered are
-:c:macro:`TS_HTTP_TXN_START_HOOK` and :c:macro:`TS_HTTP_TXN_CLOSE_HOOK`. In addition, because |TS|
+:cpp:enumerator:`TS_HTTP_TXN_START_HOOK` and :cpp:enumerator:`TS_HTTP_TXN_CLOSE_HOOK`. In addition, because |TS|
 does not terminate (and therefore does not decrypt) the connection, it cannot be cached or served from
 cache.
 

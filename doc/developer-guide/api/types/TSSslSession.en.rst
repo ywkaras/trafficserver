@@ -28,7 +28,7 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:macro:: TS_SSL_MAX_SSL_SESSION_ID_LENGTH
+.. cpp:enumerator:: TS_SSL_MAX_SSL_SESSION_ID_LENGTH
 
 .. type:: TSSslSessionID
 

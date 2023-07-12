@@ -54,6 +54,6 @@ processing a session hook.
 
 The session hook functions are listed below:
 
--  :c:func:`TSHttpSsnHookAdd`
--  :c:func:`TSHttpSsnReenable`
+-  :cpp:func:`TSHttpSsnHookAdd`
+-  :cpp:func:`TSHttpSsnReenable`
 

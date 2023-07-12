@@ -41,5 +41,5 @@ header field.
 
 .. note::
 
-   This is much faster than calling :c:func:`TSHttpTxnEffectiveUrlStringGet` and
+   This is much faster than calling :cpp:func:`TSHttpTxnEffectiveUrlStringGet` and
    extracting the host from the result.

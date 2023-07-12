@@ -26,22 +26,22 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSLookingUpType
+.. cpp:type:: TSLookingUpType
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSLookingUpType TS_LOOKUP_UNDEFINED_LOOKUP
+.. cpp:enumerator:: TS_LOOKUP_UNDEFINED_LOOKUP
 
-.. c:member:: TSLookingUpType TS_LOOKUP_PARENT_PROXY
+.. cpp:enumerator:: TS_LOOKUP_PARENT_PROXY
 
-.. c:member:: TSLookingUpType TS_LOOKUP_ORIGIN_SERVER
+.. cpp:enumerator:: TS_LOOKUP_ORIGIN_SERVER
 
-.. c:member:: TSLookingUpType TS_LOOKUP_INCOMING_ROUTER
+.. cpp:enumerator:: TS_LOOKUP_INCOMING_ROUTER
 
-.. c:member:: TSLookingUpType TS_LOOKUP_HOST_NONE
+.. cpp:enumerator:: TS_LOOKUP_HOST_NONE
 
 Description
 ===========

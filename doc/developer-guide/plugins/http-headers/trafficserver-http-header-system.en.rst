@@ -68,7 +68,7 @@ duplicate fields.
 
 Properly-behaving plugins should check for the presence of duplicate
 fields and then iterate over the duplicate fields via
-:c:func:`TSMimeHdrFieldNextDup`.
+:cpp:func:`TSMimeHdrFieldNextDup`.
 
 MIME Fields Always Belong to an Associated MIME Header
 ======================================================

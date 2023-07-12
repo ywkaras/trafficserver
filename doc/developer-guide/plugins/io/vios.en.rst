@@ -48,15 +48,15 @@ as follows:
 The VIO functions below access and modify various parts of the data
 structure.
 
--  :c:func:`TSVIOBufferGet`
--  :c:func:`TSVIOVConnGet`
--  :c:func:`TSVIOContGet`
--  :c:func:`TSVIOMutexGet`
--  :c:func:`TSVIONBytesGet`
--  :c:func:`TSVIONBytesSet`
--  :c:func:`TSVIONDoneGet`
--  :c:func:`TSVIONDoneSet`
--  :c:func:`TSVIONTodoGet`
--  :c:func:`TSVIOReaderGet`
--  :c:func:`TSVIOReenable`
+-  :cpp:func:`TSVIOBufferGet`
+-  :cpp:func:`TSVIOVConnGet`
+-  :cpp:func:`TSVIOContGet`
+-  :cpp:func:`TSVIOMutexGet`
+-  :cpp:func:`TSVIONBytesGet`
+-  :cpp:func:`TSVIONBytesSet`
+-  :cpp:func:`TSVIONDoneGet`
+-  :cpp:func:`TSVIONDoneSet`
+-  :cpp:func:`TSVIONTodoGet`
+-  :cpp:func:`TSVIOReaderGet`
+-  :cpp:func:`TSVIOReenable`
 

@@ -39,4 +39,4 @@ Destroys the HTTP header located at :arg:`hdr_loc` within the marshal buffer
 .. important::
 
    Do not forget to release the handle :arg:`hdr_loc` with a call to
-   :c:func:`TSHandleMLocRelease`.
+   :cpp:func:`TSHandleMLocRelease`.

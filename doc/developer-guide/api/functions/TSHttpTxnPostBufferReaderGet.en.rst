@@ -34,11 +34,11 @@ Description
 ===========
 
 Retrieve the client request body for the transaction referenced by :arg:`txnp`.
-The body is read from via the returned :c:type:`TSIOBufferReader`. The returned
-:c:type:`TSIOBufferReader` is owned by the caller and the caller must free it
-via :c:func:`TSIOBufferReaderFree`. This function should be used in the handler
-for :data:`TS_HTTP_REQUEST_BUFFER_READ_COMPLETE_HOOK`. The following example
-handler makes use of :c:func:`TSHttpTxnPostBufferReaderGet`.
+The body is read from via the returned :cpp:type:`TSIOBufferReader`. The returned
+:cpp:type:`TSIOBufferReader` is owned by the caller and the caller must free it
+via :cpp:func:`TSIOBufferReaderFree`. This function should be used in the handler
+for :cpp:enumerator:`TS_HTTP_REQUEST_BUFFER_READ_COMPLETE_HOOK`. The following example
+handler makes use of :cpp:func:`TSHttpTxnPostBufferReaderGet`.
 
 .. code-block:: cpp
 

@@ -35,7 +35,7 @@ Description
 
 Get the type of a value for a configuration variable. :arg:`var_name` is the name of the variable
 as a null terminated string. The type value is stored in :arg:`result`. The function can return
-:c:data:`TS_ERROR` if :arg:`var_name` is not found.
+:cpp:enumerator:`TS_ERROR` if :arg:`var_name` is not found.
 
 Types
 =====
@@ -47,4 +47,4 @@ Check :type:`TSRecordDataType` for a detailed description.
 Return Values
 =============
 
-:data:`TS_SUCCESS` if the :arg:`var_name` was found, :data:`TS_ERROR` if not.
+:cpp:enumerator:`TS_SUCCESS` if the :arg:`var_name` was found, :cpp:enumerator:`TS_ERROR` if not.

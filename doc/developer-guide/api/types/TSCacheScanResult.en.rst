@@ -33,17 +33,17 @@ Enum typedef.
 Enumeration Members
 ===================
 
-.. c:member:: TSCacheScanResult TS_CACHE_SCAN_RESULT_DONE
+.. cpp:enumerator:: TS_CACHE_SCAN_RESULT_DONE
 
-.. c:member:: TSCacheScanResult TS_CACHE_SCAN_RESULT_CONTINUE
+.. cpp:enumerator:: TS_CACHE_SCAN_RESULT_CONTINUE
 
-.. c:member:: TSCacheScanResult TS_CACHE_SCAN_RESULT_DELETE
+.. cpp:enumerator:: TS_CACHE_SCAN_RESULT_DELETE
 
-.. c:member:: TSCacheScanResult TS_CACHE_SCAN_RESULT_DELETE_ALL_ALTERNATES
+.. cpp:enumerator:: TS_CACHE_SCAN_RESULT_DELETE_ALL_ALTERNATES
 
-.. c:member:: TSCacheScanResult TS_CACHE_SCAN_RESULT_UPDATE
+.. cpp:enumerator:: TS_CACHE_SCAN_RESULT_UPDATE
 
-.. c:member:: TSCacheScanResult TS_CACHE_SCAN_RESULT_RETRY
+.. cpp:enumerator:: TS_CACHE_SCAN_RESULT_RETRY
 
 Description
 ===========

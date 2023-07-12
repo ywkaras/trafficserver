@@ -33,11 +33,11 @@ Enum typedef.
 Enumeration Members
 ===================
 
-.. c:member:: TSCacheDataType TS_CACHE_DATA_TYPE_NONE
+.. cpp:enumerator:: TS_CACHE_DATA_TYPE_NONE
 
-.. c:member:: TSCacheDataType TS_CACHE_DATA_TYPE_HTTP
+.. cpp:enumerator:: TS_CACHE_DATA_TYPE_HTTP
 
-.. c:member:: TSCacheDataType TS_CACHE_DATA_TYPE_OTHER
+.. cpp:enumerator:: TS_CACHE_DATA_TYPE_OTHER
 
 Description
 ===========

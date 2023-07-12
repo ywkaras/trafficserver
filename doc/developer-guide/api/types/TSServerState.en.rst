@@ -26,34 +26,34 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSServerState
+.. cpp:type:: TSServerState
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSServerState TS_SRVSTATE_STATE_UNDEFINED
+.. cpp:enumerator:: TS_SRVSTATE_STATE_UNDEFINED
 
-.. c:member:: TSServerState TS_SRVSTATE_ACTIVE_TIMEOUT
+.. cpp:enumerator:: TS_SRVSTATE_ACTIVE_TIMEOUT
 
-.. c:member:: TSServerState TS_SRVSTATE_BAD_INCOMING_RESPONSE
+.. cpp:enumerator:: TS_SRVSTATE_BAD_INCOMING_RESPONSE
 
-.. c:member:: TSServerState TS_SRVSTATE_CONNECTION_ALIVE
+.. cpp:enumerator:: TS_SRVSTATE_CONNECTION_ALIVE
 
-.. c:member:: TSServerState TS_SRVSTATE_CONNECTION_CLOSED
+.. cpp:enumerator:: TS_SRVSTATE_CONNECTION_CLOSED
 
-.. c:member:: TSServerState TS_SRVSTATE_CONNECTION_ERROR
+.. cpp:enumerator:: TS_SRVSTATE_CONNECTION_ERROR
 
-.. c:member:: TSServerState TS_SRVSTATE_INACTIVE_TIMEOUT
+.. cpp:enumerator:: TS_SRVSTATE_INACTIVE_TIMEOUT
 
-.. c:member:: TSServerState TS_SRVSTATE_OPEN_RAW_ERROR
+.. cpp:enumerator:: TS_SRVSTATE_OPEN_RAW_ERROR
 
-.. c:member:: TSServerState TS_SRVSTATE_PARSE_ERROR
+.. cpp:enumerator:: TS_SRVSTATE_PARSE_ERROR
 
-.. c:member:: TSServerState TS_SRVSTATE_TRANSACTION_COMPLETE
+.. cpp:enumerator:: TS_SRVSTATE_TRANSACTION_COMPLETE
 
-.. c:member:: TSServerState TS_SRVSTATE_PARENT_RETRY
+.. cpp:enumerator:: TS_SRVSTATE_PARENT_RETRY
 
 Description
 ===========

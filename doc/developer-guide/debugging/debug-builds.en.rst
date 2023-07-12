@@ -38,7 +38,7 @@ Debugging Tips:
 
 -  Use a Traffic Server debug version.
 
--  Use assertions in your plugin (:c:func:`TSAssert` and :c:func:`TSReleaseAssert`).
+-  Use assertions in your plugin (:cpp:func:`TSAssert` and :cpp:func:`TSReleaseAssert`).
 
 
 SystemTap and DTrace support

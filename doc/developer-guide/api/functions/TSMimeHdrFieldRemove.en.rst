@@ -43,7 +43,7 @@ the header then nothing is done.
 
    Removing the field does not destroy the field. It only detaches the
    field, hiding it from the printed output. The field can be
-   reattached with a call to :c:func:`TSMimeHdrFieldAppend`.  If you
+   reattached with a call to :cpp:func:`TSMimeHdrFieldAppend`.  If you
    do not use the detached field you should destroy it with a call to
-   :c:func:`TSMimeHdrFieldDestroy` and release the handle field with a
-   call to :c:func:`TSHandleMLocRelease`.
+   :cpp:func:`TSMimeHdrFieldDestroy` and release the handle field with a
+   call to :cpp:func:`TSHandleMLocRelease`.

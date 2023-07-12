@@ -26,42 +26,42 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSIOBuffersSizeIndex
+.. cpp:type:: TSIOBuffersSizeIndex
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_128
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_128
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_256
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_256
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_512
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_512
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_1K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_1K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_2K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_2K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_4K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_4K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_8K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_8K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_16K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_16K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_32K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_32K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_64K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_64K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_128K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_128K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_256K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_256K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_512K
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_512K
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_1M
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_1M
 
-.. c:member:: TSIOBuffersSizeIndex TS_IOBUFFER_SIZE_INDEX_2M
+.. cpp:enumerator:: TS_IOBUFFER_SIZE_INDEX_2M
 
 Description
 ===========

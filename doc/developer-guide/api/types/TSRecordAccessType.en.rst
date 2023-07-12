@@ -26,18 +26,18 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSRecordAccessType
+.. cpp:type:: TSRecordAccessType
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSRecordAccessType TS_RECORDACCESS_NULL
+.. cpp:enumerator:: TS_RECORDACCESS_NULL
 
-.. c:member:: TSRecordAccessType TS_RECORDACCESS_NO_ACCESS
+.. cpp:enumerator:: TS_RECORDACCESS_NO_ACCESS
 
-.. c:member:: TSRecordAccessType TS_RECORDACCESS_READ_ONLY
+.. cpp:enumerator:: TS_RECORDACCESS_READ_ONLY
 
 Description
 ===========

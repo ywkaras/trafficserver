@@ -26,18 +26,18 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. c:type:: TSStatPersistence
+.. cpp:type:: TSStatPersistence
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSStatPersistence TS_STAT_PERSISTENT
+.. cpp:enumerator:: TS_STAT_PERSISTENT
 
    The statistic value should be preserved across :program:`traffic_server` restarts.
 
-.. c:member:: TSStatPersistence TS_STAT_NON_PERSISTENT
+.. cpp:enumerator:: TS_STAT_NON_PERSISTENT
 
    The statistic value should not be preserved across process restarts.
 

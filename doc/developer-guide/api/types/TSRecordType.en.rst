@@ -26,29 +26,29 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:enum:: TSRecordType
+.. cpp:enum:: TSRecordType
 
    Effectively the scope of the record.
 
-   .. c:enumerator:: TS_RECORDTYPE_NULL
+   .. cpp:enumerator:: TS_RECORDTYPE_NULL
 
       Invalid value. This is used to indicate a failure or for initialization.
 
-   .. c:enumerator:: TS_RECORDTYPE_CONFIG
+   .. cpp:enumerator:: TS_RECORDTYPE_CONFIG
 
       A configuration record.
 
-   .. c:enumerator:: TS_RECORDTYPE_PROCESS
+   .. cpp:enumerator:: TS_RECORDTYPE_PROCESS
 
-   .. c:enumerator:: TS_RECORDTYPE_NODE
+   .. cpp:enumerator:: TS_RECORDTYPE_NODE
 
-   .. c:enumerator:: TS_RECORDTYPE_PLUGIN
+   .. cpp:enumerator:: TS_RECORDTYPE_PLUGIN
 
       Created by a plugin.
 
-   .. c:enumerator:: TS_RECORDTYPE_ALL
+   .. cpp:enumerator:: TS_RECORDTYPE_ALL
 
 Description
 ===========
 
-The management role for a management value. In practice only :c:macro:`TS_RECORDTYPE_CONFIG` is usable.
+The management role for a management value. In practice only :cpp:enumerator:`TS_RECORDTYPE_CONFIG` is usable.

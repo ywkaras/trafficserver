@@ -28,7 +28,7 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. function:: sockaddr const* TSHostLookupResultAddrGet(TSHostLookupResult lookup_result)
+.. c:function:: sockaddr const* TSHostLookupResultAddrGet(TSHostLookupResult lookup_result)
 
 Description
 ===========

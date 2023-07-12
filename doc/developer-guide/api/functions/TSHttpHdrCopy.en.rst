@@ -37,13 +37,13 @@ Synopsis
 Description
 ===========
 
-:c:func:`TSHttpHdrCopy` works correctly even if :arg:`src_bufp` and :arg:`dest_bufp`
+:cpp:func:`TSHttpHdrCopy` works correctly even if :arg:`src_bufp` and :arg:`dest_bufp`
 point to different :ref:`developer-plugins-http-headers-marshal-buffers`. Make
 sure that you create the destination HTTP header before copying into it.
 
 .. note::
 
-   :c:func:`TSHttpHdrCopy` appends the port number to the domain of
+   :cpp:func:`TSHttpHdrCopy` appends the port number to the domain of
    the URL portion of the header. For example, a copy of
    http://www.example.com appears as http://www.example.com:80 in the
    destination buffer.

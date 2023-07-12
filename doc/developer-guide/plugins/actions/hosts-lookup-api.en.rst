@@ -27,6 +27,6 @@ lookup of a host name, much like a DNS lookup.
 
 The hosts lookup functions are as follows:
 
--  :c:func:`TSHostLookup`
--  :c:func:`TSHostLookupResultAddrGet`
+-  :cpp:func:`TSHostLookup`
+-  :cpp:func:`TSHostLookupResultAddrGet`
 

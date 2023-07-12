@@ -34,5 +34,5 @@ Description
 ===========
 
 Flushes pending data that has been buffered up in memory from previous
-calls to :c:func:`TSfwrite`.
+calls to :cpp:func:`TSfwrite`.
 

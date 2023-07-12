@@ -28,8 +28,8 @@ compilation time and run time.
 
 Use the following interfaces:
 
--  :c:func:`TSPluginRegister`
--  :c:func:`TSTrafficServerVersionGet`
+-  :cpp:func:`TSPluginRegister`
+-  :cpp:func:`TSTrafficServerVersionGet`
 
 The plugin registers the plugin and ensures it's running with a
 compatible version of Traffic Server.

@@ -115,7 +115,7 @@ X-Milestones
     The ``X-Milestones`` header contains detailed information about
     how long the transaction took to traverse portions of the HTTP
     state machine. The timing information is obtained from the
-    :c:func:`TSHttpTxnMilestoneGet` API. Each milestone value is a
+    :cpp:func:`TSHttpTxnMilestoneGet` API. Each milestone value is a
     fractional number of seconds since the beginning of the
     transaction.
 

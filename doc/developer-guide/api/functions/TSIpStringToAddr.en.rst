@@ -28,7 +28,7 @@ Synopsis
 
     #include <ts/experimental.h>
 
-.. function:: TSReturnCode TSIpStringToAddr(const char * str, int str_len, sockaddr* addr)
+.. c:function:: TSReturnCode TSIpStringToAddr(const char * str, int str_len, sockaddr* addr)
 
 Description
 ===========
@@ -47,7 +47,7 @@ used to differentiate between an address and an attached port. E.g.
 Return values
 =============
 
-It returns :data:`TS_SUCCESS` on success, or :data:`TS_ERROR` on failure.
+It returns :cpp:enumerator:`TS_SUCCESS` on success, or :cpp:enumerator:`TS_ERROR` on failure.
 
 Notes
 =====

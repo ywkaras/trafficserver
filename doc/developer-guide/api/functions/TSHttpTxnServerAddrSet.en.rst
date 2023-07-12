@@ -28,7 +28,7 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. function:: TSReturnCode TSHttpTxnServerAddrSet(TSHttpTxn txnp, struct sockaddr const* addr)
+.. c:function:: TSReturnCode TSHttpTxnServerAddrSet(TSHttpTxn txnp, sockaddr const* addr)
 
 Description
 ===========
@@ -44,7 +44,7 @@ done as the address of the server is already known.
 Return Value
 ============
 
-:data:`TS_ERROR` is returned if :arg:`addr` does not contain a valid
+:cpp:enumerator:`TS_ERROR` is returned if :arg:`addr` does not contain a valid
 IPv4 or IPv6 address with a valid (non-zero) port.
 
 Notes

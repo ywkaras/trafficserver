@@ -28,7 +28,7 @@ as if it came from a client.
 
 .. note::
 
-   This is a convenience function for :c:func:`TSHttpConnectPlugin` to provide
+   This is a convenience function for :cpp:func:`TSHttpConnectPlugin` to provide
    a simpler interface and backward compatibility for existing implementations.
    When this function is used instead of `TSHttpConnectPlugin`, default buffer
    index and watermark values will be used when creating IOBuffers.
@@ -40,14 +40,14 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. function:: TSVConn TSHttpConnectWithPluginId(sockaddr const * addr, char const * tag, int64_t id)
+.. c:function:: TSVConn TSHttpConnectWithPluginId(sockaddr const * addr, char const * tag, int64_t id)
 
 Description
 ===========
 
 This call attempts to create an HTTP state machine and a virtual
 connection to that state machine. This is more efficient than using
-:c:func:`TSNetConnect` because it avoids using the operating system
+:cpp:func:`TSNetConnect` because it avoids using the operating system
 stack via the loopback interface.
 
 :arg:`addr`
@@ -73,7 +73,7 @@ stack via the loopback interface.
    reserved to mean "not set" and can be used as a default if this
    functionality is not needed.
 
-The virtual connection returned as the :c:type:`TSVConn` is API
+The virtual connection returned as the :cpp:type:`TSVConn` is API
 equivalent to a network virtual connection both to the plugin and
 to internal mechanisms. Data is read and written to the connection
 (and thence to the target system) by reading and writing on this

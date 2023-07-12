@@ -26,21 +26,20 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSThreadPool
+.. cpp:type:: TSThreadPool
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSThreadPool TS_THREAD_POOL_NET
+.. cpp:enumerator:: TS_THREAD_POOL_NET
 
-.. c:member:: TSThreadPool TS_THREAD_POOL_TASK
+.. cpp:enumerator:: TS_THREAD_POOL_TASK
 
-.. c:member:: TSThreadPool TS_THREAD_POOL_DNS
+.. cpp:enumerator:: TS_THREAD_POOL_DNS
 
-
-.. c:member:: TSThreadPool TS_THREAD_POOL_UDP
+.. cpp:enumerator:: TS_THREAD_POOL_UDP
 
 Description
 ===========

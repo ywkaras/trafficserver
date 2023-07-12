@@ -33,11 +33,11 @@ Enum typedef.
 Enumeration Members
 ===================
 
-.. c:member:: TSFetchWakeUpOptions NO_CALLBACK
+.. c:enumerator:: NO_CALLBACK
 
-.. c:member:: TSFetchWakeUpOptions AFTER_HEADER
+.. c:enumerator:: AFTER_HEADER
 
-.. c:member:: TSFetchWakeUpOptions AFTER_BODY
+.. c:enumerator:: AFTER_BODY
 
 Description
 ===========

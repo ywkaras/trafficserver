@@ -22,7 +22,7 @@
 API functions
 *************
 
-.. c:function:: void TSHttpTxnReqCacheableSet(TSHttpTxn txnp, int flag)
+.. cpp:function:: void TSHttpTxnReqCacheableSet(TSHttpTxn txnp, int flag)
 
    Set a flag that marks a request as cacheable. This is a positive override
    only, setting :arg:`flag` to ``0`` restores the default behavior, it does not

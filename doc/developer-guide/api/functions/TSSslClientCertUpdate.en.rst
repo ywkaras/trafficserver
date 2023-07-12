@@ -37,5 +37,5 @@ Description
 
 :func:`TSSslClientCertUpdate` updates existing client certificates configured in :file:`sni.yaml` or
 `proxy.config.ssl.client.cert.filename`. :arg:`cert_path` should be exact match as provided in
-configurations. :func:`TSSslClientCertUpdate` returns :c:macro:`TS_SUCCESS` only if :arg:`cert_path` exists
+configurations. :func:`TSSslClientCertUpdate` returns :cpp:enumerator:`TS_SUCCESS` only if :arg:`cert_path` exists
 in configuration and reloaded to update the context.

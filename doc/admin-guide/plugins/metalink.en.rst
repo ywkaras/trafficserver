@@ -69,7 +69,7 @@ options.
 Implementation Status
 ---------------------
 
-The plugin implements the :c:data:`TS_HTTP_SEND_RESPONSE_HDR_HOOK`
+The plugin implements the :cpp:enumerator:`TS_HTTP_SEND_RESPONSE_HDR_HOOK`
 hook to check and potentially rewrite the :mailheader:`Location` and
 :mailheader:`Digest` headers after responses are cached.  It doesn't
 do it before they're cached because the contents of the cache can
@@ -78,7 +78,7 @@ check if the URL in the :mailheader:`Location` header is already
 cached.  In future, the plugin should also check if the URL is fresh
 or not.
 
-The plugin implements the :c:data:`TS_HTTP_READ_RESPONSE_HDR_HOOK`
+The plugin implements the :cpp:enumerator:`TS_HTTP_READ_RESPONSE_HDR_HOOK`
 hook and :ref:`a null transformation <developer-plugins-http-transformations-null-transform>`
 to compute the SHA-256 digest for
 content as it's added to the cache.  It uses SHA256_Init(),

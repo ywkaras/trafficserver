@@ -30,5 +30,5 @@ for reading ``POST`` bodies in plugins as well as using alternative
 transports to the origin server.The intercepting HTTP transaction
 functions are:
 
--  :c:func:`TSHttpTxnIntercept`
+-  :cpp:func:`TSHttpTxnIntercept`
 

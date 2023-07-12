@@ -26,35 +26,35 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:enum:: TSHttpCntlType
+.. cpp:enum:: TSHttpCntlType
 
    The feature to control.
 
-   .. c:enumerator:: TS_HTTP_CNTL_LOGGING_MODE
+   .. cpp:enumerator:: TS_HTTP_CNTL_LOGGING_MODE
 
       Turn off (or on) all logging for this transaction.
 
-   .. c:enumerator:: TS_HTTP_CNTL_INTERCEPT_RETRY_MODE
+   .. cpp:enumerator:: TS_HTTP_CNTL_INTERCEPT_RETRY_MODE
 
       Control the intercept retry mode.
 
-   .. c:enumerator:: TS_HTTP_CNTL_RESPONSE_CACHEABLE
+   .. cpp:enumerator:: TS_HTTP_CNTL_RESPONSE_CACHEABLE
 
       Make the response cacheable or uncacheable.
 
-   .. c:enumerator:: TS_HTTP_CNTL_REQUEST_CACHEABLE
+   .. cpp:enumerator:: TS_HTTP_CNTL_REQUEST_CACHEABLE
 
       Make the request cacheable or uncacheable.
 
-   .. c:enumerator:: TS_HTTP_CNTL_SERVER_NO_STORE
+   .. cpp:enumerator:: TS_HTTP_CNTL_SERVER_NO_STORE
 
       Make the server response uncacheable.
 
-   .. c:enumerator:: TS_HTTP_CNTL_TXN_DEBUG
+   .. cpp:enumerator:: TS_HTTP_CNTL_TXN_DEBUG
 
       Turn on transaction debugging.
 
-   .. c:enumerator:: TS_HTTP_CNTL_SKIP_REMAPPING
+   .. cpp:enumerator:: TS_HTTP_CNTL_SKIP_REMAPPING
 
       Skip the remap requirement for this transaction.
 

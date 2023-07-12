@@ -35,7 +35,7 @@ Synopsis
 Description
 ===========
 
-Note that both string arguments must be allocated with :c:func:`TSmalloc` or
-:c:func:`TSstrdup`.  The :arg:`mimetype` is optional, and if not provided it
+Note that both string arguments must be allocated with :cpp:func:`TSmalloc` or
+:cpp:func:`TSstrdup`.  The :arg:`mimetype` is optional, and if not provided it
 defaults to :literal:`text/html`. Sending an empty string would prevent setting
 a content type header (but that is not advised).

@@ -42,13 +42,9 @@ more widely. Those are described on this page.
 
 .. type:: ink_hrtime
 
-.. type:: INK_MD5
-
-   Buffer type sufficient to contain an MD5 hash value.
-
 .. cpp:class:: INK_MD5
 
-   See :type:`INK_MD5`.
+   Buffer type sufficient to contain an MD5 hash value.
 
 .. cpp:class:: RecRawStatBlock
 
@@ -56,11 +52,11 @@ more widely. Those are described on this page.
 
 .. type:: TSAction
 
-.. type:: TSCacheKey
+.. c:type:: TSCacheKey
 
 .. type:: TSConfig
 
-.. type:: TSCont
+.. c:type:: TSCont
 
    An opaque type that represents a Traffic Server :term:`continuation`.
 
@@ -86,7 +82,7 @@ more widely. Those are described on this page.
 
       The type of data represented in the struct.
 
-   .. member:: sockaddr const *addr
+   .. c:member:: sockaddr const *addr
 
       Network address of the target of the connection.
 
@@ -107,12 +103,12 @@ more widely. Those are described on this page.
 
       A numeric value specifying the minimum number of bytes that must be written to
       an IOBuffer before any continuation is called back to read from the buffer.
-      See the :c:func:`TSIOBufferWaterMarkGet` and :c:func:`TSIOBufferWaterMarkSet`
+      See the :cpp:func:`TSIOBufferWaterMarkGet` and :cpp:func:`TSIOBufferWaterMarkSet`
       functions for further detail.
 
 .. type:: TSConnectType
 
-   Enumeration that specifies the type of data within a :c:type:`TSHttpConnectOptions` structure.
+   Enumeration that specifies the type of data within a :cpp:type:`TSHttpConnectOptions` structure.
 
 .. type:: TSHttpParser
 
@@ -136,9 +132,78 @@ more widely. Those are described on this page.
 
    An enumeration that contains valid watermark values, currently only defaults.
 
-.. type:: TSLifecycleHookID
+.. enum:: TSLifecycleHookID
 
    An enumeration that identifies a :ref:`life cycle hook <ts-lifecycle-hook-add>`.
+
+   .. cpp:enumerator:: TS_LIFECYCLE_PORTS_INITIALIZED_HOOK
+
+      Called after the :ts:cv:`proxy server port <proxy.config.http.server_ports>`
+      data structures have been initialized but before connections are accepted on
+      those ports. The sockets corresponding to the ports may or may not be open
+      depending on how the :program:`traffic_server` process was invoked. Other
+      API functions that depend on server ports should be called from this hook
+      and not :func:`TSPluginInit`.
+
+      Invoked with the event :cpp:enumerator:`TS_EVENT_LIFECYCLE_PORTS_INITIALIZED` and
+      ``NULL`` data.
+
+   .. cpp:enumerator:: TS_LIFECYCLE_PORTS_READY_HOOK
+
+      Called after enabling connections on the proxy server ports. Because |TS| is
+      threaded this may or may not be called before any connections are accepted.
+      The hook code may assume that any connection to |TS| started after this hook
+      is called will be accepted by |TS|, making this a convenient place to signal
+      external processes of that.
+
+      Invoked with the event :cpp:enumerator:`TS_EVENT_LIFECYCLE_PORTS_READY` and ``NULL``
+      data.
+
+   .. cpp:enumerator:: TS_LIFECYCLE_CACHE_READY_HOOK
+
+      Called after |TS| cache initialization has finished.
+
+      Invoked with the event :cpp:enumerator:`TS_EVENT_LIFECYCLE_CACHE_READY` and ``NULL``
+      data.
+
+   .. cpp:enumerator:: TS_LIFECYCLE_MSG_HOOK
+
+      Called when triggered by an external process, such as :program:`traffic_ctl`.
+
+      Invoked with the event :cpp:enumerator:`TS_EVENT_LIFECYCLE_MSG`. The data is an instance of the
+      :cpp:struct:`TSPluginMsg`. This contains a *tag* which is a null terminated string and a data payload.
+      The payload cannot be assumed to be null terminated and is created by the external agent. Its internal
+      structure and format are entirely under the control of the external agent although presumably there is
+      an agreement between the plugin and the external where this is determined by the :arg:`tag`.
+
+   .. cpp:enumerator:: TS_LIFECYCLE_CLIENT_SSL_CTX_INITIALIZED_HOOK
+
+      Called after the initialization of the SSL context used by |TS| for outbound connections (|TS| as client).
+
+   .. cpp:enumerator:: TS_LIFECYCLE_SERVER_SSL_CTX_INITIALIZED_HOOK
+
+      Called after every SSL context initialization used by |TS| for inbound connections (|TS| as the server).
+
+   .. cpp:enumerator:: TS_LIFECYCLE_TASK_THREADS_READY_HOOK
+
+      Called after |TS| task threads have been started.
+
+      Invoked with the event :cpp:enumerator:`TS_EVENT_LIFECYCLE_TASK_THREADS_READY` and ``NULL``
+      data.
+
+   .. cpp:enumerator:: TS_LIFECYCLE_SSL_SECRET_HOOK
+
+      Called before the data for the certificate or key is loaded.  The data argument to the callback is a pointer to a :type:`TSSecretID` which
+      contains a pointer to the name of the certificate or key and the relevant version if applicable.
+
+      This hook gives the plugin a chance to load the certificate or key from an alternative source and set via the :cpp:func:`TSSslSecretSet` API.
+      If there is no plugin override, the certificate or key will be loaded from disk and the secret name will be interpreted as a file path.
+
+   .. cpp:enumerator:: TS_LIFECYCLE_SHUTDOWN_HOOK
+
+      Called after |TS| receiving a shutdown signal, such as SIGTERM.
+
+      Invoked with the event :cpp:enumerator:`TS_EVENT_LIFECYCLE_SHUTDOWN` and ``NULL`` data.
 
 .. type:: TSMBuffer
 
@@ -165,10 +230,10 @@ more widely. Those are described on this page.
 
 .. type:: TSMLoc
 
-   This is a memory location relative to a :term:`header heap` represented by a :c:type:`TSMBuffer` and
-   must always be used in conjunction with that :c:type:`TSMBuffer` instance. It identifies a specific
-   object in the :c:type:`TSMBuffer`. This indirection is needed so that the :c:type:`TSMBuffer`
-   can reallocate space as needed. Therefore a raw address obtained from a :c:type:`TSMLoc` should
+   This is a memory location relative to a :term:`header heap` represented by a :cpp:type:`TSMBuffer` and
+   must always be used in conjunction with that :cpp:type:`TSMBuffer` instance. It identifies a specific
+   object in the :cpp:type:`TSMBuffer`. This indirection is needed so that the :cpp:type:`TSMBuffer`
+   can reallocate space as needed. Therefore a raw address obtained from a :cpp:type:`TSMLoc` should
    be considered volatile that may become invalid across any API call.
 
 .. var:: TSMLoc TS_NULL_MLOC
@@ -317,10 +382,6 @@ more widely. Those are described on this page.
 
     A module version.
 
-.. cpp:type:: ModuleVersion
-
-    A module version.
-
 .. cpp:class:: template<typename T> DLL
 
     An anchor for a double linked intrusive list of instance of :arg:`T`.
@@ -344,8 +405,8 @@ more widely. Those are described on this page.
       Minor version number.
 
 .. type:: TSFetchUrlParams_t
-.. type:: TSFetchSM
-.. type:: TSFetchEvent
+.. c:type:: TSFetchSM
+.. c:type:: TSFetchEvent
 
 .. type:: TSHttpPriority
 
@@ -378,7 +439,7 @@ more widely. Those are described on this page.
 
    .. member:: uint8_t weight
 
-   .. member:: int32_t stream_dependency
+   .. :c:member:: int32_t stream_dependency
 
       The stream dependency. Per spec, see RFC 7540 section 6.2, this is 31
       bits. We use a signed 32 bit structure to store either a valid dependency

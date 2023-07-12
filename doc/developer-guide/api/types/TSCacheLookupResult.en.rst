@@ -33,13 +33,13 @@ Enum typedef.
 Enumeration Members
 ===================
 
-.. c:member:: TSCacheLookupResult TS_CACHE_LOOKUP_MISS
+.. cpp:enumerator:: TS_CACHE_LOOKUP_MISS
 
-.. c:member:: TSCacheLookupResult TS_CACHE_LOOKUP_HIT_STALE
+.. cpp:enumerator:: TS_CACHE_LOOKUP_HIT_STALE
 
-.. c:member:: TSCacheLookupResult TS_CACHE_LOOKUP_HIT_FRESH
+.. cpp:enumerator:: TS_CACHE_LOOKUP_HIT_FRESH
 
-.. c:member:: TSCacheLookupResult TS_CACHE_LOOKUP_SKIPPED
+.. cpp:enumerator:: TS_CACHE_LOOKUP_SKIPPED
 
 Description
 ===========

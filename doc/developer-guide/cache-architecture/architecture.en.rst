@@ -755,7 +755,7 @@ The checks that are done are:
       for the response to be cached. It is disabled by default, for
       best performance.
 
-A plugin can call :c:func:`TSHttpTxnReqCacheableSet()` to force the request to
+A plugin can call :cpp:func:`TSHttpTxnReqCacheableSet()` to force the request to
 be viewed as cache valid.
 
 .. _cache-lookup:
@@ -1012,7 +1012,7 @@ is put in to the aggregation buffer.
 
 When no more cache virtual connections can be processed (due to an empty queue
 or the aggregation buffer filling) then :cpp:member:`Vol::evac_range` is called
-to clear the range to be overwritten plus an additional :c:macro:`EVACUATION_SIZE`
+to clear the range to be overwritten plus an additional :cpp:enumerator:`EVACUATION_SIZE`
 range. The buckets covering that range are checked. If there are any items in
 the buckets a new cache virtual connection (a *doc evacuator*) is created and
 used to read the evacuation item closest to the write cursor (i.e. with the

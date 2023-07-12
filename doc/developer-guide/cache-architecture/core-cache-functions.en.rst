@@ -26,7 +26,7 @@ Core Cache
 Core Cache Constants
 ====================
 
-.. c:macro:: EVACUATION_SIZE
+.. cpp:enumerator:: EVACUATION_SIZE
 
    The size of the contiguous area to check for evacuation.
 

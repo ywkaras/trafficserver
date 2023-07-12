@@ -61,17 +61,17 @@ corresponding usage of the ``fopen`` family of functions is
 inappropriate due to file descriptor and portability limitations. The
 ``TSfopen`` family of functions consists of the following:
 
--  :c:func:`TSfclose`
+-  :cpp:func:`TSfclose`
 
--  :c:func:`TSfflush`
+-  :cpp:func:`TSfflush`
 
--  :c:func:`TSfgets`
+-  :cpp:func:`TSfgets`
 
--  :c:func:`TSfopen`
+-  :cpp:func:`TSfopen`
 
--  :c:func:`TSfread`
+-  :cpp:func:`TSfread`
 
--  :c:func:`TSfwrite`
+-  :cpp:func:`TSfwrite`
 
 Memory Allocation
 =================
@@ -92,15 +92,15 @@ leaks.
 
 The memory allocation functions are:
 
--  :c:func:`TSfree`
+-  :cpp:func:`TSfree`
 
--  :c:func:`TSmalloc`
+-  :cpp:func:`TSmalloc`
 
--  :c:func:`TSrealloc`
+-  :cpp:func:`TSrealloc`
 
--  :c:func:`TSstrdup`
+-  :cpp:func:`TSstrdup`
 
--  :c:func:`TSstrndup`
+-  :cpp:func:`TSstrndup`
 
 Thread Functions
 ================
@@ -114,30 +114,30 @@ shared resources and data using the ``TSMutex`` type, as described in
 
 The thread functions are listed below:
 
--  :c:func:`TSThreadCreate`
--  :c:func:`TSThreadDestroy`
--  :c:func:`TSThreadInit`
--  :c:func:`TSThreadSelf`
+-  :cpp:func:`TSThreadCreate`
+-  :cpp:func:`TSThreadDestroy`
+-  :cpp:func:`TSThreadInit`
+-  :cpp:func:`TSThreadSelf`
 
 Debugging Functions
 ===================
 
--  :c:func:`TSDbg`
-   (replaces deprecated :c:func:`TSDebug`) prints out a formatted
+-  :cpp:func:`TSDbg`
+   (replaces deprecated :cpp:func:`TSDebug`) prints out a formatted
    statement if you are running Traffic Server in debug mode.
 
--  :c:func:`TSIsDbgCtlSet`
-   (replaces deprecated :c:func:`TSIsDebugTagSet`)
+-  :cpp:func:`TSIsDbgCtlSet`
+   (replaces deprecated :cpp:func:`TSIsDebugTagSet`)
    checks to see if a debug control (associated with a debug tag) is
    set. If the debug tag is set, then Traffic Server prints out all
    debug statements associated with the control.
 
--  :c:func:`TSError`
+-  :cpp:func:`TSError`
    prints error messages to Traffic Server's error log
 
--  :c:func:`TSAssert`
+-  :cpp:func:`TSAssert`
    enables the use of assertion in a plugin.
 
--  :c:func:`TSReleaseAssert`
+-  :cpp:func:`TSReleaseAssert`
    enables the use of assertion in a plugin.
 

@@ -26,19 +26,19 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSParseResult
+.. cpp:type:: TSParseResult
 
 Enum typedef defining the possible return values from
-:c:func:`TSHttpHdrParseResp`.
+:cpp:func:`TSHttpHdrParseResp`.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSParseResult TS_PARSE_ERROR
+.. cpp:enumerator:: TS_PARSE_ERROR
 
-.. c:member:: TSParseResult TS_PARSE_DONE
+.. cpp:enumerator:: TS_PARSE_DONE
 
-.. c:member:: TSParseResult TS_PARSE_CONT
+.. cpp:enumerator:: TS_PARSE_CONT
 
 Description
 ===========

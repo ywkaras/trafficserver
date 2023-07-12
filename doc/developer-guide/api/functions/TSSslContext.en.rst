@@ -32,7 +32,7 @@ Synopsis
 
 .. function:: TSSslContext TSSslContextFindByName(const char * name)
 
-.. function:: TSSslContext TSSslContextFindByAddr(const struct sockaddr * address)
+.. c:function:: TSSslContext TSSslContextFindByAddr(const sockaddr * address)
 
 Description
 ===========

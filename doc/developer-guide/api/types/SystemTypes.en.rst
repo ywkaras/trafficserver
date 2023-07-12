@@ -33,10 +33,6 @@ Description
 
 These types are provided by the compiler ("built-in") or from a required operating system, POSIX, or package header.
 
-.. c:type:: off_t
-
-   `Reference <https://www.gnu.org/software/libc/manual/html_node/Important-Data-Types.html>`__.
-
 .. cpp:type:: off_t
 
    `Reference <https://www.gnu.org/software/libc/manual/html_node/Important-Data-Types.html>`__.

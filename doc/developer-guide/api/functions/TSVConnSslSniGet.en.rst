@@ -25,7 +25,7 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. c:function:: const char TSVConnSslSniGet(TSVConn sslp, int *length)
+.. cpp:function:: const char TSVConnSslSniGet(TSVConn sslp, int *length)
 
 
 Description

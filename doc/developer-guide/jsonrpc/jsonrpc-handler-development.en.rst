@@ -190,7 +190,7 @@ a successful response or with an error. **The JSONRPC manager will wait for the 
 
 .. note:
 
-    Check :c:func:`TSRPCRegister` for API details.
+    Check :cpp:func:`TSRPCRegister` for API details.
 
 
 RPC method registration and implementation examples
@@ -458,7 +458,7 @@ When implementing rpc handlers inside a plugin, errors should be handled differe
     shows how to set an error that will be sent back as part of the Error field.
 
 
-For more information check the  :c:func:`TSRPCRegister` for API details and :ref:`jsonrpc-error`.
+For more information check the  :cpp:func:`TSRPCRegister` for API details and :ref:`jsonrpc-error`.
 
 .. _jsonrpc-handler-unit-test:
 

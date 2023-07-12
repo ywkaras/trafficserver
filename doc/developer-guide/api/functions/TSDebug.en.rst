@@ -52,8 +52,8 @@ Synopsis
 .. function:: const char* TSHttpServerStateNameLookup(TSServerState state)
 .. function:: const char* TSHttpHookNameLookup(TSHttpHookID hook)
 .. function:: const char* TSHttpEventNameLookup(TSEvent event)
-.. macro:: TSAssert( ... )
-.. macro:: TSReleaseAssert( ... )
+.. function:: TSAssert( ... )
+.. function:: TSReleaseAssert( ... )
 
 diags.log
 =========
@@ -98,10 +98,10 @@ It writes output to the Traffic Server debug log through stderr.
 :func:`TSIsDebugTagSet` (deprecated) returns non-zero if the given debug :arg:`tag` is
 enabled.
 
-In debug mode, :macro:`TSAssert` Traffic Server to prints the file
+In debug mode, :func:`TSAssert` Traffic Server to prints the file
 name, line number and expression, and then aborts. In release mode,
 the expression is not removed but the effects of printing an error
-message and aborting are. :macro:`TSReleaseAssert` prints an error
+message and aborting are. :func:`TSReleaseAssert` prints an error
 message and aborts in both release and debug mode.
 
 :func:`TSDebugSpecific` emits a debug line even if the debug :arg:`tag`

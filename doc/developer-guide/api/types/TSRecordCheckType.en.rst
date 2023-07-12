@@ -26,20 +26,20 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSRecordCheckType
+.. cpp:type:: TSRecordCheckType
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSRecordCheckType TS_RECORDCHECK_NULL
+.. cpp:enumerator:: TS_RECORDCHECK_NULL
 
-.. c:member:: TSRecordCheckType TS_RECORDCHECK_STR
+.. cpp:enumerator:: TS_RECORDCHECK_STR
 
-.. c:member:: TSRecordCheckType TS_RECORDCHECK_INT
+.. cpp:enumerator:: TS_RECORDCHECK_INT
 
-.. c:member:: TSRecordCheckType TS_RECORDCHECK_IP
+.. cpp:enumerator:: TS_RECORDCHECK_IP
 
 Description
 ===========

@@ -28,7 +28,7 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. function:: TSAction TSCacheRead(TSCont contp, TSCacheKey key)
+.. c:function:: TSAction TSCacheRead(TSCont contp, TSCacheKey key)
 
 Description
 ===========
@@ -37,12 +37,12 @@ Asks the Traffic Server cache if the object corresponding to :arg:`key` exists
 in the cache and can be read.
 
 If the object can be read, the Traffic Server cache calls the continuation
-:arg:`contp` back with the event :data:`TS_EVENT_CACHE_OPEN_READ`. In this case,
+:arg:`contp` back with the event :cpp:enumerator:`TS_EVENT_CACHE_OPEN_READ`. In this case,
 the cache also passes :arg:`contp` a cache vconnection and :arg:`contp` can then
 initiate a read operation on that vconnection using :type:`TSVConnRead`.
 
 If the object cannot be read, the cache calls :arg:`contp` back with the event
-:data:`TS_EVENT_CACHE_OPEN_READ_FAILED`. The user (:arg:`contp`) has the option to
-cancel the action returned by :type:`TSCacheRead`. Note that reentrant calls
+:cpp:enumerator:`TS_EVENT_CACHE_OPEN_READ_FAILED`. The user (:arg:`contp`) has the option to
+cancel the action returned by :c:func:`TSCacheRead`. Note that reentrant calls
 are possible, i.e. the cache can call back the user (:arg:`contp`) in the same
 call.

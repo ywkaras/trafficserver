@@ -26,16 +26,16 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSReturnCode
+.. cpp:type:: TSReturnCode
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSReturnCode TS_ERROR
+.. cpp:enumerator:: TS_ERROR
 
-.. c:member:: TSReturnCode TS_SUCCESS
+.. cpp:enumerator:: TS_SUCCESS
 
 Description
 ===========

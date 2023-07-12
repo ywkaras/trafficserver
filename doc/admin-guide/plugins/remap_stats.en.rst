@@ -53,7 +53,7 @@ Flags and options are:
 
 Options in the code:
 
-.. c:macro:: MAX_STAT_LENGTH
+.. cpp:enumerator:: MAX_STAT_LENGTH
 
    The maximum length of any stat name. Since stat names include the remap FQDN, this affects the maximum FQDN length that can be included in the stat.
 

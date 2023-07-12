@@ -107,10 +107,6 @@ This registers the group name and type, starts the threads, and returns the even
 Types
 =====
 
-.. type:: EventType
-
-   A thread classification value that represents the type of events the thread is expected to process.
-
 .. var:: EventType ET_CALL
 
    A predefined :type:`EventType` which always exists. This is deprecated, use :var:`ET_NET` instead.

@@ -33,11 +33,11 @@ Enum typedef.
 Enumeration Members
 ===================
 
-.. c:member:: TSCacheError TS_CACHE_ERROR_NO_DOC
+.. cpp:enumerator:: TS_CACHE_ERROR_NO_DOC
 
-.. c:member:: TSCacheError TS_CACHE_ERROR_DOC_BUSY
+.. cpp:enumerator:: TS_CACHE_ERROR_DOC_BUSY
 
-.. c:member:: TSCacheError TS_CACHE_ERROR_NOT_READY
+.. cpp:enumerator:: TS_CACHE_ERROR_NOT_READY
 
 Description
 ===========

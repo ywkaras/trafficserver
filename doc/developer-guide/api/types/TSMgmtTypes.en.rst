@@ -32,57 +32,57 @@ Macros used for RPC communications.
 Management Signals
 ==================
 
-.. c:macro:: MGMT_SIGNAL_PID
+.. cpp:enumerator:: MGMT_SIGNAL_PID
 
-.. c:macro:: MGMT_SIGNAL_CONFIG_ERROR
+.. cpp:enumerator:: MGMT_SIGNAL_CONFIG_ERROR
 
-.. c:macro:: MGMT_SIGNAL_SYSTEM_ERROR
+.. cpp:enumerator:: MGMT_SIGNAL_SYSTEM_ERROR
 
-.. c:macro:: MGMT_SIGNAL_CONFIG_FILE_READ
+.. cpp:enumerator:: MGMT_SIGNAL_CONFIG_FILE_READ
 
-.. c:macro:: MGMT_SIGNAL_CACHE_ERROR
+.. cpp:enumerator:: MGMT_SIGNAL_CACHE_ERROR
 
-.. c:macro:: MGMT_SIGNAL_CACHE_WARNING
+.. cpp:enumerator:: MGMT_SIGNAL_CACHE_WARNING
 
-.. c:macro:: MGMT_SIGNAL_LOGGING_ERROR
+.. cpp:enumerator:: MGMT_SIGNAL_LOGGING_ERROR
 
-.. c:macro:: MGMT_SIGNAL_LOGGING_WARNING
+.. cpp:enumerator:: MGMT_SIGNAL_LOGGING_WARNING
 
-.. c:macro:: MGMT_SIGNAL_PLUGIN_SET_CONFIG
+.. cpp:enumerator:: MGMT_SIGNAL_PLUGIN_SET_CONFIG
 
-.. c:macro:: MGMT_SIGNAL_LIBRECORDS
+.. cpp:enumerator:: MGMT_SIGNAL_LIBRECORDS
 
-.. c:macro:: MGMT_SIGNAL_HTTP_CONGESTED_SERVER
+.. cpp:enumerator:: MGMT_SIGNAL_HTTP_CONGESTED_SERVER
 
-.. c:macro:: MGMT_SIGNAL_HTTP_ALLEVIATED_SERVER
+.. cpp:enumerator:: MGMT_SIGNAL_HTTP_ALLEVIATED_SERVER
 
-.. c:macro:: MGMT_SIGNAL_CONFIG_FILE_CHILD
+.. cpp:enumerator:: MGMT_SIGNAL_CONFIG_FILE_CHILD
 
 
 Management Events
 ==================
 
-.. c:macro:: MGMT_EVENT_SYNC_KEY
+.. cpp:enumerator:: MGMT_EVENT_SYNC_KEY
 
-.. c:macro:: MGMT_EVENT_SHUTDOWN
+.. cpp:enumerator:: MGMT_EVENT_SHUTDOWN
 
-.. c:macro:: MGMT_EVENT_RESTART
+.. cpp:enumerator:: MGMT_EVENT_RESTART
 
-.. c:macro:: MGMT_EVENT_BOUNCE
+.. cpp:enumerator:: MGMT_EVENT_BOUNCE
 
-.. c:macro:: MGMT_EVENT_CLEAR_STATS
+.. cpp:enumerator:: MGMT_EVENT_CLEAR_STATS
 
-.. c:macro:: MGMT_EVENT_CONFIG_FILE_UPDATE
+.. cpp:enumerator:: MGMT_EVENT_CONFIG_FILE_UPDATE
 
-.. c:macro:: MGMT_EVENT_PLUGIN_CONFIG_UPDATE
+.. cpp:enumerator:: MGMT_EVENT_PLUGIN_CONFIG_UPDATE
 
-.. c:macro:: MGMT_EVENT_ROLL_LOG_FILES
+.. cpp:enumerator:: MGMT_EVENT_ROLL_LOG_FILES
 
-.. c:macro:: MGMT_EVENT_LIBRECORDS
+.. cpp:enumerator:: MGMT_EVENT_LIBRECORDS
 
-.. c:macro:: MGMT_EVENT_STORAGE_DEVICE_CMD_OFFLINE
+.. cpp:enumerator:: MGMT_EVENT_STORAGE_DEVICE_CMD_OFFLINE
 
-.. c:macro:: MGMT_EVENT_LIFECYCLE_MESSAGE
+.. cpp:enumerator:: MGMT_EVENT_LIFECYCLE_MESSAGE
 
 
 OpTypes

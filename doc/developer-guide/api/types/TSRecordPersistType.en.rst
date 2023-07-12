@@ -26,18 +26,18 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSRecordPersistType
+.. cpp:type:: TSRecordPersistType
 
 Enum typedef.
 
 Enumeration Members
 ===================
 
-.. c:member:: TSRecordPersistType TS_RECORDP_NULL
+.. cpp:enumerator:: TS_RECORDP_NULL
 
-.. c:member:: TSRecordPersistType TS_RECORDP_PERSISTENT
+.. cpp:enumerator:: TS_RECORDP_PERSISTENT
 
-.. c:member:: TSRecordPersistType TS_RECORDP_NON_PERSISTENT
+.. cpp:enumerator:: TS_RECORDP_NON_PERSISTENT
 
 Description
 ===========

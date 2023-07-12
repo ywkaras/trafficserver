@@ -26,7 +26,7 @@ Synopsis
 
     #include <ts/apidefs.h>
 
-.. c:type:: TSUuid
+.. cpp:type:: TSUuid
 
 An opaque pointer to an internal representation of a UUID object.
 

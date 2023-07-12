@@ -47,7 +47,7 @@ Next Protocol Negotiation extension negotiates the requested protocol,
 
 The event and data provided to the handler are the same as for
 :func:`TSNetAccept`.  If a connection is successfully accepted, the
-event code will be :data:`TS_EVENT_NET_ACCEPT` and the event data
+event code will be :cpp:enumerator:`TS_EVENT_NET_ACCEPT` and the event data
 will be a valid :type:`TSVConn` bound to the accepted connection.
 
 .. important::

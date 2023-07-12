@@ -29,7 +29,7 @@ transactions.
 As described in :ref:`HTTP sessions
 <developer-plugins-hooks-http-sessions>`, an **HTTP transaction** is an
 object defined for the lifetime of a single request from a client and
-the corresponding response from Traffic Server. The :c:type:`TSHttpTxn`
+the corresponding response from Traffic Server. The :cpp:type:`TSHttpTxn`
 structure is the main handle given to a plugin for manipulating a
 transaction's internal state. Additionally, an HTTP transaction has a
 reference back to the HTTP session that created it.
@@ -160,48 +160,48 @@ illustration of the steps involved in a typical HTTP transaction.
 
 The HTTP transaction functions are:
 
--  :c:func:`TSHttpTxnCacheLookupStatusGet`
+-  :cpp:func:`TSHttpTxnCacheLookupStatusGet`
 
--  :c:func:`TSHttpTxnCachedReqGet`
+-  :cpp:func:`TSHttpTxnCachedReqGet`
    - Note that it is an error to modify cached headers.
 
--  :c:func:`TSHttpTxnCachedRespGet`
+-  :cpp:func:`TSHttpTxnCachedRespGet`
    - Note that it is an error to modify cached headers.
 
--  :c:func:`TSHttpTxnClientReqGet`
+-  :cpp:func:`TSHttpTxnClientReqGet`
    - Plugins that read client request headers use this call to retrieve the
-   HTTP header for any given :c:type:`TSHttpTxn`.
+   HTTP header for any given :cpp:type:`TSHttpTxn`.
 
--  :c:func:`TSHttpTxnPostBufferReaderGet`
+-  :cpp:func:`TSHttpTxnPostBufferReaderGet`
    - Plugins that read client request bodies use this call to retrieve the
-   HTTP body for any given :c:type:`TSHttpTxn`.
+   HTTP body for any given :cpp:type:`TSHttpTxn`.
 
--  :c:func:`TSHttpTxnClientRespGet`
+-  :cpp:func:`TSHttpTxnClientRespGet`
 
--  :c:func:`TSHttpTxnErrorBodySet`
+-  :cpp:func:`TSHttpTxnErrorBodySet`
 
--  :c:func:`TSHttpTxnHookAdd`
+-  :cpp:func:`TSHttpTxnHookAdd`
 
--  :c:func:`TSHttpTxnNextHopAddrGet`
+-  :cpp:func:`TSHttpTxnNextHopAddrGet`
 
--  :c:func:`TSHttpTxnParentProxySet`
+-  :cpp:func:`TSHttpTxnParentProxySet`
 
--  :c:func:`TSHttpTxnReenable`
+-  :cpp:func:`TSHttpTxnReenable`
 
--  :c:func:`TSHttpTxnServerAddrGet`
+-  :cpp:func:`TSHttpTxnServerAddrGet`
 
--  :c:func:`TSHttpTxnServerAddrSet`
+-  :cpp:func:`TSHttpTxnServerAddrSet`
 
--  :c:func:`TSHttpTxnServerReqGet`
+-  :cpp:func:`TSHttpTxnServerReqGet`
 
--  :c:func:`TSHttpTxnServerRespGet`
+-  :cpp:func:`TSHttpTxnServerRespGet`
 
--  :c:func:`TSHttpTxnSsnGet`
+-  :cpp:func:`TSHttpTxnSsnGet`
 
--  :c:func:`TSHttpTxnTransformedRespCache`
+-  :cpp:func:`TSHttpTxnTransformedRespCache`
 
--  :c:func:`TSHttpTxnTransformRespGet`
+-  :cpp:func:`TSHttpTxnTransformRespGet`
 
--  :c:func:`TSHttpTxnUntransformedRespCache`
+-  :cpp:func:`TSHttpTxnUntransformedRespCache`
 
 

@@ -44,16 +44,16 @@ the :ref:`admin-guide`.
 Depending on the result type, you'll use ``TSMgmtIntGet``,
 ``TSMgmtCounterGet``, ``TSMgmtFloatGet``, or ``TSMgmtStringGet`` to
 obtain the variable value (see the example for
-:c:func:`TSMgmtIntGet`.
+:cpp:func:`TSMgmtIntGet`.
 
 The ``TSMgmt*Get`` functions are:
 
--  :c:func:`TSMgmtCounterGet`
+-  :cpp:func:`TSMgmtCounterGet`
 
--  :c:func:`TSMgmtFloatGet`
+-  :cpp:func:`TSMgmtFloatGet`
 
--  :c:func:`TSMgmtIntGet`
+-  :cpp:func:`TSMgmtIntGet`
 
--  :c:func:`TSMgmtStringGet`
+-  :cpp:func:`TSMgmtStringGet`
 
 

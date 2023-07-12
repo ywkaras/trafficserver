@@ -46,56 +46,56 @@ To facilitate fast comparisons and reduce storage size, Traffic Server
 defines several preallocated scheme names.
 
 "file"
-   .. c:var:: char const * TS_URL_SCHEME_FILE
-   .. c:var:: int TS_URL_LEN_FILE
+   .. cpp:var:: char const * TS_URL_SCHEME_FILE
+   .. cpp:var:: int TS_URL_LEN_FILE
 
 "ftp"
-   .. c:var:: char const * TS_URL_SCHEME_FTP
-   .. c:var:: int TS_URL_LEN_FTP
+   .. cpp:var:: char const * TS_URL_SCHEME_FTP
+   .. cpp:var:: int TS_URL_LEN_FTP
 
 "gopher"
-   .. c:var:: char const * TS_URL_SCHEME_GOPHER
-   .. c:var:: int TS_URL_LEN_GOPHER
+   .. cpp:var:: char const * TS_URL_SCHEME_GOPHER
+   .. cpp:var:: int TS_URL_LEN_GOPHER
 
 "http"
-   .. c:var:: char const * TS_URL_SCHEME_HTTP
-   .. c:var:: int TS_URL_LEN_HTTP
+   .. cpp:var:: char const * TS_URL_SCHEME_HTTP
+   .. cpp:var:: int TS_URL_LEN_HTTP
 
 "https"
-   .. c:var:: char const * TS_URL_SCHEME_HTTPS
-   .. c:var:: int TS_URL_LEN_HTTPS
+   .. cpp:var:: char const * TS_URL_SCHEME_HTTPS
+   .. cpp:var:: int TS_URL_LEN_HTTPS
 
 "mailto"
-   .. c:var:: char const * TS_URL_SCHEME_MAILTO
-   .. c:var:: int TS_URL_LEN_MAILTO
+   .. cpp:var:: char const * TS_URL_SCHEME_MAILTO
+   .. cpp:var:: int TS_URL_LEN_MAILTO
 
 "news"
-   .. c:var:: char const * TS_URL_SCHEME_NEWS
-   .. c:var:: int TS_URL_LEN_NEWS
+   .. cpp:var:: char const * TS_URL_SCHEME_NEWS
+   .. cpp:var:: int TS_URL_LEN_NEWS
 
 "nntp"
-   .. c:var:: char const * TS_URL_SCHEME_NNTP
-   .. c:var:: int TS_URL_LEN_NNTP
+   .. cpp:var:: char const * TS_URL_SCHEME_NNTP
+   .. cpp:var:: int TS_URL_LEN_NNTP
 
 "prospero"
-   .. c:var:: char const * TS_URL_SCHEME_PROSPERO
-   .. c:var:: int TS_URL_LEN_PROSPERO
+   .. cpp:var:: char const * TS_URL_SCHEME_PROSPERO
+   .. cpp:var:: int TS_URL_LEN_PROSPERO
 
 "telnet"
-   .. c:var:: char const * TS_URL_SCHEME_TELNET
-   .. c:var:: int TS_URL_LEN_TELNET
+   .. cpp:var:: char const * TS_URL_SCHEME_TELNET
+   .. cpp:var:: int TS_URL_LEN_TELNET
 
 "wais"
-   .. c:var:: char const * TS_URL_SCHEME_WAIS
-   .. c:var:: int TS_URL_LEN_WAIS
+   .. cpp:var:: char const * TS_URL_SCHEME_WAIS
+   .. cpp:var:: int TS_URL_LEN_WAIS
 
 "ws"
-   .. c:var:: char const * TS_URL_SCHEME_WS
-   .. c:var:: int TS_URL_LEN_WS
+   .. cpp:var:: char const * TS_URL_SCHEME_WS
+   .. cpp:var:: int TS_URL_LEN_WS
 
 "wss"
-   .. c:var:: char const * TS_URL_SCHEME_WSS
-   .. c:var:: int TS_URL_LEN_WSS
+   .. cpp:var:: char const * TS_URL_SCHEME_WSS
+   .. cpp:var:: int TS_URL_LEN_WSS
 
 The scheme names above are defined in ``apidefs.h``. When Traffic Server sets the scheme portion of
 the URL (or any portion for that matter), it quickly checks to see if the new value is one of the
@@ -108,31 +108,31 @@ spelling errors.
 
 Traffic Server **URL functions** are listed below:
 
-:c:func:`TSUrlClone`
-:c:func:`TSUrlCopy`
-:c:func:`TSUrlCreate`
-:c:func:`TSUrlPrint`
-:c:func:`TSUrlFtpTypeGet`
-:c:func:`TSUrlFtpTypeSet`
-:c:func:`TSUrlHostGet`
-:c:func:`TSUrlHostSet`
-:c:func:`TSUrlHttpFragmentGet`
-:c:func:`TSUrlHttpFragmentSet`
-:c:func:`TSUrlHttpParamsGet`
-:c:func:`TSUrlHttpParamsSet`
-:c:func:`TSUrlHttpQueryGet`
-:c:func:`TSUrlHttpQuerySet`
-:c:func:`TSUrlLengthGet`
-:c:func:`TSUrlParse`
-:c:func:`TSUrlPasswordGet`
-:c:func:`TSUrlPasswordSet`
-:c:func:`TSUrlPathGet`
-:c:func:`TSUrlPathSet`
-:c:func:`TSUrlPortGet`
-:c:func:`TSUrlRawPortGet`
-:c:func:`TSUrlPortSet`
-:c:func:`TSUrlSchemeGet`
-:c:func:`TSUrlSchemeSet`
-:c:func:`TSUrlStringGet`
-:c:func:`TSUrlUserGet`
-:c:func:`TSUrlUserSet`
+:cpp:func:`TSUrlClone`
+:cpp:func:`TSUrlCopy`
+:cpp:func:`TSUrlCreate`
+:cpp:func:`TSUrlPrint`
+:cpp:func:`TSUrlFtpTypeGet`
+:cpp:func:`TSUrlFtpTypeSet`
+:cpp:func:`TSUrlHostGet`
+:cpp:func:`TSUrlHostSet`
+:cpp:func:`TSUrlHttpFragmentGet`
+:cpp:func:`TSUrlHttpFragmentSet`
+:cpp:func:`TSUrlHttpParamsGet`
+:cpp:func:`TSUrlHttpParamsSet`
+:cpp:func:`TSUrlHttpQueryGet`
+:cpp:func:`TSUrlHttpQuerySet`
+:cpp:func:`TSUrlLengthGet`
+:cpp:func:`TSUrlParse`
+:cpp:func:`TSUrlPasswordGet`
+:cpp:func:`TSUrlPasswordSet`
+:cpp:func:`TSUrlPathGet`
+:cpp:func:`TSUrlPathSet`
+:cpp:func:`TSUrlPortGet`
+:cpp:func:`TSUrlRawPortGet`
+:cpp:func:`TSUrlPortSet`
+:cpp:func:`TSUrlSchemeGet`
+:cpp:func:`TSUrlSchemeSet`
+:cpp:func:`TSUrlStringGet`
+:cpp:func:`TSUrlUserGet`
+:cpp:func:`TSUrlUserSet`

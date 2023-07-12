@@ -25,12 +25,12 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. c:function:: bool TSHttpTxnCntlGet(TSHttpTxn txnp, TSHttpCntlType ctrl)
-.. c:function:: TSReturnCode TSHttpTxnCntlSet(TSHttpTxn txnp, TSHttpCntlType cntl, bool data)
+.. cpp:function:: bool TSHttpTxnCntlGet(TSHttpTxn txnp, TSHttpCntlType ctrl)
+.. cpp:function:: TSReturnCode TSHttpTxnCntlSet(TSHttpTxn txnp, TSHttpCntlType cntl, bool data)
 
 Description
 -----------
 Set or Get the status of various control mechanisms within the HTTP transaction. The control
-type must be one of the values are identified by the enumeration :c:enum:`TSHttpCntlType`. The
+type must be one of the values are identified by the enumeration :cpp:enum:`TSHttpCntlType`. The
 values are boolean values, ``true`` and ``false``. A ``true`` values turns on the transaction
 feature, and the ``false`` value turns it off.

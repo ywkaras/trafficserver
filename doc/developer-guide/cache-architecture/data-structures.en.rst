@@ -137,11 +137,11 @@ Data Structures
 
    This represents a :term:`storage unit` inside a :term:`cache volume`.
 
-   .. cpp:member:: off_t data_blocks
+   .. member:: off_t data_blocks
 
       The number of blocks of storage in the stripe.
 
-   .. cpp:member:: int aggWrite(int event, void * e)
+   .. member:: int aggWrite(int event, void * e)
 
       Schedule the aggregation buffer to be written to disk.
 

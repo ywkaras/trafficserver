@@ -149,28 +149,28 @@ known schemes, since this removes the possibility of a spelling error.
 
 The **HTTP Header Functions** are listed below:
 
--  :c:func:`TSHttpHdrClone`
--  :c:func:`TSHttpHdrCopy`
--  :c:func:`TSHttpHdrCreate`
--  :c:func:`TSHttpHdrDestroy`
--  :c:func:`TSHttpHdrLengthGet`
--  :c:func:`TSHttpHdrMethodGet`
--  :c:func:`TSHttpHdrMethodSet`
--  :c:func:`TSHttpHdrPrint`
--  :c:func:`TSHttpHdrReasonGet`
--  :c:func:`TSHttpHdrReasonLookup`
--  :c:func:`TSHttpHdrReasonSet`
--  :c:func:`TSHttpHdrStatusGet`
--  :c:func:`TSHttpHdrStatusSet`
--  :c:func:`TSHttpHdrTypeGet`
--  :c:func:`TSHttpHdrTypeSet`
--  :c:func:`TSHttpHdrUrlGet`
--  :c:func:`TSHttpHdrUrlSet`
--  :c:func:`TSHttpHdrVersionGet`
--  :c:func:`TSHttpHdrVersionSet`
--  :c:func:`TSHttpParserClear`
--  :c:func:`TSHttpParserCreate`
--  :c:func:`TSHttpParserDestroy`
--  :c:func:`TSHttpHdrParseReq`
--  :c:func:`TSHttpHdrParseResp`
+-  :cpp:func:`TSHttpHdrClone`
+-  :cpp:func:`TSHttpHdrCopy`
+-  :cpp:func:`TSHttpHdrCreate`
+-  :cpp:func:`TSHttpHdrDestroy`
+-  :cpp:func:`TSHttpHdrLengthGet`
+-  :cpp:func:`TSHttpHdrMethodGet`
+-  :cpp:func:`TSHttpHdrMethodSet`
+-  :cpp:func:`TSHttpHdrPrint`
+-  :cpp:func:`TSHttpHdrReasonGet`
+-  :cpp:func:`TSHttpHdrReasonLookup`
+-  :cpp:func:`TSHttpHdrReasonSet`
+-  :cpp:func:`TSHttpHdrStatusGet`
+-  :cpp:func:`TSHttpHdrStatusSet`
+-  :cpp:func:`TSHttpHdrTypeGet`
+-  :cpp:func:`TSHttpHdrTypeSet`
+-  :cpp:func:`TSHttpHdrUrlGet`
+-  :cpp:func:`TSHttpHdrUrlSet`
+-  :cpp:func:`TSHttpHdrVersionGet`
+-  :cpp:func:`TSHttpHdrVersionSet`
+-  :cpp:func:`TSHttpParserClear`
+-  :cpp:func:`TSHttpParserCreate`
+-  :cpp:func:`TSHttpParserDestroy`
+-  :cpp:func:`TSHttpHdrParseReq`
+-  :cpp:func:`TSHttpHdrParseResp`
 

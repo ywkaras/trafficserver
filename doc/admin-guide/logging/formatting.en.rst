@@ -546,11 +546,11 @@ Field Source           Description
 piid  Proxy Plugin     Plugin ID for the current transaction. This is set for
                        plugin driven transactions via
                        :c:func:`TSHttpConnectWithPluginId`. or
-                       :c:func:`TSHttpConnectPlugin`.
+                       :cpp:func:`TSHttpConnectPlugin`.
 pitag Proxy Plugin     Plugin tag for the current transaction. This is set for
                        plugin driven transactions via
                        :c:func:`TSHttpConnectWithPluginId`. or
-                       :c:func:`TSHttpConnectPlugin`.
+                       :cpp:func:`TSHttpConnectPlugin`.
 cqint Client Request   If a request was generated internally (via a plugin), then
                        this has a value of ``1``, otherwise ``0``. This can be
                        useful when tracking internal only requests, such as those
@@ -798,7 +798,7 @@ tts   Client Request          Same as ttms_, but in integer seconds (no
         %<{Milestone field name1-Milestone field name2}msdms>
 
     For more information on transaction milestones in |TS|, refer to the
-    documentation on :c:func:`TSHttpTxnMilestoneGet`.
+    documentation on :cpp:func:`TSHttpTxnMilestoneGet`.
 
 .. _admin-logging-fields-urls:
 

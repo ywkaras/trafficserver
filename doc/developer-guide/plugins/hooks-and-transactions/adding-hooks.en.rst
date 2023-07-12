@@ -37,7 +37,7 @@ There are several ways to add hooks to your plugin.
 
 -  **Transformation hooks** Transformation hooks are a special case of
    transaction hooks. See
-   :c:func:`TSVConnCacheObjectSizeGet`
+   :cpp:func:`TSVConnCacheObjectSizeGet`
    for more information about transformation hooks. You add a
    transformation hook using ``TSHttpTxnHookAdd``, as described in
    :ref:`developer-plugins-hooks-http-transactions`.
@@ -58,9 +58,9 @@ There are several ways to add hooks to your plugin.
    information on the alternate selection mechanism.
 
 All of the hook addition functions
-(:c:func:`TSHttpHookAdd`,
-:c:func:`TSHttpSsnHookAdd`,
-:c:func:`TSHttpSsnReenable`)
+(:cpp:func:`TSHttpHookAdd`,
+:cpp:func:`TSHttpSsnHookAdd`,
+:cpp:func:`TSHttpSsnReenable`)
 take ``TSHttpHookID`` (identifies the hook to add on to) and ``TSCont``
 (the basic callback mechanism in Traffic Server). A single ``TSCont``
 can be added to any number of hooks at a time.
@@ -157,5 +157,5 @@ values for ``TSHttpHookID`` are:
     was left open for keep alive has new data available.
 
 The function you use to add a global HTTP hook is
-:c:func:`TSHttpHookAdd`.
+:cpp:func:`TSHttpHookAdd`.
 
