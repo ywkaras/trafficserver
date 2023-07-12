@@ -71,12 +71,12 @@ by other continuations).
 Locking Global Data
 ===================
 
-The :ref:`denylist-1.c` sample plugin implements a mutex that locks global
+The :ref:`denylist-1.cc` sample plugin implements a mutex that locks global
 data. The denylist plugin reads sites to be denied from a
 configuration file; file read operations are protected by a mutex
-created in :c:func:`TSPluginInit`. The :ref:`denylist-1.c` code uses
+created in :c:func:`TSPluginInit`. The :ref:`denylist-1.cc` code uses
 :c:func:`TSMutexLockTry` instead of :c:func:`TSMutexLock`. For more detailed
-information, see the :ref:`denylist-1.c` code;
+information, see the :ref:`denylist-1.cc` code;
 start by looking at the :c:func:`TSPluginInit` function.
 
 General guidelines for locking shared data are as follows:
@@ -104,7 +104,7 @@ accessed by other continuations or processes. Here's how:
 1. | Create a mutex for the continuation using ``TSMutexCreate``.
    | For example:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
        TSMutex mutexp;
        mutexp = TSMutexCreate ();
@@ -113,7 +113,7 @@ accessed by other continuations or processes. Here's how:
      continuation's mutex.
    | For example:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
        TSCont contp;
        contp = TSContCreate (handler, mutexp);
@@ -147,7 +147,7 @@ plugin continuation to be called back by HTTP transactions globally when
 they reach ``TS_HTTP_TXN_START_HOOK``. Refer to the example below, which
 uses a transaction-specific continuation called ``txn_contp``.
 
-.. code-block:: c
+.. code-block:: cpp
 
            void TSPluginInit(int argc, const char *argv[])
            {
@@ -166,7 +166,7 @@ In the plugin continuation handler, create the new continuation
 ``txn_contp`` and then register it to be called back at
 ``TS_HTTP_TXN_CLOSE_HOOK``:
 
-.. code-block:: c
+.. code-block:: cpp
 
            static int plugin_cont_handler(TSCont contp, TSEvent event, void *edata)
            {
@@ -201,7 +201,7 @@ Remember that the ``txn_contp`` handler must destroy itself when the
 HTTP transaction is closed. If you forget to do this, then your plugin
 will have a memory leak.
 
-.. code-block:: c
+.. code-block:: cpp
 
 
            static int txn_cont_handler(TSCont txn_contp, TSEvent event, void *edata)
@@ -232,7 +232,7 @@ For the example above, store the data in the ``txn_contp`` data
 structure - this means that you'll create your own data structure. Now
 suppose you want to store the state of the HTTP transaction:
 
-.. code-block:: c
+.. code-block:: cpp
 
        typedef struct {
              int state;
@@ -242,7 +242,7 @@ You need to allocate the memory and initialize this structure for each
 HTTP ``txnp``. You can do that in the plugin continuation handler when
 it is called back with ``TS_EVENT_HTTP_TXN_START``
 
-.. code-block:: c
+.. code-block:: cpp
 
            static int plugin_cont_handler(TSCont contp, TSEvent event, void *edata)
            {
@@ -283,7 +283,7 @@ it is called back with ``TS_EVENT_HTTP_TXN_START``
 
 For accessing this data from anywhere, use TSContDataGet:
 
-.. code-block:: c
+.. code-block:: cpp
 
            TSCont txn_contp;
            ContData *contData;
@@ -296,7 +296,7 @@ For accessing this data from anywhere, use TSContDataGet:
 
 Remember to free this memory before destroying the continuation:
 
-.. code-block:: c
+.. code-block:: cpp
 
            static int txn_cont_handler(TSCont txn_contp, TSEvent event, void *edata)
            {
@@ -361,7 +361,7 @@ HTTP transaction (``TSHttpTxn`` object) already has its own mutex.
 In the example below, it's not necessary to specify a mutex for the
 continuation created in ``txn_handler``:
 
-.. code-block:: c
+.. code-block:: cpp
 
     static void
     txn_handler (TSHttpTxn txnp, TSCont contp) {

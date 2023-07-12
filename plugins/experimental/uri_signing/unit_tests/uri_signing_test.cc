@@ -26,12 +26,13 @@
 extern "C" {
 #include <jansson.h>
 #include <cjose/cjose.h>
+}
+
 #include "../jwt.h"
 #include "../normalize.h"
 #include "../parse.h"
 #include "../match.h"
 #include "../config.h"
-}
 
 static char const *const testConfig =
   R"(

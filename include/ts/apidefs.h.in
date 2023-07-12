@@ -47,10 +47,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#ifndef tsapi
-#define tsapi
-#endif
-
 /** Apply printf format string compile-time argument checking to a function.
  *
  *
@@ -120,10 +116,6 @@
 #define TS_NORETURN
 #endif
 #endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* Version info
  */
@@ -1119,308 +1111,308 @@ typedef struct TSDbgCtl_s {
       plugin.config.
 
  */
-extern tsapi void TSPluginInit(int argc, const char *argv[]);
+extern void TSPluginInit(int argc, const char *argv[]);
 
 /* --------------------------------------------------------------------------
    URL schemes */
-extern tsapi const char *TS_URL_SCHEME_FILE;
-extern tsapi const char *TS_URL_SCHEME_FTP;
-extern tsapi const char *TS_URL_SCHEME_GOPHER;
-extern tsapi const char *TS_URL_SCHEME_HTTP;
-extern tsapi const char *TS_URL_SCHEME_HTTPS;
-extern tsapi const char *TS_URL_SCHEME_MAILTO;
-extern tsapi const char *TS_URL_SCHEME_NEWS;
-extern tsapi const char *TS_URL_SCHEME_NNTP;
-extern tsapi const char *TS_URL_SCHEME_PROSPERO;
-extern tsapi const char *TS_URL_SCHEME_TELNET;
-extern tsapi const char *TS_URL_SCHEME_TUNNEL;
-extern tsapi const char *TS_URL_SCHEME_WAIS;
-extern tsapi const char *TS_URL_SCHEME_PNM;
-extern tsapi const char *TS_URL_SCHEME_RTSP;
-extern tsapi const char *TS_URL_SCHEME_RTSPU;
-extern tsapi const char *TS_URL_SCHEME_MMS;
-extern tsapi const char *TS_URL_SCHEME_MMSU;
-extern tsapi const char *TS_URL_SCHEME_MMST;
-extern tsapi const char *TS_URL_SCHEME_WS;
-extern tsapi const char *TS_URL_SCHEME_WSS;
+extern const char *TS_URL_SCHEME_FILE;
+extern const char *TS_URL_SCHEME_FTP;
+extern const char *TS_URL_SCHEME_GOPHER;
+extern const char *TS_URL_SCHEME_HTTP;
+extern const char *TS_URL_SCHEME_HTTPS;
+extern const char *TS_URL_SCHEME_MAILTO;
+extern const char *TS_URL_SCHEME_NEWS;
+extern const char *TS_URL_SCHEME_NNTP;
+extern const char *TS_URL_SCHEME_PROSPERO;
+extern const char *TS_URL_SCHEME_TELNET;
+extern const char *TS_URL_SCHEME_TUNNEL;
+extern const char *TS_URL_SCHEME_WAIS;
+extern const char *TS_URL_SCHEME_PNM;
+extern const char *TS_URL_SCHEME_RTSP;
+extern const char *TS_URL_SCHEME_RTSPU;
+extern const char *TS_URL_SCHEME_MMS;
+extern const char *TS_URL_SCHEME_MMSU;
+extern const char *TS_URL_SCHEME_MMST;
+extern const char *TS_URL_SCHEME_WS;
+extern const char *TS_URL_SCHEME_WSS;
 
 /* --------------------------------------------------------------------------
    URL scheme string lengths */
-extern tsapi int TS_URL_LEN_FILE;
-extern tsapi int TS_URL_LEN_FTP;
-extern tsapi int TS_URL_LEN_GOPHER;
-extern tsapi int TS_URL_LEN_HTTP;
-extern tsapi int TS_URL_LEN_HTTPS;
-extern tsapi int TS_URL_LEN_MAILTO;
-extern tsapi int TS_URL_LEN_NEWS;
-extern tsapi int TS_URL_LEN_NNTP;
-extern tsapi int TS_URL_LEN_PROSPERO;
-extern tsapi int TS_URL_LEN_TELNET;
-extern tsapi int TS_URL_LEN_WAIS;
-extern tsapi int TS_URL_LEN_WS;
-extern tsapi int TS_URL_LEN_WSS;
+extern int TS_URL_LEN_FILE;
+extern int TS_URL_LEN_FTP;
+extern int TS_URL_LEN_GOPHER;
+extern int TS_URL_LEN_HTTP;
+extern int TS_URL_LEN_HTTPS;
+extern int TS_URL_LEN_MAILTO;
+extern int TS_URL_LEN_NEWS;
+extern int TS_URL_LEN_NNTP;
+extern int TS_URL_LEN_PROSPERO;
+extern int TS_URL_LEN_TELNET;
+extern int TS_URL_LEN_WAIS;
+extern int TS_URL_LEN_WS;
+extern int TS_URL_LEN_WSS;
 
 /* --------------------------------------------------------------------------
    MIME fields */
-extern tsapi const char *TS_MIME_FIELD_ACCEPT;
-extern tsapi const char *TS_MIME_FIELD_ACCEPT_CHARSET;
-extern tsapi const char *TS_MIME_FIELD_ACCEPT_ENCODING;
-extern tsapi const char *TS_MIME_FIELD_ACCEPT_LANGUAGE;
-extern tsapi const char *TS_MIME_FIELD_ACCEPT_RANGES;
-extern tsapi const char *TS_MIME_FIELD_AGE;
-extern tsapi const char *TS_MIME_FIELD_ALLOW;
-extern tsapi const char *TS_MIME_FIELD_APPROVED;
-extern tsapi const char *TS_MIME_FIELD_AUTHORIZATION;
-extern tsapi const char *TS_MIME_FIELD_BYTES;
-extern tsapi const char *TS_MIME_FIELD_CACHE_CONTROL;
-extern tsapi const char *TS_MIME_FIELD_CLIENT_IP;
-extern tsapi const char *TS_MIME_FIELD_CONNECTION;
-extern tsapi const char *TS_MIME_FIELD_CONTENT_BASE;
-extern tsapi const char *TS_MIME_FIELD_CONTENT_ENCODING;
-extern tsapi const char *TS_MIME_FIELD_CONTENT_LANGUAGE;
-extern tsapi const char *TS_MIME_FIELD_CONTENT_LENGTH;
-extern tsapi const char *TS_MIME_FIELD_CONTENT_LOCATION;
-extern tsapi const char *TS_MIME_FIELD_CONTENT_MD5;
-extern tsapi const char *TS_MIME_FIELD_CONTENT_RANGE;
-extern tsapi const char *TS_MIME_FIELD_CONTENT_TYPE;
-extern tsapi const char *TS_MIME_FIELD_CONTROL;
-extern tsapi const char *TS_MIME_FIELD_COOKIE;
-extern tsapi const char *TS_MIME_FIELD_DATE;
-extern tsapi const char *TS_MIME_FIELD_DISTRIBUTION;
-extern tsapi const char *TS_MIME_FIELD_ETAG;
-extern tsapi const char *TS_MIME_FIELD_EXPECT;
-extern tsapi const char *TS_MIME_FIELD_EXPIRES;
-extern tsapi const char *TS_MIME_FIELD_FOLLOWUP_TO;
-extern tsapi const char *TS_MIME_FIELD_FROM;
-extern tsapi const char *TS_MIME_FIELD_HOST;
-extern tsapi const char *TS_MIME_FIELD_IF_MATCH;
-extern tsapi const char *TS_MIME_FIELD_IF_MODIFIED_SINCE;
-extern tsapi const char *TS_MIME_FIELD_IF_NONE_MATCH;
-extern tsapi const char *TS_MIME_FIELD_IF_RANGE;
-extern tsapi const char *TS_MIME_FIELD_IF_UNMODIFIED_SINCE;
-extern tsapi const char *TS_MIME_FIELD_KEEP_ALIVE;
-extern tsapi const char *TS_MIME_FIELD_KEYWORDS;
-extern tsapi const char *TS_MIME_FIELD_LAST_MODIFIED;
-extern tsapi const char *TS_MIME_FIELD_LINES;
-extern tsapi const char *TS_MIME_FIELD_LOCATION;
-extern tsapi const char *TS_MIME_FIELD_MAX_FORWARDS;
-extern tsapi const char *TS_MIME_FIELD_MESSAGE_ID;
-extern tsapi const char *TS_MIME_FIELD_NEWSGROUPS;
-extern tsapi const char *TS_MIME_FIELD_ORGANIZATION;
-extern tsapi const char *TS_MIME_FIELD_PATH;
-extern tsapi const char *TS_MIME_FIELD_PRAGMA;
-extern tsapi const char *TS_MIME_FIELD_PROXY_AUTHENTICATE;
-extern tsapi const char *TS_MIME_FIELD_PROXY_AUTHORIZATION;
-extern tsapi const char *TS_MIME_FIELD_PROXY_CONNECTION;
-extern tsapi const char *TS_MIME_FIELD_PUBLIC;
-extern tsapi const char *TS_MIME_FIELD_RANGE;
-extern tsapi const char *TS_MIME_FIELD_REFERENCES;
-extern tsapi const char *TS_MIME_FIELD_REFERER;
-extern tsapi const char *TS_MIME_FIELD_REPLY_TO;
-extern tsapi const char *TS_MIME_FIELD_RETRY_AFTER;
-extern tsapi const char *TS_MIME_FIELD_SENDER;
-extern tsapi const char *TS_MIME_FIELD_SERVER;
-extern tsapi const char *TS_MIME_FIELD_SET_COOKIE;
-extern tsapi const char *TS_MIME_FIELD_STRICT_TRANSPORT_SECURITY;
-extern tsapi const char *TS_MIME_FIELD_SUBJECT;
-extern tsapi const char *TS_MIME_FIELD_SUMMARY;
-extern tsapi const char *TS_MIME_FIELD_TE;
-extern tsapi const char *TS_MIME_FIELD_TRANSFER_ENCODING;
-extern tsapi const char *TS_MIME_FIELD_UPGRADE;
-extern tsapi const char *TS_MIME_FIELD_USER_AGENT;
-extern tsapi const char *TS_MIME_FIELD_VARY;
-extern tsapi const char *TS_MIME_FIELD_VIA;
-extern tsapi const char *TS_MIME_FIELD_WARNING;
-extern tsapi const char *TS_MIME_FIELD_WWW_AUTHENTICATE;
-extern tsapi const char *TS_MIME_FIELD_XREF;
-extern tsapi const char *TS_MIME_FIELD_X_FORWARDED_FOR;
-extern tsapi const char *TS_MIME_FIELD_FORWARDED;
+extern const char *TS_MIME_FIELD_ACCEPT;
+extern const char *TS_MIME_FIELD_ACCEPT_CHARSET;
+extern const char *TS_MIME_FIELD_ACCEPT_ENCODING;
+extern const char *TS_MIME_FIELD_ACCEPT_LANGUAGE;
+extern const char *TS_MIME_FIELD_ACCEPT_RANGES;
+extern const char *TS_MIME_FIELD_AGE;
+extern const char *TS_MIME_FIELD_ALLOW;
+extern const char *TS_MIME_FIELD_APPROVED;
+extern const char *TS_MIME_FIELD_AUTHORIZATION;
+extern const char *TS_MIME_FIELD_BYTES;
+extern const char *TS_MIME_FIELD_CACHE_CONTROL;
+extern const char *TS_MIME_FIELD_CLIENT_IP;
+extern const char *TS_MIME_FIELD_CONNECTION;
+extern const char *TS_MIME_FIELD_CONTENT_BASE;
+extern const char *TS_MIME_FIELD_CONTENT_ENCODING;
+extern const char *TS_MIME_FIELD_CONTENT_LANGUAGE;
+extern const char *TS_MIME_FIELD_CONTENT_LENGTH;
+extern const char *TS_MIME_FIELD_CONTENT_LOCATION;
+extern const char *TS_MIME_FIELD_CONTENT_MD5;
+extern const char *TS_MIME_FIELD_CONTENT_RANGE;
+extern const char *TS_MIME_FIELD_CONTENT_TYPE;
+extern const char *TS_MIME_FIELD_CONTROL;
+extern const char *TS_MIME_FIELD_COOKIE;
+extern const char *TS_MIME_FIELD_DATE;
+extern const char *TS_MIME_FIELD_DISTRIBUTION;
+extern const char *TS_MIME_FIELD_ETAG;
+extern const char *TS_MIME_FIELD_EXPECT;
+extern const char *TS_MIME_FIELD_EXPIRES;
+extern const char *TS_MIME_FIELD_FOLLOWUP_TO;
+extern const char *TS_MIME_FIELD_FROM;
+extern const char *TS_MIME_FIELD_HOST;
+extern const char *TS_MIME_FIELD_IF_MATCH;
+extern const char *TS_MIME_FIELD_IF_MODIFIED_SINCE;
+extern const char *TS_MIME_FIELD_IF_NONE_MATCH;
+extern const char *TS_MIME_FIELD_IF_RANGE;
+extern const char *TS_MIME_FIELD_IF_UNMODIFIED_SINCE;
+extern const char *TS_MIME_FIELD_KEEP_ALIVE;
+extern const char *TS_MIME_FIELD_KEYWORDS;
+extern const char *TS_MIME_FIELD_LAST_MODIFIED;
+extern const char *TS_MIME_FIELD_LINES;
+extern const char *TS_MIME_FIELD_LOCATION;
+extern const char *TS_MIME_FIELD_MAX_FORWARDS;
+extern const char *TS_MIME_FIELD_MESSAGE_ID;
+extern const char *TS_MIME_FIELD_NEWSGROUPS;
+extern const char *TS_MIME_FIELD_ORGANIZATION;
+extern const char *TS_MIME_FIELD_PATH;
+extern const char *TS_MIME_FIELD_PRAGMA;
+extern const char *TS_MIME_FIELD_PROXY_AUTHENTICATE;
+extern const char *TS_MIME_FIELD_PROXY_AUTHORIZATION;
+extern const char *TS_MIME_FIELD_PROXY_CONNECTION;
+extern const char *TS_MIME_FIELD_PUBLIC;
+extern const char *TS_MIME_FIELD_RANGE;
+extern const char *TS_MIME_FIELD_REFERENCES;
+extern const char *TS_MIME_FIELD_REFERER;
+extern const char *TS_MIME_FIELD_REPLY_TO;
+extern const char *TS_MIME_FIELD_RETRY_AFTER;
+extern const char *TS_MIME_FIELD_SENDER;
+extern const char *TS_MIME_FIELD_SERVER;
+extern const char *TS_MIME_FIELD_SET_COOKIE;
+extern const char *TS_MIME_FIELD_STRICT_TRANSPORT_SECURITY;
+extern const char *TS_MIME_FIELD_SUBJECT;
+extern const char *TS_MIME_FIELD_SUMMARY;
+extern const char *TS_MIME_FIELD_TE;
+extern const char *TS_MIME_FIELD_TRANSFER_ENCODING;
+extern const char *TS_MIME_FIELD_UPGRADE;
+extern const char *TS_MIME_FIELD_USER_AGENT;
+extern const char *TS_MIME_FIELD_VARY;
+extern const char *TS_MIME_FIELD_VIA;
+extern const char *TS_MIME_FIELD_WARNING;
+extern const char *TS_MIME_FIELD_WWW_AUTHENTICATE;
+extern const char *TS_MIME_FIELD_XREF;
+extern const char *TS_MIME_FIELD_X_FORWARDED_FOR;
+extern const char *TS_MIME_FIELD_FORWARDED;
 
 /* --------------------------------------------------------------------------
    MIME fields string lengths */
-extern tsapi int TS_MIME_LEN_ACCEPT;
-extern tsapi int TS_MIME_LEN_ACCEPT_CHARSET;
-extern tsapi int TS_MIME_LEN_ACCEPT_ENCODING;
-extern tsapi int TS_MIME_LEN_ACCEPT_LANGUAGE;
-extern tsapi int TS_MIME_LEN_ACCEPT_RANGES;
-extern tsapi int TS_MIME_LEN_AGE;
-extern tsapi int TS_MIME_LEN_ALLOW;
-extern tsapi int TS_MIME_LEN_APPROVED;
-extern tsapi int TS_MIME_LEN_AUTHORIZATION;
-extern tsapi int TS_MIME_LEN_BYTES;
-extern tsapi int TS_MIME_LEN_CACHE_CONTROL;
-extern tsapi int TS_MIME_LEN_CLIENT_IP;
-extern tsapi int TS_MIME_LEN_CONNECTION;
-extern tsapi int TS_MIME_LEN_CONTENT_BASE;
-extern tsapi int TS_MIME_LEN_CONTENT_ENCODING;
-extern tsapi int TS_MIME_LEN_CONTENT_LANGUAGE;
-extern tsapi int TS_MIME_LEN_CONTENT_LENGTH;
-extern tsapi int TS_MIME_LEN_CONTENT_LOCATION;
-extern tsapi int TS_MIME_LEN_CONTENT_MD5;
-extern tsapi int TS_MIME_LEN_CONTENT_RANGE;
-extern tsapi int TS_MIME_LEN_CONTENT_TYPE;
-extern tsapi int TS_MIME_LEN_CONTROL;
-extern tsapi int TS_MIME_LEN_COOKIE;
-extern tsapi int TS_MIME_LEN_DATE;
-extern tsapi int TS_MIME_LEN_DISTRIBUTION;
-extern tsapi int TS_MIME_LEN_ETAG;
-extern tsapi int TS_MIME_LEN_EXPECT;
-extern tsapi int TS_MIME_LEN_EXPIRES;
-extern tsapi int TS_MIME_LEN_FOLLOWUP_TO;
-extern tsapi int TS_MIME_LEN_FROM;
-extern tsapi int TS_MIME_LEN_HOST;
-extern tsapi int TS_MIME_LEN_IF_MATCH;
-extern tsapi int TS_MIME_LEN_IF_MODIFIED_SINCE;
-extern tsapi int TS_MIME_LEN_IF_NONE_MATCH;
-extern tsapi int TS_MIME_LEN_IF_RANGE;
-extern tsapi int TS_MIME_LEN_IF_UNMODIFIED_SINCE;
-extern tsapi int TS_MIME_LEN_KEEP_ALIVE;
-extern tsapi int TS_MIME_LEN_KEYWORDS;
-extern tsapi int TS_MIME_LEN_LAST_MODIFIED;
-extern tsapi int TS_MIME_LEN_LINES;
-extern tsapi int TS_MIME_LEN_LOCATION;
-extern tsapi int TS_MIME_LEN_MAX_FORWARDS;
-extern tsapi int TS_MIME_LEN_MESSAGE_ID;
-extern tsapi int TS_MIME_LEN_NEWSGROUPS;
-extern tsapi int TS_MIME_LEN_ORGANIZATION;
-extern tsapi int TS_MIME_LEN_PATH;
-extern tsapi int TS_MIME_LEN_PRAGMA;
-extern tsapi int TS_MIME_LEN_PROXY_AUTHENTICATE;
-extern tsapi int TS_MIME_LEN_PROXY_AUTHORIZATION;
-extern tsapi int TS_MIME_LEN_PROXY_CONNECTION;
-extern tsapi int TS_MIME_LEN_PUBLIC;
-extern tsapi int TS_MIME_LEN_RANGE;
-extern tsapi int TS_MIME_LEN_REFERENCES;
-extern tsapi int TS_MIME_LEN_REFERER;
-extern tsapi int TS_MIME_LEN_REPLY_TO;
-extern tsapi int TS_MIME_LEN_RETRY_AFTER;
-extern tsapi int TS_MIME_LEN_SENDER;
-extern tsapi int TS_MIME_LEN_SERVER;
-extern tsapi int TS_MIME_LEN_SET_COOKIE;
-extern tsapi int TS_MIME_LEN_STRICT_TRANSPORT_SECURITY;
-extern tsapi int TS_MIME_LEN_SUBJECT;
-extern tsapi int TS_MIME_LEN_SUMMARY;
-extern tsapi int TS_MIME_LEN_TE;
-extern tsapi int TS_MIME_LEN_TRANSFER_ENCODING;
-extern tsapi int TS_MIME_LEN_UPGRADE;
-extern tsapi int TS_MIME_LEN_USER_AGENT;
-extern tsapi int TS_MIME_LEN_VARY;
-extern tsapi int TS_MIME_LEN_VIA;
-extern tsapi int TS_MIME_LEN_WARNING;
-extern tsapi int TS_MIME_LEN_WWW_AUTHENTICATE;
-extern tsapi int TS_MIME_LEN_XREF;
-extern tsapi int TS_MIME_LEN_X_FORWARDED_FOR;
-extern tsapi int TS_MIME_LEN_FORWARDED;
+extern int TS_MIME_LEN_ACCEPT;
+extern int TS_MIME_LEN_ACCEPT_CHARSET;
+extern int TS_MIME_LEN_ACCEPT_ENCODING;
+extern int TS_MIME_LEN_ACCEPT_LANGUAGE;
+extern int TS_MIME_LEN_ACCEPT_RANGES;
+extern int TS_MIME_LEN_AGE;
+extern int TS_MIME_LEN_ALLOW;
+extern int TS_MIME_LEN_APPROVED;
+extern int TS_MIME_LEN_AUTHORIZATION;
+extern int TS_MIME_LEN_BYTES;
+extern int TS_MIME_LEN_CACHE_CONTROL;
+extern int TS_MIME_LEN_CLIENT_IP;
+extern int TS_MIME_LEN_CONNECTION;
+extern int TS_MIME_LEN_CONTENT_BASE;
+extern int TS_MIME_LEN_CONTENT_ENCODING;
+extern int TS_MIME_LEN_CONTENT_LANGUAGE;
+extern int TS_MIME_LEN_CONTENT_LENGTH;
+extern int TS_MIME_LEN_CONTENT_LOCATION;
+extern int TS_MIME_LEN_CONTENT_MD5;
+extern int TS_MIME_LEN_CONTENT_RANGE;
+extern int TS_MIME_LEN_CONTENT_TYPE;
+extern int TS_MIME_LEN_CONTROL;
+extern int TS_MIME_LEN_COOKIE;
+extern int TS_MIME_LEN_DATE;
+extern int TS_MIME_LEN_DISTRIBUTION;
+extern int TS_MIME_LEN_ETAG;
+extern int TS_MIME_LEN_EXPECT;
+extern int TS_MIME_LEN_EXPIRES;
+extern int TS_MIME_LEN_FOLLOWUP_TO;
+extern int TS_MIME_LEN_FROM;
+extern int TS_MIME_LEN_HOST;
+extern int TS_MIME_LEN_IF_MATCH;
+extern int TS_MIME_LEN_IF_MODIFIED_SINCE;
+extern int TS_MIME_LEN_IF_NONE_MATCH;
+extern int TS_MIME_LEN_IF_RANGE;
+extern int TS_MIME_LEN_IF_UNMODIFIED_SINCE;
+extern int TS_MIME_LEN_KEEP_ALIVE;
+extern int TS_MIME_LEN_KEYWORDS;
+extern int TS_MIME_LEN_LAST_MODIFIED;
+extern int TS_MIME_LEN_LINES;
+extern int TS_MIME_LEN_LOCATION;
+extern int TS_MIME_LEN_MAX_FORWARDS;
+extern int TS_MIME_LEN_MESSAGE_ID;
+extern int TS_MIME_LEN_NEWSGROUPS;
+extern int TS_MIME_LEN_ORGANIZATION;
+extern int TS_MIME_LEN_PATH;
+extern int TS_MIME_LEN_PRAGMA;
+extern int TS_MIME_LEN_PROXY_AUTHENTICATE;
+extern int TS_MIME_LEN_PROXY_AUTHORIZATION;
+extern int TS_MIME_LEN_PROXY_CONNECTION;
+extern int TS_MIME_LEN_PUBLIC;
+extern int TS_MIME_LEN_RANGE;
+extern int TS_MIME_LEN_REFERENCES;
+extern int TS_MIME_LEN_REFERER;
+extern int TS_MIME_LEN_REPLY_TO;
+extern int TS_MIME_LEN_RETRY_AFTER;
+extern int TS_MIME_LEN_SENDER;
+extern int TS_MIME_LEN_SERVER;
+extern int TS_MIME_LEN_SET_COOKIE;
+extern int TS_MIME_LEN_STRICT_TRANSPORT_SECURITY;
+extern int TS_MIME_LEN_SUBJECT;
+extern int TS_MIME_LEN_SUMMARY;
+extern int TS_MIME_LEN_TE;
+extern int TS_MIME_LEN_TRANSFER_ENCODING;
+extern int TS_MIME_LEN_UPGRADE;
+extern int TS_MIME_LEN_USER_AGENT;
+extern int TS_MIME_LEN_VARY;
+extern int TS_MIME_LEN_VIA;
+extern int TS_MIME_LEN_WARNING;
+extern int TS_MIME_LEN_WWW_AUTHENTICATE;
+extern int TS_MIME_LEN_XREF;
+extern int TS_MIME_LEN_X_FORWARDED_FOR;
+extern int TS_MIME_LEN_FORWARDED;
 
 /* --------------------------------------------------------------------------
    HTTP values */
-extern tsapi const char *TS_HTTP_VALUE_BYTES;
-extern tsapi const char *TS_HTTP_VALUE_CHUNKED;
-extern tsapi const char *TS_HTTP_VALUE_CLOSE;
-extern tsapi const char *TS_HTTP_VALUE_COMPRESS;
-extern tsapi const char *TS_HTTP_VALUE_DEFLATE;
-extern tsapi const char *TS_HTTP_VALUE_GZIP;
-extern tsapi const char *TS_HTTP_VALUE_BROTLI;
-extern tsapi const char *TS_HTTP_VALUE_IDENTITY;
-extern tsapi const char *TS_HTTP_VALUE_KEEP_ALIVE;
-extern tsapi const char *TS_HTTP_VALUE_MAX_AGE;
-extern tsapi const char *TS_HTTP_VALUE_MAX_STALE;
-extern tsapi const char *TS_HTTP_VALUE_MIN_FRESH;
-extern tsapi const char *TS_HTTP_VALUE_MUST_REVALIDATE;
-extern tsapi const char *TS_HTTP_VALUE_NONE;
-extern tsapi const char *TS_HTTP_VALUE_NO_CACHE;
-extern tsapi const char *TS_HTTP_VALUE_NO_STORE;
-extern tsapi const char *TS_HTTP_VALUE_NO_TRANSFORM;
-extern tsapi const char *TS_HTTP_VALUE_ONLY_IF_CACHED;
-extern tsapi const char *TS_HTTP_VALUE_PRIVATE;
-extern tsapi const char *TS_HTTP_VALUE_PROXY_REVALIDATE;
-extern tsapi const char *TS_HTTP_VALUE_PUBLIC;
+extern const char *TS_HTTP_VALUE_BYTES;
+extern const char *TS_HTTP_VALUE_CHUNKED;
+extern const char *TS_HTTP_VALUE_CLOSE;
+extern const char *TS_HTTP_VALUE_COMPRESS;
+extern const char *TS_HTTP_VALUE_DEFLATE;
+extern const char *TS_HTTP_VALUE_GZIP;
+extern const char *TS_HTTP_VALUE_BROTLI;
+extern const char *TS_HTTP_VALUE_IDENTITY;
+extern const char *TS_HTTP_VALUE_KEEP_ALIVE;
+extern const char *TS_HTTP_VALUE_MAX_AGE;
+extern const char *TS_HTTP_VALUE_MAX_STALE;
+extern const char *TS_HTTP_VALUE_MIN_FRESH;
+extern const char *TS_HTTP_VALUE_MUST_REVALIDATE;
+extern const char *TS_HTTP_VALUE_NONE;
+extern const char *TS_HTTP_VALUE_NO_CACHE;
+extern const char *TS_HTTP_VALUE_NO_STORE;
+extern const char *TS_HTTP_VALUE_NO_TRANSFORM;
+extern const char *TS_HTTP_VALUE_ONLY_IF_CACHED;
+extern const char *TS_HTTP_VALUE_PRIVATE;
+extern const char *TS_HTTP_VALUE_PROXY_REVALIDATE;
+extern const char *TS_HTTP_VALUE_PUBLIC;
 
 /* --------------------------------------------------------------------------
    HTTP values string lengths */
-extern tsapi int TS_HTTP_LEN_BYTES;
-extern tsapi int TS_HTTP_LEN_CHUNKED;
-extern tsapi int TS_HTTP_LEN_CLOSE;
-extern tsapi int TS_HTTP_LEN_COMPRESS;
-extern tsapi int TS_HTTP_LEN_DEFLATE;
-extern tsapi int TS_HTTP_LEN_GZIP;
-extern tsapi int TS_HTTP_LEN_BROTLI;
-extern tsapi int TS_HTTP_LEN_IDENTITY;
-extern tsapi int TS_HTTP_LEN_KEEP_ALIVE;
-extern tsapi int TS_HTTP_LEN_MAX_AGE;
-extern tsapi int TS_HTTP_LEN_MAX_STALE;
-extern tsapi int TS_HTTP_LEN_MIN_FRESH;
-extern tsapi int TS_HTTP_LEN_MUST_REVALIDATE;
-extern tsapi int TS_HTTP_LEN_NONE;
-extern tsapi int TS_HTTP_LEN_NO_CACHE;
-extern tsapi int TS_HTTP_LEN_NO_STORE;
-extern tsapi int TS_HTTP_LEN_NO_TRANSFORM;
-extern tsapi int TS_HTTP_LEN_ONLY_IF_CACHED;
-extern tsapi int TS_HTTP_LEN_PRIVATE;
-extern tsapi int TS_HTTP_LEN_PROXY_REVALIDATE;
-extern tsapi int TS_HTTP_LEN_PUBLIC;
+extern int TS_HTTP_LEN_BYTES;
+extern int TS_HTTP_LEN_CHUNKED;
+extern int TS_HTTP_LEN_CLOSE;
+extern int TS_HTTP_LEN_COMPRESS;
+extern int TS_HTTP_LEN_DEFLATE;
+extern int TS_HTTP_LEN_GZIP;
+extern int TS_HTTP_LEN_BROTLI;
+extern int TS_HTTP_LEN_IDENTITY;
+extern int TS_HTTP_LEN_KEEP_ALIVE;
+extern int TS_HTTP_LEN_MAX_AGE;
+extern int TS_HTTP_LEN_MAX_STALE;
+extern int TS_HTTP_LEN_MIN_FRESH;
+extern int TS_HTTP_LEN_MUST_REVALIDATE;
+extern int TS_HTTP_LEN_NONE;
+extern int TS_HTTP_LEN_NO_CACHE;
+extern int TS_HTTP_LEN_NO_STORE;
+extern int TS_HTTP_LEN_NO_TRANSFORM;
+extern int TS_HTTP_LEN_ONLY_IF_CACHED;
+extern int TS_HTTP_LEN_PRIVATE;
+extern int TS_HTTP_LEN_PROXY_REVALIDATE;
+extern int TS_HTTP_LEN_PUBLIC;
 
 /* --------------------------------------------------------------------------
    HTTP methods */
-extern tsapi const char *TS_HTTP_METHOD_CONNECT;
-extern tsapi const char *TS_HTTP_METHOD_DELETE;
-extern tsapi const char *TS_HTTP_METHOD_GET;
-extern tsapi const char *TS_HTTP_METHOD_HEAD;
-extern tsapi const char *TS_HTTP_METHOD_OPTIONS;
-extern tsapi const char *TS_HTTP_METHOD_POST;
-extern tsapi const char *TS_HTTP_METHOD_PURGE;
-extern tsapi const char *TS_HTTP_METHOD_PUT;
-extern tsapi const char *TS_HTTP_METHOD_TRACE;
-extern tsapi const char *TS_HTTP_METHOD_PUSH;
+extern const char *TS_HTTP_METHOD_CONNECT;
+extern const char *TS_HTTP_METHOD_DELETE;
+extern const char *TS_HTTP_METHOD_GET;
+extern const char *TS_HTTP_METHOD_HEAD;
+extern const char *TS_HTTP_METHOD_OPTIONS;
+extern const char *TS_HTTP_METHOD_POST;
+extern const char *TS_HTTP_METHOD_PURGE;
+extern const char *TS_HTTP_METHOD_PUT;
+extern const char *TS_HTTP_METHOD_TRACE;
+extern const char *TS_HTTP_METHOD_PUSH;
 
 /* --------------------------------------------------------------------------
    HTTP methods string lengths */
-extern tsapi int TS_HTTP_LEN_CONNECT;
-extern tsapi int TS_HTTP_LEN_DELETE;
-extern tsapi int TS_HTTP_LEN_GET;
-extern tsapi int TS_HTTP_LEN_HEAD;
-extern tsapi int TS_HTTP_LEN_OPTIONS;
-extern tsapi int TS_HTTP_LEN_POST;
-extern tsapi int TS_HTTP_LEN_PURGE;
-extern tsapi int TS_HTTP_LEN_PUT;
-extern tsapi int TS_HTTP_LEN_TRACE;
-extern tsapi int TS_HTTP_LEN_PUSH;
+extern int TS_HTTP_LEN_CONNECT;
+extern int TS_HTTP_LEN_DELETE;
+extern int TS_HTTP_LEN_GET;
+extern int TS_HTTP_LEN_HEAD;
+extern int TS_HTTP_LEN_OPTIONS;
+extern int TS_HTTP_LEN_POST;
+extern int TS_HTTP_LEN_PURGE;
+extern int TS_HTTP_LEN_PUT;
+extern int TS_HTTP_LEN_TRACE;
+extern int TS_HTTP_LEN_PUSH;
 
 /* --------------------------------------------------------------------------
    TLS Next Protocol well-known protocol names. */
 
-extern tsapi const char *const TS_ALPN_PROTOCOL_HTTP_0_9;
-extern tsapi const char *const TS_ALPN_PROTOCOL_HTTP_1_0;
-extern tsapi const char *const TS_ALPN_PROTOCOL_HTTP_1_1;
-extern tsapi const char *const TS_ALPN_PROTOCOL_HTTP_2_0;
-extern tsapi const char *const TS_ALPN_PROTOCOL_HTTP_3;
-extern tsapi const char *const TS_ALPN_PROTOCOL_HTTP_3_D29;
-extern tsapi const char *const TS_ALPN_PROTOCOL_HTTP_QUIC;
-extern tsapi const char *const TS_ALPN_PROTOCOL_HTTP_QUIC_D29;
+extern const char *const TS_ALPN_PROTOCOL_HTTP_0_9;
+extern const char *const TS_ALPN_PROTOCOL_HTTP_1_0;
+extern const char *const TS_ALPN_PROTOCOL_HTTP_1_1;
+extern const char *const TS_ALPN_PROTOCOL_HTTP_2_0;
+extern const char *const TS_ALPN_PROTOCOL_HTTP_3;
+extern const char *const TS_ALPN_PROTOCOL_HTTP_3_D29;
+extern const char *const TS_ALPN_PROTOCOL_HTTP_QUIC;
+extern const char *const TS_ALPN_PROTOCOL_HTTP_QUIC_D29;
 
-extern tsapi int TS_ALPN_PROTOCOL_INDEX_HTTP_0_9;
-extern tsapi int TS_ALPN_PROTOCOL_INDEX_HTTP_1_0;
-extern tsapi int TS_ALPN_PROTOCOL_INDEX_HTTP_1_1;
-extern tsapi int TS_ALPN_PROTOCOL_INDEX_HTTP_2_0;
-extern tsapi int TS_ALPN_PROTOCOL_INDEX_HTTP_3;
-extern tsapi int TS_ALPN_PROTOCOL_INDEX_HTTP_QUIC;
+extern int TS_ALPN_PROTOCOL_INDEX_HTTP_0_9;
+extern int TS_ALPN_PROTOCOL_INDEX_HTTP_1_0;
+extern int TS_ALPN_PROTOCOL_INDEX_HTTP_1_1;
+extern int TS_ALPN_PROTOCOL_INDEX_HTTP_2_0;
+extern int TS_ALPN_PROTOCOL_INDEX_HTTP_3;
+extern int TS_ALPN_PROTOCOL_INDEX_HTTP_QUIC;
 
-extern tsapi const char *const TS_ALPN_PROTOCOL_GROUP_HTTP;
-extern tsapi const char *const TS_ALPN_PROTOCOL_GROUP_HTTP2;
+extern const char *const TS_ALPN_PROTOCOL_GROUP_HTTP;
+extern const char *const TS_ALPN_PROTOCOL_GROUP_HTTP2;
 
-extern tsapi const char *const TS_PROTO_TAG_HTTP_1_0;
-extern tsapi const char *const TS_PROTO_TAG_HTTP_1_1;
-extern tsapi const char *const TS_PROTO_TAG_HTTP_2_0;
-extern tsapi const char *const TS_PROTO_TAG_HTTP_3;
-extern tsapi const char *const TS_PROTO_TAG_HTTP_QUIC;
-extern tsapi const char *const TS_PROTO_TAG_TLS_1_3;
-extern tsapi const char *const TS_PROTO_TAG_TLS_1_2;
-extern tsapi const char *const TS_PROTO_TAG_TLS_1_1;
-extern tsapi const char *const TS_PROTO_TAG_TLS_1_0;
-extern tsapi const char *const TS_PROTO_TAG_TCP;
-extern tsapi const char *const TS_PROTO_TAG_UDP;
-extern tsapi const char *const TS_PROTO_TAG_IPV4;
-extern tsapi const char *const TS_PROTO_TAG_IPV6;
+extern const char *const TS_PROTO_TAG_HTTP_1_0;
+extern const char *const TS_PROTO_TAG_HTTP_1_1;
+extern const char *const TS_PROTO_TAG_HTTP_2_0;
+extern const char *const TS_PROTO_TAG_HTTP_3;
+extern const char *const TS_PROTO_TAG_HTTP_QUIC;
+extern const char *const TS_PROTO_TAG_TLS_1_3;
+extern const char *const TS_PROTO_TAG_TLS_1_2;
+extern const char *const TS_PROTO_TAG_TLS_1_1;
+extern const char *const TS_PROTO_TAG_TLS_1_0;
+extern const char *const TS_PROTO_TAG_TCP;
+extern const char *const TS_PROTO_TAG_UDP;
+extern const char *const TS_PROTO_TAG_IPV4;
+extern const char *const TS_PROTO_TAG_IPV6;
 
 /* --------------------------------------------------------------------------
    MLoc Constants */
@@ -1481,7 +1473,7 @@ typedef enum {
 #ifdef __cplusplus
 namespace ts
 {
-  static const int NO_FD = -1; ///< No or invalid file descriptor.
+static const int NO_FD = -1; ///< No or invalid file descriptor.
 }
 #endif
 
@@ -1511,7 +1503,3 @@ typedef struct TSYAMLCfgFieldData_s {
   const char *record_name; ///< record name. null terminated
   TSYaml value_node;       ///< YAML::Node pointer.
 } TSYAMLRecCfgFieldData;
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

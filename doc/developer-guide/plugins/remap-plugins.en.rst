@@ -12,7 +12,7 @@
    under the License.
 
 .. include:: ../../common.defs
-.. default-domain:: c
+.. default-domain:: cpp
 .. _developer-plugins-remap:
 
 Remap Plugins

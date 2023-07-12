@@ -16,7 +16,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 TSRemapInit
 ***********
@@ -26,7 +26,7 @@ Traffic Server remap plugin entry points.
 Synopsis
 ========
 
-.. code-block:: c
+.. code-block:: cpp
 
     #include <ts/ts.h>
     #include <ts/remap.h>

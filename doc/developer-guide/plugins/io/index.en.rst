@@ -98,7 +98,7 @@ reexamine it to see if it can make further progress.
 The null transform plugin provides an example of how this is done. Below
 is a prototype for :c:func:`TSVConnWrite`:
 
-.. code-block:: c
+.. code-block:: cpp
 
      TSVIO TSVConnWrite (TSVConn connp, TSCont contp, TSIOBufferReader readerp, int nbytes)
 
@@ -108,7 +108,7 @@ has emptied its buffer and is ready for more data.
 
 The call made in the null transform plugin is:
 
-.. code-block:: c
+.. code-block:: cpp
 
       TSVConnWrite (output_conn, contp, data->output_reader, TSVIONBytesGet (input_vio));
 

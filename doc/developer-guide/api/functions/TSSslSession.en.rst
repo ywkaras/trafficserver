@@ -16,7 +16,7 @@
    under the License.
 
 .. include:: ../../../common.defs
-.. default-domain:: c
+.. default-domain:: cpp
 
 TSSslSession
 ************

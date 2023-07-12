@@ -16,7 +16,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 TSUuidCreate
 ************
@@ -113,7 +113,7 @@ object.
 Examples
 ========
 
-.. code-block:: c
+.. code-block:: cpp
 
     #include <ts/ts.h>
 

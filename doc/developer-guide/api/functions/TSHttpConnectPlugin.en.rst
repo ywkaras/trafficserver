@@ -1,4 +1,4 @@
-.. Licensed to the Apache Software Foundation (ASF) under one or more
+. Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed
    with this work for additional information regarding copyright
    ownership.  The ASF licenses this file to you under the Apache
@@ -16,7 +16,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 TSHttpConnectPlugin
 *************************

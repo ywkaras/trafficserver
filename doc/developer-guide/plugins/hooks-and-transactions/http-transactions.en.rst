@@ -37,7 +37,7 @@ reference back to the HTTP session that created it.
 The sample code below illustrates how to register locally to a
 transaction and associate data to the transaction.
 
-.. code-block:: c
+.. code-block:: cpp
 
     /*
     * Simple plugin that illustrates:

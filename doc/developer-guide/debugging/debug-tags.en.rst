@@ -79,7 +79,7 @@ In this case, debug output goes to ``traffic.out``.
 
 Example:
 
-.. code-block:: c
+.. code-block:: cpp
 
        static TSDbgCtl const *my_dbg_ctl; // Non-local variable.
        ...

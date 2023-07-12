@@ -23,14 +23,6 @@
 
 #pragma once
 
-#ifndef tsapi
-#define tsapi
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #define TSREMAP_VMAJOR  3 /* major version number */
 #define TSREMAP_VMINOR  0 /* minor version number */
 #define TSREMAP_VERSION ((TSREMAP_VMAJOR << 16) | TSREMAP_VMINOR)
@@ -97,7 +89,7 @@ typedef enum {
    Return: TS_SUCCESS
            TS_ERROR - error, errbuf can include error message from plugin
 */
-tsapi TSReturnCode TSRemapInit(TSRemapInterface *api_info, char *errbuf, int errbuf_size);
+TSReturnCode TSRemapInit(TSRemapInterface *api_info, char *errbuf, int errbuf_size);
 
 /* This gets called every time before remap.config is reloaded. This is complementary
    to TSRemapInit() which gets called when the plugin is first loaded.
@@ -107,7 +99,7 @@ tsapi TSReturnCode TSRemapInit(TSRemapInterface *api_info, char *errbuf, int err
    Params: none
    Return: none
 */
-tsapi void TSRemapPreConfigReload(void);
+void TSRemapPreConfigReload(void);
 
 /* This gets called every time afterremap.config is reloaded. This is complementary
    to TSRemapInit() which gets called when the plugin is first loaded.
@@ -119,7 +111,7 @@ tsapi void TSRemapPreConfigReload(void);
                           TS_ERROR - (re)load failed.
    Return: none
 */
-tsapi void TSRemapPostConfigReload(TSRemapReloadStatus reloadStatus);
+void TSRemapPostConfigReload(TSRemapReloadStatus reloadStatus);
 
 /* Remap new request
    Mandatory interface function.
@@ -129,11 +121,11 @@ tsapi void TSRemapPostConfigReload(TSRemapReloadStatus reloadStatus);
            TSREMAP_NO_REMAP_STOP - No remapping was done, and stop plugin chain evaluation
            TSREMAP_DID_REMAP_STOP -  Remapping was done, but stop plugin chain evaluation
 */
-tsapi TSRemapStatus TSRemapDoRemap(void *ih, TSHttpTxn rh, TSRemapRequestInfo *rri);
+TSRemapStatus TSRemapDoRemap(void *ih, TSHttpTxn rh, TSRemapRequestInfo *rri);
 
 /* Plugin shutdown, called when plugin is unloaded.
    Optional function. */
-tsapi void TSRemapDone(void);
+void TSRemapDone(void);
 
 /* Plugin new instance. Create new plugin processing entry for unique remap record.
    First two arguments in argv vector are - fromURL and toURL from remap record.
@@ -141,16 +133,12 @@ tsapi void TSRemapDone(void);
    Return: TS_SUCCESS
            TS_ERROR - instance creation error
 */
-tsapi TSReturnCode TSRemapNewInstance(int argc, char *argv[], void **ih, char *errbuf, int errbuf_size);
-tsapi void TSRemapDeleteInstance(void *);
+TSReturnCode TSRemapNewInstance(int argc, char *argv[], void **ih, char *errbuf, int errbuf_size);
+void TSRemapDeleteInstance(void *);
 
 /* Check response code from Origin Server
    os_response_type -> TSServerState
    Remap API plugin can use InkAPI function calls inside TSRemapDoRemap()
    Return: none
 */
-tsapi void TSRemapOSResponse(void *ih, TSHttpTxn rh, int os_response_type);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+void TSRemapOSResponse(void *ih, TSHttpTxn rh, int os_response_type);

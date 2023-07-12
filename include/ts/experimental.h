@@ -31,10 +31,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 typedef enum {
   TS_FETCH_EVENT_EXT_HEAD_READY = -1,
   TS_FETCH_EVENT_EXT_HEAD_DONE  = -2,
@@ -55,26 +51,26 @@ typedef enum {
 struct in_addr;
 
 /* Cache APIs that are not yet fully supported and/or frozen nor complete. */
-tsapi TSReturnCode TSCacheBufferInfoGet(TSCacheTxn txnp, uint64_t *length, uint64_t *offset);
+TSReturnCode TSCacheBufferInfoGet(TSCacheTxn txnp, uint64_t *length, uint64_t *offset);
 
-tsapi TSCacheHttpInfo TSCacheHttpInfoCreate();
-tsapi void TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *obj);
-tsapi void TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *obj);
-tsapi void TSCacheHttpInfoReqSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj);
-tsapi void TSCacheHttpInfoRespSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj);
-tsapi void TSCacheHttpInfoKeySet(TSCacheHttpInfo infop, TSCacheKey key);
-tsapi void TSCacheHttpInfoSizeSet(TSCacheHttpInfo infop, int64_t size);
-tsapi int TSCacheHttpInfoVector(TSCacheHttpInfo infop, void *data, int length);
-tsapi time_t TSCacheHttpInfoReqSentTimeGet(TSCacheHttpInfo infop);
-tsapi time_t TSCacheHttpInfoRespReceivedTimeGet(TSCacheHttpInfo infop);
+TSCacheHttpInfo TSCacheHttpInfoCreate();
+void TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *obj);
+void TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *obj);
+void TSCacheHttpInfoReqSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj);
+void TSCacheHttpInfoRespSet(TSCacheHttpInfo infop, TSMBuffer bufp, TSMLoc obj);
+void TSCacheHttpInfoKeySet(TSCacheHttpInfo infop, TSCacheKey key);
+void TSCacheHttpInfoSizeSet(TSCacheHttpInfo infop, int64_t size);
+int TSCacheHttpInfoVector(TSCacheHttpInfo infop, void *data, int length);
+time_t TSCacheHttpInfoReqSentTimeGet(TSCacheHttpInfo infop);
+time_t TSCacheHttpInfoRespReceivedTimeGet(TSCacheHttpInfo infop);
 int64_t TSCacheHttpInfoSizeGet(TSCacheHttpInfo infop);
 
 /* Do not edit these apis, used internally */
-tsapi int TSMimeHdrFieldEqual(TSMBuffer bufp, TSMLoc hdr_obj, TSMLoc field1, TSMLoc field2);
-tsapi TSReturnCode TSHttpTxnHookRegisteredFor(TSHttpTxn txnp, TSHttpHookID id, TSEventFunc funcp);
+int TSMimeHdrFieldEqual(TSMBuffer bufp, TSMLoc hdr_obj, TSMLoc field1, TSMLoc field2);
+TSReturnCode TSHttpTxnHookRegisteredFor(TSHttpTxn txnp, TSHttpHookID id, TSEventFunc funcp);
 
 /* Protocols APIs */
-tsapi void TSVConnCacheHttpInfoSet(TSVConn connp, TSCacheHttpInfo infop);
+void TSVConnCacheHttpInfoSet(TSVConn connp, TSCacheHttpInfo infop);
 
 /* The rest is from the old "froze" private API include, we should consider
    moving some of these over to ts/ts.h as well. TODO */
@@ -82,43 +78,43 @@ tsapi void TSVConnCacheHttpInfoSet(TSVConn connp, TSCacheHttpInfo infop);
 /****************************************************************************
  *  Test if cache ready to accept request for a specific type of data
  ****************************************************************************/
-tsapi TSReturnCode TSCacheDataTypeReady(TSCacheDataType type, int *is_ready);
+TSReturnCode TSCacheDataTypeReady(TSCacheDataType type, int *is_ready);
 
 /****************************************************************************
  *  When reenabling a txn in error, keep the connection open in case
  *  of keepalive.
  ****************************************************************************/
-tsapi void TSHttpTxnClientKeepaliveSet(TSHttpTxn txnp, int set);
+void TSHttpTxnClientKeepaliveSet(TSHttpTxn txnp, int set);
 
 /****************************************************************************
  *  Allow to set the body of a POST request.
  ****************************************************************************/
-tsapi void TSHttpTxnServerRequestBodySet(TSHttpTxn txnp, char *buf, int64_t buflength);
+void TSHttpTxnServerRequestBodySet(TSHttpTxn txnp, char *buf, int64_t buflength);
 
-tsapi TSReturnCode TSHttpTxnCachedRespTimeGet(TSHttpTxn txnp, time_t *resp_time);
+TSReturnCode TSHttpTxnCachedRespTimeGet(TSHttpTxn txnp, time_t *resp_time);
 
 /* ===== Cache ===== */
-tsapi TSReturnCode TSCacheKeyDataTypeSet(TSCacheKey key, TSCacheDataType type);
+TSReturnCode TSCacheKeyDataTypeSet(TSCacheKey key, TSCacheDataType type);
 
 /* ===== Utility ===== */
 /****************************************************************************
  *  Create a random number
  *  Return random integer between <X> and <Y>
  ****************************************************************************/
-tsapi unsigned int TSrandom(void);
+unsigned int TSrandom(void);
 
 /****************************************************************************
  *  Create a random double
  *  Return random double between <X> and <Y>
  ****************************************************************************/
-tsapi double TSdrandom(void);
+double TSdrandom(void);
 
 /* =====  CacheHttpInfo =====  */
 
-tsapi TSCacheHttpInfo TSCacheHttpInfoCopy(TSCacheHttpInfo infop);
-tsapi void TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *offset);
-tsapi void TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *offset);
-tsapi void TSCacheHttpInfoDestroy(TSCacheHttpInfo infop);
+TSCacheHttpInfo TSCacheHttpInfoCopy(TSCacheHttpInfo infop);
+void TSCacheHttpInfoReqGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *offset);
+void TSCacheHttpInfoRespGet(TSCacheHttpInfo infop, TSMBuffer *bufp, TSMLoc *offset);
+void TSCacheHttpInfoDestroy(TSCacheHttpInfo infop);
 
 /* Get Arbitrary Txn info such as cache lookup details etc as defined in TSHttpTxnInfoKey */
 /**
@@ -131,40 +127,40 @@ tsapi void TSCacheHttpInfoDestroy(TSCacheHttpInfo infop);
    @return @c TS_SUCCESS if the requested info is supported, TS_ERROR otherwise
 
 */
-tsapi TSReturnCode TSHttpTxnInfoIntGet(TSHttpTxn txnp, TSHttpTxnInfoKey key, TSMgmtInt *value);
+TSReturnCode TSHttpTxnInfoIntGet(TSHttpTxn txnp, TSHttpTxnInfoKey key, TSMgmtInt *value);
 
 /****************************************************************************
  *  TSHttpTxnCacheLookupCountGet
  *  Return: TS_SUCCESS/TS_ERROR
  ****************************************************************************/
-tsapi TSReturnCode TSHttpTxnCacheLookupCountGet(TSHttpTxn txnp, int *lookup_count);
-tsapi TSReturnCode TSHttpTxnServerRespIgnore(TSHttpTxn txnp);
-tsapi TSReturnCode TSHttpTxnShutDown(TSHttpTxn txnp, TSEvent event);
-tsapi TSReturnCode TSHttpTxnCloseAfterResponse(TSHttpTxn txnp, int should_close);
+TSReturnCode TSHttpTxnCacheLookupCountGet(TSHttpTxn txnp, int *lookup_count);
+TSReturnCode TSHttpTxnServerRespIgnore(TSHttpTxn txnp);
+TSReturnCode TSHttpTxnShutDown(TSHttpTxn txnp, TSEvent event);
+TSReturnCode TSHttpTxnCloseAfterResponse(TSHttpTxn txnp, int should_close);
 
 /****************************************************************************
  *  ??
  *  Return ??
  ****************************************************************************/
-tsapi int TSHttpTxnClientReqIsServerStyle(TSHttpTxn txnp);
+int TSHttpTxnClientReqIsServerStyle(TSHttpTxn txnp);
 
 /****************************************************************************
  *  ??
  *  Return ??
  ****************************************************************************/
-tsapi void TSHttpTxnOverwriteExpireTime(TSHttpTxn txnp, time_t expire_time);
+void TSHttpTxnOverwriteExpireTime(TSHttpTxn txnp, time_t expire_time);
 
 /****************************************************************************
  *  ??
  *  Return ??
  ****************************************************************************/
-tsapi TSReturnCode TSHttpTxnUpdateCachedObject(TSHttpTxn txnp);
+TSReturnCode TSHttpTxnUpdateCachedObject(TSHttpTxn txnp);
 
 /****************************************************************************
  *  ??
  *  TODO: This returns a LookingUp_t value, we need to SDK'ify it.
  ****************************************************************************/
-tsapi int TSHttpTxnLookingUpTypeGet(TSHttpTxn txnp);
+int TSHttpTxnLookingUpTypeGet(TSHttpTxn txnp);
 
 /**
    Attempt to attach the contp continuation to sockets that have already been
@@ -180,7 +176,7 @@ tsapi int TSHttpTxnLookingUpTypeGet(TSHttpTxn txnp);
    Need to update records.yaml comments on proxy.config.http.server_ports
    when this option is promoted from experimental.
  */
-tsapi TSReturnCode TSPluginDescriptorAccept(TSCont contp);
+TSReturnCode TSPluginDescriptorAccept(TSCont contp);
 
 /**
     Opens a network connection to the host specified by the 'to' sockaddr
@@ -204,7 +200,7 @@ tsapi TSReturnCode TSPluginDescriptorAccept(TSCont contp);
       or cancel the attempt to connect.
 
  */
-tsapi TSAction TSNetConnectTransparent(
+TSAction TSNetConnectTransparent(
   TSCont contp,                /**< continuation that is called back when the attempted net connection either succeeds or fails. */
   struct sockaddr const *from, /**< Address to spoof as connection origin */
   struct sockaddr const *to    /**< Address to which to connect. */
@@ -218,51 +214,51 @@ typedef struct tsapi_matcheline *TSMatcherLine;
  *  ??
  *  Return
  ****************************************************************************/
-tsapi char *TSMatcherReadIntoBuffer(char *file_name, int *file_len);
+char *TSMatcherReadIntoBuffer(char *file_name, int *file_len);
 
 /****************************************************************************
  *  ??
  *  Return
  ****************************************************************************/
-tsapi char *TSMatcherTokLine(char *buffer, char **last);
+char *TSMatcherTokLine(char *buffer, char **last);
 
 /****************************************************************************
  *  ??
  *  Return
  ****************************************************************************/
-tsapi char *TSMatcherExtractIPRange(char *match_str, uint32_t *addr1, uint32_t *addr2);
+char *TSMatcherExtractIPRange(char *match_str, uint32_t *addr1, uint32_t *addr2);
 
 /****************************************************************************
  *  ??
  *  Return
  ****************************************************************************/
-tsapi TSMatcherLine TSMatcherLineCreate();
+TSMatcherLine TSMatcherLineCreate();
 
 /****************************************************************************
  *  ??
  *  Return
  ****************************************************************************/
-tsapi void TSMatcherLineDestroy(TSMatcherLine ml);
+void TSMatcherLineDestroy(TSMatcherLine ml);
 
 /****************************************************************************
  *  ??
  *  Return
  ****************************************************************************/
-tsapi const char *TSMatcherParseSrcIPConfigLine(char *line, TSMatcherLine ml);
+const char *TSMatcherParseSrcIPConfigLine(char *line, TSMatcherLine ml);
 
 /****************************************************************************
  *  ??
  *  Return
  ****************************************************************************/
-tsapi char *TSMatcherLineName(TSMatcherLine ml, int element);
+char *TSMatcherLineName(TSMatcherLine ml, int element);
 
 /****************************************************************************
  *  ??
  *  Return
  ****************************************************************************/
-tsapi char *TSMatcherLineValue(TSMatcherLine ml, int element);
+char *TSMatcherLineValue(TSMatcherLine ml, int element);
 
-tsapi TSReturnCode TSMgmtConfigFileAdd(const char *parent, const char *fileName);
+TSReturnCode TSMgmtConfigFileAdd(const char *parent, const char *fileName);
 /* ----------------------------------------------------------------------
  * Interfaces used by Wireless group
  * ---------------------------------------------------------------------- */
@@ -291,8 +287,8 @@ tsapi TSReturnCode TSMgmtConfigFileAdd(const char *parent, const char *fileName)
  *
  * return TSFetchSM which should be destroyed by TSFetchDestroy().
  */
-tsapi TSFetchSM TSFetchCreate(TSCont contp, const char *method, const char *url, const char *version,
-                              struct sockaddr const *client_addr, int flags);
+TSFetchSM TSFetchCreate(TSCont contp, const char *method, const char *url, const char *version, struct sockaddr const *client_addr,
+                        int flags);
 
 /*
  * Set fetch flags to FetchSM Context
@@ -302,7 +298,7 @@ tsapi TSFetchSM TSFetchCreate(TSCont contp, const char *method, const char *url,
  *
  * return void
  */
-tsapi void TSFetchFlagSet(TSFetchSM fetch_sm, int flags);
+void TSFetchFlagSet(TSFetchSM fetch_sm, int flags);
 
 /*
  * Create FetchSM, this API will enable stream IO automatically.
@@ -315,7 +311,7 @@ tsapi void TSFetchFlagSet(TSFetchSM fetch_sm, int flags);
  *
  * return TSFetchSM which should be destroyed by TSFetchDestroy().
  */
-tsapi void TSFetchHeaderAdd(TSFetchSM fetch_sm, const char *name, int name_len, const char *value, int value_len);
+void TSFetchHeaderAdd(TSFetchSM fetch_sm, const char *name, int name_len, const char *value, int value_len);
 
 /*
  * Write data to FetchSM
@@ -323,7 +319,7 @@ tsapi void TSFetchHeaderAdd(TSFetchSM fetch_sm, const char *name, int name_len, 
  * @param fetch_sm: returned value of TSFetchCreate().
  * @param data/len: data to be written to fetch sm.
  */
-tsapi void TSFetchWriteData(TSFetchSM fetch_sm, const void *data, size_t len);
+void TSFetchWriteData(TSFetchSM fetch_sm, const void *data, size_t len);
 
 /*
  * Read up to *len* bytes from FetchSM into *buf*.
@@ -331,7 +327,7 @@ tsapi void TSFetchWriteData(TSFetchSM fetch_sm, const void *data, size_t len);
  * @param fetch_sm: returned value of TSFetchCreate().
  * @param buf/len: buffer to contain data from fetch sm.
  */
-tsapi ssize_t TSFetchReadData(TSFetchSM fetch_sm, void *buf, size_t len);
+ssize_t TSFetchReadData(TSFetchSM fetch_sm, void *buf, size_t len);
 
 /*
  * Launch FetchSM to do http request, before calling this API,
@@ -340,40 +336,36 @@ tsapi ssize_t TSFetchReadData(TSFetchSM fetch_sm, void *buf, size_t len);
  *
  * @param fetch_sm: comes from returned value of TSFetchCreate().
  */
-tsapi void TSFetchLaunch(TSFetchSM fetch_sm);
+void TSFetchLaunch(TSFetchSM fetch_sm);
 
 /*
  * Destroy FetchSM
  *
  * @param fetch_sm: returned value of TSFetchCreate().
  */
-tsapi void TSFetchDestroy(TSFetchSM fetch_sm);
+void TSFetchDestroy(TSFetchSM fetch_sm);
 
 /*
  * Set user-defined data in FetchSM
  */
-tsapi void TSFetchUserDataSet(TSFetchSM fetch_sm, void *data);
+void TSFetchUserDataSet(TSFetchSM fetch_sm, void *data);
 
 /*
  * Get user-defined data in FetchSM
  */
-tsapi void *TSFetchUserDataGet(TSFetchSM fetch_sm);
+void *TSFetchUserDataGet(TSFetchSM fetch_sm);
 
 /*
  * Get client response hdr mbuffer
  */
-tsapi TSMBuffer TSFetchRespHdrMBufGet(TSFetchSM fetch_sm);
+TSMBuffer TSFetchRespHdrMBufGet(TSFetchSM fetch_sm);
 
 /*
  * Get client response hdr mloc
  */
-tsapi TSMLoc TSFetchRespHdrMLocGet(TSFetchSM fetch_sm);
+TSMLoc TSFetchRespHdrMLocGet(TSFetchSM fetch_sm);
 
 /*
  * Print as a MIME header date string.
  */
-tsapi TSReturnCode TSMimeFormatDate(time_t const value_time, char *const value_str, int *const value_len);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+TSReturnCode TSMimeFormatDate(time_t const value_time, char *const value_str, int *const value_len);

@@ -26,7 +26,7 @@ The Denylist plugin examines the host header in every client
 transaction. This is done in the ``handle_dns`` routine, using
 ``TSHttpTxnClientReqGet``, ``TSHttpHdrUrlGet``, and ``TSUrlHostGet``.
 
-.. code-block:: c
+.. code-block:: cpp
 
    static void
    handle_dns (TSHttpTxn txnp, TSCont contp)

@@ -87,7 +87,7 @@ Caveats that could cause issues include the following:
 
 Below is an example, followed by an explanation.
 
-.. code-block:: c
+.. code-block:: cpp
 
     continuation_handler (TSCont contp, TSEvent event, void *edata) {
         switch (event) {

@@ -16,7 +16,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 Plugin Statistics
 **********************
@@ -28,7 +28,7 @@ in contrast to processing log files.
 Synopsis
 ========
 
-.. code-block:: c
+.. code-block:: cpp
 
     #include <ts/ts.h>
 

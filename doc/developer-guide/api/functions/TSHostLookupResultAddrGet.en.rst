@@ -16,7 +16,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 TSHostLookupResultAddrGet
 *************************
@@ -37,7 +37,7 @@ Retrieves the pointer to a ``sockaddr`` of a the given :arg:`lookup_result` from
 
 For example:
 
-.. code-block:: c
+.. code-block:: cpp
 
     int
     handler(TSCont contp, TSEvent event, void *edata) {

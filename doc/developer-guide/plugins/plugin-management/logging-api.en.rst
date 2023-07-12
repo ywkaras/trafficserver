@@ -58,18 +58,18 @@ The logging API enables you to:
    :c:func:`TSTextLogObjectDestroy`
 
 The steps below show how the logging API is used in the
-``denylist_1.c`` sample plugin. For the complete source code, see the
+``denylist_1.cc`` sample plugin. For the complete source code, see the
 :ref:`developer-plugins-examples-denylist-code` section.
 
 #. A new log file is defined as a global variable.
 
-   .. code-block:: c
+   .. code-block:: cpp
 
          static TSTextLogObject log;
 
 #. In ``TSPluginInit``, a new log object is allocated:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
            TSReturnCode error = TSTextLogObjectCreate("denylist",
                                 TS_LOG_MODE_ADD_TIMESTAMP, &log);
@@ -83,7 +83,7 @@ The steps below show how the logging API is used in the
 #. After creating the log, the plugin makes sure that the log was
    created successfully:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
        if (error != TS_SUCCESS) {
            printf("denylist plugin: error %d while creating log\n", error);
@@ -93,7 +93,7 @@ The steps below show how the logging API is used in the
    the URL (in each client request) with a list of denylisted sites (stored in
    the array ``sites[]``):
 
-   .. code-block:: c
+   .. code-block:: cpp
 
        for (i = 0; i < nsites; i++) {
          if (strncmp (host, sites[i], host_length) == 0) {
@@ -105,7 +105,7 @@ The steps below show how the logging API is used in the
    sites (such as ``sites[i]``), then the plugin writes a denylist
    entry to ``denylist.log``:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
        if (log) { TSTextLogObjectWrite(log, "denylisting site: %s",
        sites[i]);

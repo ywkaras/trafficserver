@@ -85,7 +85,7 @@
  *
  * @private
  */
-extern "C" void TSDebug(const char *tag, const char *fmt, ...) ATSCPPAPI_PRINTFLIKE(2, 3);
+void TSDebug(const char *tag, const char *fmt, ...) ATSCPPAPI_PRINTFLIKE(2, 3);
 
 /**
  * We forward declare this because if we didn't we end up writing our
@@ -94,7 +94,7 @@ extern "C" void TSDebug(const char *tag, const char *fmt, ...) ATSCPPAPI_PRINTFL
  *
  * @private
  */
-extern "C" void TSError(const char *fmt, ...) ATSCPPAPI_PRINTFLIKE(1, 2);
+void TSError(const char *fmt, ...) ATSCPPAPI_PRINTFLIKE(1, 2);
 
 // This is weird, but see the following:
 //   http://stackoverflow.com/questions/5641427/how-to-make-preprocessor-generate-a-string-for-line-keyword

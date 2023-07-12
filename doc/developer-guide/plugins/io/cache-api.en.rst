@@ -38,7 +38,7 @@ differs from the HTTP type).
 
 **Example:**
 
-.. code-block:: c
+.. code-block:: cpp
 
         const unsigned char *key_name = "example key name";
 
@@ -120,7 +120,7 @@ actual size of the document (``content_length``). Then, issue
 ``TSVConnRead`` to read the document with the total data length required
 as ``content_length``. Assume the following data:
 
-.. code-block:: c
+.. code-block:: cpp
 
         TSIOBuffer       cache_bufp = TSIOBufferCreate ();
         TSIOBufferReader cache_readerp = TSIOBufferReaderAlloc (out_bufp);
@@ -130,7 +130,7 @@ as ``content_length``. Assume the following data:
 
 In the ``TS_CACHE_OPEN_READ`` handler:
 
-.. code-block:: c
+.. code-block:: cpp
 
     cache_vconnp = (TSVConn) data;
         content_length = TSVConnCacheObjectSizeGet (cache_vconnp);
@@ -138,7 +138,7 @@ In the ``TS_CACHE_OPEN_READ`` handler:
 
 In the ``TS_EVENT_VCONN_READ_READY`` handler:
 
-.. code-block:: c
+.. code-block:: cpp
 
     (usual VCONN_READ_READY handler logic)
     int nbytes = TSVIONBytesGet (cache_vio);

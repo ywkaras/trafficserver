@@ -16,7 +16,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 .. _ts-lifecycle-hook-add:
 
@@ -26,7 +26,7 @@ TSLifecycleHookAdd
 Synopsis
 ========
 
-.. code-block:: c
+.. code-block:: cpp
 
     #include <ts/ts.h>
 
@@ -150,7 +150,7 @@ The following example demonstrates how to correctly use
 initialized and therefore does not work if called from :func:`TSPluginInit`
 directly.
 
-.. code-block:: c
+.. code-block:: cpp
 
    #include <ts/ts.h>
 

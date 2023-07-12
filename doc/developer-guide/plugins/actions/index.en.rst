@@ -59,7 +59,7 @@ data because the continuation may have already been destroyed.
 
 Below is an example of typical usage for an action:
 
-.. code-block:: c
+.. code-block:: cpp
 
         #include <ts/ts.h>
         static int
@@ -119,7 +119,7 @@ schedule itself to get called back in 30 seconds and then initiate the
 net connection. If the timeout expires first, then the plugin would
 cancel the action. The following sample code implements this:
 
-.. code-block:: c
+.. code-block:: cpp
 
         #include <ts/ts.h>
         static int

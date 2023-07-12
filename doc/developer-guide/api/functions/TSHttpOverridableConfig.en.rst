@@ -17,7 +17,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 .. _ts-overridable-config:
 
@@ -27,7 +27,7 @@ TSHttpOverridableConfig
 Synopsis
 ========
 
-.. code-block:: c
+.. code-block:: cpp
 
     #include <ts/ts.h>
 

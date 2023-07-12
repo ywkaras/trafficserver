@@ -29,7 +29,7 @@ HTTP state machine reaches the "send response header" event. In the
 Denylist plugin's ``handle_dns`` routine, the transaction hook is added
 as follows:
 
-.. code-block:: c
+.. code-block:: cpp
 
    TSMutexLock (sites_mutex);
    for (i = 0; i < nsites; i++) {

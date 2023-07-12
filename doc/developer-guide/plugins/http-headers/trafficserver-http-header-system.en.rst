@@ -44,7 +44,7 @@ passed into the common ``str*()`` routines
 
 For example (from the ``denylist_1`` sample)
 
-.. code-block:: c
+.. code-block:: cpp
 
    char *host_string;
    int host_length;
@@ -91,26 +91,26 @@ every deprecated *``TSMimeField``* function, there is a new, preferred
 
 Instead of:
 
-.. code-block:: c
+.. code-block:: cpp
 
     TSMLoc TSMimeFieldCreate (TSMBuffer bufp)
 
 You should use:
 
-.. code-block:: c
+.. code-block:: cpp
 
     TSMLoc TSMimeHdrFieldCreate (TSMBuffer bufp, TSMLoc hdr)
 
 Instead of:
 
-.. code-block:: c
+.. code-block:: cpp
 
     void TSMimeFieldCopyValues (TSMBuffer dest_bufp, TSMLoc dest_offset,
        TSMBuffer src_bufp, TSMLoc src_offset)
 
 You should use:
 
-.. code-block:: c
+.. code-block:: cpp
 
     void TSMimeHdrFieldCopyValues (TSMBuffer dest_bufp, TSMLoc dest_hdr,
        TSMLoc dest_field, TSMBuffer src_bufp, TSMLoc src_hdr, TSMLoc
@@ -140,14 +140,14 @@ of the object to be released. The parent location is usually clear from
 the creation of the ``TSMLoc`` or string. For example, if your plugin
 had the following calls:
 
-.. code-block:: c
+.. code-block:: cpp
 
    url_loc = TSHttpHdrUrlGet (bufp, hdr_loc);
    host_string = TSUrlHostGet (bufp, url_loc, &host_length);
 
 then your plugin would have to call:
 
-.. code-block:: c
+.. code-block:: cpp
 
    TSHandleMLocRelease (bufp, hdr_loc, url_loc);
 
@@ -155,13 +155,13 @@ If an ``TSMLoc`` is obtained from a transaction, then it does not have a
 parent ``TSMLoc``. Use the null ``TSMLoc`` constant ``TS_NULL_MLOC`` as
 its parent. For example, if your plugin calls:
 
-.. code-block:: c
+.. code-block:: cpp
 
    TSHttpTxnClientReqGet (txnp, &bufp, &hdr_loc);
 
 then you must release ``hdr_loc`` with:
 
-.. code-block:: c
+.. code-block:: cpp
 
    TSHandleMLocRelease (bufp, TS_NULL_MLOC, hdr_loc);
 
@@ -170,7 +170,7 @@ retrieved by the ``TSHttpTxn*Get`` functions.
 
 Here's an example using a new ``TSMimeHdrField`` function:
 
-.. code-block:: c
+.. code-block:: cpp
 
    TSHttpTxnServerRespGet( txnp, &resp_bufp, &resp_hdr_loc );
    new_field_loc = TSMimeHdrFieldCreate (resp_bufp, resp_hdr_loc);

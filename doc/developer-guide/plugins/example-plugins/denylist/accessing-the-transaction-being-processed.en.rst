@@ -40,7 +40,7 @@ data type that represents HTTP transactions). Your plugin can then do
 things with the transaction. Here's how it looks in the code for the
 Denylist plugin's handler:
 
-.. code-block:: c
+.. code-block:: cpp
 
    static int
    denylist_plugin (TSCont contp, TSEvent event, void *edata)

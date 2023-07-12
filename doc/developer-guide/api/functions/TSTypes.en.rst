@@ -20,7 +20,7 @@
    when providing additional documentation on the type, to move it from here to a more appropriate
    file.
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 TSAPI Types
 ***********

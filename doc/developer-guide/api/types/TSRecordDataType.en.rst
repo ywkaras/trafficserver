@@ -22,7 +22,7 @@ TSRecordDataType
 Synopsis
 ========
 
-.. code-block:: c
+.. code-block:: cpp
 
     #include <ts/apidefs.h>
 

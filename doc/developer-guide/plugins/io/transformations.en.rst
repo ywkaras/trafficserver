@@ -40,7 +40,7 @@ it only supports reading or writing).
 For example, the null transform plugin's transformation examines the
 input VIO by calling:
 
-.. code-block:: c
+.. code-block:: cpp
 
      input_vio = TSVConnWriteVIOGet (contp);
 
@@ -56,7 +56,7 @@ make some progress on the IO operations.
 It is common for the handler function for all vconnections to look
 similar. Their basic form looks something like the code fragment below:
 
-.. code-block:: c
+.. code-block:: cpp
 
     int
     vconnection_handler (TSCont contp, TSEvent event, void *edata)
@@ -142,9 +142,9 @@ Here's how to make sure that all incoming data is consumed:
 
 -  After reading or copying data, make sure that you consume the data
    and increase the value of ndone for the input VIO, as in the
-   following example taken from ``null_transform.c``:
+   following example taken from ``null_transform.cc``:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
        TSIOBufferCopy (TSVIOBufferGet (data->output_vio),
        TSVIOReaderGet (input_vio), towrite, 0);

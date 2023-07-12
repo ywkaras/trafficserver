@@ -23,7 +23,7 @@ Denylist Plugin
 ****************
 
 The sample denylisting plugin included in the Traffic Server SDK is
-``denylist_1.c``. This plugin checks every incoming HTTP client request
+``denylist_1.cc``. This plugin checks every incoming HTTP client request
 against a list of listed web sites. If the client requests a
 listed site, then the plugin returns an ``Access forbidden``
 message to the client.
@@ -52,9 +52,9 @@ Traffic Server has a multi-threaded design, race conditions can occur if
 several threads try to access the same continuation's data.
 
 Here is how the static parent continuation is created in
-``denylist_1.c``:
+``denylist_1.cc``:
 
-.. code-block:: c
+.. code-block:: cpp
 
    void
    TSPluginInit (int argc, const char *argv[])
@@ -72,12 +72,12 @@ events that are sent to it; accordingly, the ``denylist_plugin``
 routine consists of a switch statement that covers each of the events
 that might be sent to it:
 
-.. code-block:: c
+.. code-block:: cpp
 
    static int
    denylist_plugin (TSCont contp, TSEvent event, void *edata)
    {
-      TSHttpTxn txnp = (TSHttpTxn) edata;
+      auto txnp = static_cast<TSHttpTxn>(edata);
       switch (event) {
          case TS_EVENT_HTTP_OS_DNS:
             handle_dns (txnp, contp);

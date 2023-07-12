@@ -31,11 +31,11 @@ containing the append text is a parameter you specify in
 
     append_transform.so path/to/file
 
-The append_transform plugin is based on ``null_transform.c``. The only
+The append_transform plugin is based on ``null_transform.cc``. The only
 difference is that after the plugin feeds the document through the
 transformation, it adds text to the response.
 
-Below is a list of the functions in ``append_transform.c``, in the order
+Below is a list of the functions in ``append_transform.cc``, in the order
 they appear in the source code. Below each entry is a description of
 what the function does:
 
@@ -44,7 +44,7 @@ what the function does:
    Allocates and initializes a ``MyData`` structure. The plugin defines
    a struct, ``MyData``, as follows:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
        typedef struct {
            TSVIO output_vio;

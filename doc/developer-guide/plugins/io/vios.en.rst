@@ -34,7 +34,7 @@ made.
 The ``TSVIO`` data structure itself is opaque, but it could be defined
 as follows:
 
-.. code-block:: c
+.. code-block:: cpp
 
     typedef struct {
         TSCont continuation;

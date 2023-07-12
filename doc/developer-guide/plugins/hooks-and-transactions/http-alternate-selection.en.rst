@@ -62,7 +62,7 @@ by a call to ``TSHttpAltInfoQualitySet``.
 
 The sample code below shows how to call the alternate APIs.
 
-.. code-block:: c
+.. code-block:: cpp
 
    static void handle_select_alt(TSHttpAltInfo infop)
    {

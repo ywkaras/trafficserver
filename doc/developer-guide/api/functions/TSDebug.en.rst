@@ -16,7 +16,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 TSDbg
 *****
@@ -26,7 +26,7 @@ Traffic Server Debugging APIs.
 Synopsis
 ========
 
-.. code-block:: c
+.. code-block:: cpp
 
     #include <ts/ts.h>
 

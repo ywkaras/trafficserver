@@ -83,11 +83,11 @@
 /* for http config or cntl var */
 typedef struct {
   int nvar;
-  char *svar;
+  char const *svar;
 } ts_lua_var_item;
 
 typedef struct {
-  char *content;
+  char const *content;
   char script[TS_LUA_MAX_SCRIPT_FNAME_LENGTH];
   void *conf_vars[TS_LUA_MAX_CONFIG_VARS_COUNT];
 

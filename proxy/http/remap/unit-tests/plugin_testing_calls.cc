@@ -36,10 +36,6 @@
 
 PluginDebugObject debugObject;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 TSReturnCode
 handleInitRun(char *errbuf, int errbuf_size, int &counter)
 {
@@ -131,7 +127,3 @@ getPluginDebugObjectTest()
 {
   return (void *)&debugObject;
 }
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

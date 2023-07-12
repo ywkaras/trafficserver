@@ -16,7 +16,7 @@
 
 .. include:: ../../../common.defs
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 TSHttpTxnPostBufferReaderGet
 ****************************
@@ -40,7 +40,7 @@ via :c:func:`TSIOBufferReaderFree`. This function should be used in the handler
 for :data:`TS_HTTP_REQUEST_BUFFER_READ_COMPLETE_HOOK`. The following example
 handler makes use of :c:func:`TSHttpTxnPostBufferReaderGet`.
 
-.. code-block:: c
+.. code-block:: cpp
 
    int
    CB_Read_Request_Body_Hook(TSCont contp, TSEvent event, void* data) {
@@ -74,5 +74,5 @@ handler makes use of :c:func:`TSHttpTxnPostBufferReaderGet`.
      return 0;
    }
 
-:ts:git:`example/plugins/c-api/request_buffer/request_buffer.c` is a simple
+:ts:git:`example/plugins/c-api/request_buffer/request_buffer.cc` is a simple
 yet complete plugin that accesses HTTP request bodies.

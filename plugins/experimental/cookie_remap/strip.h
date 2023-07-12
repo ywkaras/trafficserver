@@ -20,10 +20,6 @@
 
 #include <sys/types.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* return codes */
 #define STRIP_RESULT_OK           0  /**< success */
 #define STRIP_RESULT_BAD_PARAM    -1 /**< one or more invalid arguments */
@@ -137,7 +133,3 @@ extern "C" {
  *         NUL-terminated
  */
 int get_stripped(const char *in, ssize_t in_len, char *out, int *out_len, unsigned int flags);
-
-#ifdef __cplusplus
-}
-#endif

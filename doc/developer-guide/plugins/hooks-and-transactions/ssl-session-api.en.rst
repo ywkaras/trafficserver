@@ -19,7 +19,7 @@
 
 .. _developer-plugins-ssl-session-hooks:
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 TLS Session Plugin API
 **********************

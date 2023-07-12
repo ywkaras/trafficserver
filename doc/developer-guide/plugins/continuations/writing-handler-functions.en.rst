@@ -22,7 +22,7 @@
 Writing Handler Functions
 *************************
 
-.. default-domain:: c
+.. default-domain:: cpp
 
 The handler function is the key component of a continuation. It is
 supposed to examine the event and event data, and then do something
@@ -40,7 +40,7 @@ continuation is a handle to the same continuation that is invoked. The
 handler function typically has a switch statement to handle the events
 it receives:
 
-.. code-block:: c
+.. code-block:: cpp
 
    static int some_handler (TScont contp, TSEvent event, void *edata)
    {

@@ -22,7 +22,7 @@
 Sample Buffered Null Transform Plugin
 *************************************
 
-The buffered null transform, ``bnull_transform.c``, reads the response
+The buffered null transform, ``bnull_transform.cc``, reads the response
 content into a buffer and then writes the full buffer out to the client.
 Many examples of transformations, such as compression, require you to
 gather the full response content in order to perform the transformation.
@@ -36,7 +36,7 @@ transform:
 
 #.  Gets a handle to HTTP transactions.
 
-    .. code-block:: c
+    .. code-block:: cpp
 
        void
           TSPluginInit (int argc, const char *argv[]) {
@@ -48,7 +48,7 @@ transform:
 
 #.  Checks to see if the transaction response is transformable.
 
-    .. code-block:: c
+    .. code-block:: cpp
 
        static int transform_plugin (TSCont contp, TSEvent event, void *edata) {
           TSHttpTxn txnp = (TSHttpTxn) edata;
@@ -66,7 +66,7 @@ transform:
     is from the origin server, the routine transformable checks the
     response header for the "200 OK" server response.
 
-    .. code-block:: c
+    .. code-block:: cpp
 
        {
           TSMBuffer bufp;
@@ -90,7 +90,7 @@ transform:
    data is ready to be transformed (as it is streaming from the origin
    server).
 
-   .. code-block:: c
+   .. code-block:: cpp
 
       static void transform_add (TSHttpTxn txnp)
       {
@@ -123,7 +123,7 @@ transform:
 #. Copy data from the input buffer to the output buffer. See the
    ``handle_buffering`` function for the following code fragment:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
       TSIOBufferCopy (data->output_buffer,
          TSVIOReaderGet (write_vio), towrite, 0);
@@ -131,7 +131,7 @@ transform:
 #. Tell the input buffer that the transformation has read the data. See
    the ``handle_buffering`` function for the following code fragment:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
       TSIOBufferReaderConsume (TSVIOReaderGet (write_vio), towrite);
 
@@ -139,7 +139,7 @@ transform:
    (increase the value of ``ndone``). See the ``handle_buffering``
    function for the following code fragment:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
       TSVIONDoneSet (write_vio, TSVIONDoneGet (write_vio) + towrite); }
 
@@ -147,7 +147,7 @@ transform:
    ``handle_buffering`` function wakes up the upstream vconnection by
    sending it ``WRITE_READY``:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
       if (TSVIONTodoGet (write_vio) > 0) {
          if (towrite > 0) {
@@ -178,7 +178,7 @@ transform:
    data structure to ``STATE_OUTPUT_DATA`` and calls the upstream
    vconnection back with the ``WRITE_COMPLETE`` event.
 
-   .. code-block:: c
+   .. code-block:: cpp
 
       data->state = STATE_OUTPUT_DATA;
       TSContCall (TSVIOContGet (write_vio),
@@ -197,7 +197,7 @@ transform:
 #. The ``handle_output`` function writes the buffer to the output
    vconnection:
 
-   .. code-block:: c
+   .. code-block:: cpp
 
       data->output_vio =
          TSVConnWrite (output_conn, contp, data->output_reader,

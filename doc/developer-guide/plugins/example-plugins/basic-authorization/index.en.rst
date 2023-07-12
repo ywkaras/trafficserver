@@ -22,7 +22,7 @@
 Basic Authorization Plugin
 **************************
 
-The sample basic authorization plugin, ``basic_auth.c``, checks for
+The sample basic authorization plugin, ``basic_auth.cc``, checks for
 basic HTTP proxy authorization. In HTTP basic proxy authorization,
 client user names and passwords are contained in the
 ``Proxy-Authorization`` header. The password is encoded using base64

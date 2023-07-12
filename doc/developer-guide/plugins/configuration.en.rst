@@ -45,7 +45,7 @@ global data updates.
 
 Here's how the interface works:
 
-.. code-block:: c
+.. code-block:: cpp
 
     /* Assume that you have previously defined a plugin configuration
      * data structure named ConfigData, along with its constructor

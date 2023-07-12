@@ -115,10 +115,6 @@ public:
   sdk_assert(((INKContInternal *)_c)->mutex); \
   SCOPED_MUTEX_LOCK(ml, ((INKContInternal *)_c)->mutex, this_ethread());
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 TSReturnCode sdk_sanity_check_mutex(TSMutex);
 TSReturnCode sdk_sanity_check_hostlookup_structure(TSHostLookupResult);
 TSReturnCode sdk_sanity_check_iocore_structure(void *);
@@ -129,12 +125,12 @@ TSReturnCode sdk_sanity_check_iocore_structure(void *);
  *
  * ---------------------------------------------------------------------- */
 
-tsapi TSMutex TSMutexCreateInternal(void);
-tsapi int TSMutexCheck(TSMutex mutex);
+TSMutex TSMutexCreateInternal(void);
+int TSMutexCheck(TSMutex mutex);
 
 /* IOBuffer */
-tsapi int64_t TSIOBufferBlockDataSizeGet(TSIOBufferBlock blockp);
-tsapi void TSIOBufferBlockDestroy(TSIOBufferBlock blockp);
+int64_t TSIOBufferBlockDataSizeGet(TSIOBufferBlock blockp);
+void TSIOBufferBlockDestroy(TSIOBufferBlock blockp);
 typedef void *INKUDPPacket;
 typedef void *INKUDPacketQueue;
 typedef void *INKUDPConn;
@@ -142,61 +138,57 @@ typedef void *INKUDPConn;
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi TSAction INKUDPBind(TSCont contp, unsigned int ip, int port);
+TSAction INKUDPBind(TSCont contp, unsigned int ip, int port);
 
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi TSAction INKUDPSendTo(TSCont contp, INKUDPConn udp, unsigned int ip, int port, char *buf, int len);
+TSAction INKUDPSendTo(TSCont contp, INKUDPConn udp, unsigned int ip, int port, char *buf, int len);
 
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi TSAction INKUDPRecvFrom(TSCont contp, INKUDPConn udp);
+TSAction INKUDPRecvFrom(TSCont contp, INKUDPConn udp);
 
 /****************************************************************************
  *  Return file descriptor.
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi int INKUDPConnFdGet(INKUDPConn udp);
+int INKUDPConnFdGet(INKUDPConn udp);
 
 /* ===== UDP Packet ===== */
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi INKUDPPacket INKUDPPacketCreate();
+INKUDPPacket INKUDPPacketCreate();
 
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi TSIOBufferBlock INKUDPPacketBufferBlockGet(INKUDPPacket packet);
+TSIOBufferBlock INKUDPPacketBufferBlockGet(INKUDPPacket packet);
 
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi unsigned int INKUDPPacketFromAddressGet(INKUDPPacket packet);
+unsigned int INKUDPPacketFromAddressGet(INKUDPPacket packet);
 
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi int INKUDPPacketFromPortGet(INKUDPPacket packet);
+int INKUDPPacketFromPortGet(INKUDPPacket packet);
 
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi INKUDPConn INKUDPPacketConnGet(INKUDPPacket packet);
+INKUDPConn INKUDPPacketConnGet(INKUDPPacket packet);
 
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi void INKUDPPacketDestroy(INKUDPPacket packet);
+void INKUDPPacketDestroy(INKUDPPacket packet);
 
 /* ===== Packet Queue ===== */
 /****************************************************************************
  *  contact: OXYGEN
  ****************************************************************************/
-tsapi INKUDPPacket INKUDPPacketGet(INKUDPacketQueue queuep);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+INKUDPPacket INKUDPPacketGet(INKUDPacketQueue queuep);
