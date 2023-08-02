@@ -30,6 +30,7 @@
 
 #include <tscore/ink_assert.h>
 #include <tscore/Diags.h>
+#include <tscore/Regex.h>
 
 // The resistry of fast debug controllers has a ugly implementation to handle the whole-program initialization
 // and destruction order problem with C++.
@@ -73,6 +74,29 @@ public:
 
   _RegistryAccessor()
   {
+    // Work-around for issue:  https://github.com/apache/trafficserver/issues/10129
+    //
+    // Calling member functions of the Regex class (used by the Diags class) can trigger the initialization of a
+    // thread_local variable.  Initialization of any thread_local variable seems to lock a global mutex in the C/C++
+    // runtime environment.  This same global mutex is locked while a shared library is being dynamically loaded.  It
+    // is kept locked during the non-local dynamic initialization for the shared library.  This initialization may
+    // include DbgCtl member function calls that create instances of this class, and thus lock the Registry mutex.
+    // This leads to a possible deadlock scenario:
+    // 1.  A shared libary is loading, so the global mutex is locked.
+    // 2.  In another thread, a DbgCtl member function call is made, which calls this constructor, and
+    //     locks the Registry mutex.
+    // 3.  The first thread blocks trying to lock the Registry mutex.
+    // 4.  The second thread calls a Diags member function, needs to initialize a thread_local variable,
+    //     and therefore blocks on the global mutex.  Deadlock.
+    //
+    // The work-around here is to make sure, in each thread, the Regex thread_local variable is initialized
+    // before any locks of the Registry mutex.
+    if (thread_local bool done{false}; !done) {
+      Regex r;
+      static_cast<void>(r.compile("dummy"));
+      done = true;
+    }
+
     if (!_registry_instance) {
       Registry *expected{nullptr};
       Registry *r{new Registry};
