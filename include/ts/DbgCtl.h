@@ -23,10 +23,10 @@
 
 #pragma once
 
+#include <ts/apidefs.h> // For TS_PRINTFLIKE.
+
 class DiagsConfigState;
 
-// For use with TSDbg() or Dbg().
-//
 class DbgCtl
 {
 public:
@@ -38,7 +38,7 @@ public:
   ~DbgCtl() { _rm_reference(); }
 
   bool
-  on() const
+  tag_on() const
   {
     return _ptr->on != 0;
   }
@@ -55,27 +55,55 @@ public:
     return _global_on;
   }
 
+  bool
+  on() const
+  {
+    return _global_on && (_ptr->on != 0);
+  }
+
   // Call this when the compiled regex to enable tags may have changed.  Should not be called in plugins.
   //
   static void update();
 
-  // For use in Dbg() macro only.
+  // For use in Dbg() and DbgPrint() macros only.
   //
-  static void print(const char *tag, const char *format_str, ...);
+  static void print(DbgCtl const &ctl, char const *file, char const *function, int line, char const *format_str, ...) TS_PRINTFLIKE(5, 6);
 
 private:
   struct _Data {
-    char volatile on; // Flag
+    bool volatile on; // Flag
     char const *tag;
   };
 
-  Data const *const _ptr;
+  _Data const *const _ptr;
 
-  static const Data *_new_reference(char const *tag);
+  static const _Data *_new_reference(char const *tag);
 
   static void _rm_reference();
 
   static bool _global_on;
 
   class _RegistryAccessor;
+
+  friend class DiagsConfigState;
 };
+
+// printf-line debug output.  The first parameter must be DbgCtl instance. The second parameter must be a printf format
+// string.  The remaining parameters correspond to the format string.  Output is generated regardless of whether the
+// debug control is on.
+//
+#define DbgPrint(CTL, ...)                                               \
+  do {                                                                   \
+    DbgCtl::print((CTL), __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__); \
+  } while (false)
+
+// printf-line debug output.  The first parameter must be DbgCtl instance. The second parameter must be a printf format
+// string.  The remaining parameters correspond to the format string.  Output is generated only if the debug control is
+// on.
+//
+#define Dbg(CTL, ...)             \
+  do {                            \
+    if ((CTL).on()) {             \
+      DbgPrint(CTL, __VA_ARGS__); \
+    }                             \
+  } while (false)

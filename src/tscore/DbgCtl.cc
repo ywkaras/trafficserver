@@ -25,8 +25,9 @@
 #include <set>
 #include <cstring>
 #include <atomic>
+#include <cstdarg>
 
-#include "swoc/bwf_ip.h"
+// TEMP #include "swoc/bwf_ip.h"
 
 #include <tscore/ink_assert.h>
 #include <tscore/Diags.h>
@@ -39,14 +40,14 @@ class DbgCtl::_RegistryAccessor
 private:
   struct TagCmp {
     bool
-    operator()(Data const &a, Data const &b) const
+    operator()(_Data const &a, _Data const &b) const
     {
       return std::strcmp(a.tag, b.tag) < 0;
     }
   };
 
 public:
-  using Set = std::set<Data, TagCmp>;
+  using Set = std::set<_Data, TagCmp>;
 
   class Registry
   {
@@ -121,12 +122,12 @@ private:
   inline static std::atomic<Registry *> _registry_instance{nullptr};
 };
 
-Data const *
+DbgCtl::_Data const *
 DbgCtl::_new_reference(char const *tag)
 {
   ink_assert(tag != nullptr);
 
-  Data ctl;
+  _Data ctl;
 
   ctl.tag = tag;
 
@@ -195,3 +196,15 @@ DbgCtl::update()
     const_cast<bool volatile &>(i.on) = diags()->tag_activated(i.tag, DiagsTagType_Debug);
   }
 }
+
+void
+DbgCtl::print(DbgCtl const &ctl, char const *file, char const *function, int line, char const *format_str, ...)
+{
+  SourceLocation const src_loc{file, function, line};
+  va_list args;
+  va_start(args, format_str);
+  diags()->print_va(ctl._ptr->tag, DL_Debug, &src_loc, format_str, args);
+  va_end(args);
+}
+
+bool DbgCtl::_global_on{false};

@@ -148,7 +148,7 @@ SSLDiagnostic(const SourceLocation &loc, bool debug, SSLNetVConnection *vc, cons
 #endif
     if (debug) {
       if (diags()->on(ssl_diags_dbg_ctl)) {
-        diags()->print(ssl_diags_dbg_ctl.ptr()->tag, DL_Debug, &loc, "SSL::%lu:%s:%s:%d%s%s%s%s", es, ERR_error_string(l, buf),
+        diags()->print(ssl_diags_dbg_ctl.tag(), DL_Debug, &loc, "SSL::%lu:%s:%s:%d%s%s%s%s", es, ERR_error_string(l, buf),
                        file, line, (flags & ERR_TXT_STRING) ? ":" : "", (flags & ERR_TXT_STRING) ? data : "",
                        vc ? ": peer address is " : "", ip_buf);
       }
@@ -173,7 +173,7 @@ SSLDiagnostic(const SourceLocation &loc, bool debug, SSLNetVConnection *vc, cons
   va_start(ap, fmt);
   if (debug) {
     if (diags()->on(ssl_diags_dbg_ctl)) {
-      diags()->print_va(ssl_diags_dbg_ctl.ptr()->tag, DL_Debug, &loc, fmt, ap);
+      diags()->print_va(ssl_diags_dbg_ctl.tag(), DL_Debug, &loc, fmt, ap);
     }
   } else {
     diags()->error_va(DL_Error, &loc, fmt, ap);
