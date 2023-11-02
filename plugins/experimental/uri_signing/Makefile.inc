@@ -18,6 +18,7 @@ pkglib_LTLIBRARIES += experimental/uri_signing/uri_signing.la
 
 experimental_uri_signing_uri_signing_la_SOURCES = \
     experimental/uri_signing/uri_signing.cc       \
+    experimental/uri_signing/common.cc            \
     experimental/uri_signing/config.cc            \
     experimental/uri_signing/cookie.cc            \
     experimental/uri_signing/jwt.cc               \

@@ -66,7 +66,7 @@ TSRemapNewInstance(int argc, char *argv[], void **ih, char *errbuf, int errbuf_s
     char const *const config_dir = TSConfigDirGet();
     size_t const config_file_ct  = snprintf(nullptr, 0, "%s/%s", config_dir, fname);
     config_file                  = static_cast<char *>(malloc(config_file_ct + 1));
-    static_cast<void>(snprintf(config_file, config_file_ct + 1, "%s/%s", config_dir, fname));
+    (void)snprintf(config_file, config_file_ct + 1, "%s/%s", config_dir, fname);
   }
 
   Dbg(dbg_ctl, "config file name: %s", config_file);
@@ -152,8 +152,6 @@ cont_new(char *cookie)
 TSRemapStatus
 TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
 {
-  static char const *const package = "URISigningPackage";
-
   struct timer t;
   start_timer(&t);
 
@@ -165,60 +163,16 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
   char *strip_uri            = nullptr;
   TSRemapStatus status       = TSREMAP_NO_REMAP;
   bool checked_auth          = false;
+  int64_t last_mark          = 0;
+  struct signer *signer      = nullptr;
+  char *cookie               = nullptr;
   struct jwt *jwt            = nullptr;
+  cjose_jws_t *jws           = nullptr;
   int checked_cookies        = 0;
   size_t client_cookie_sz_ct = 0;
-  const char *client_cookie  = nullptr;
-  int client_cookie_ct       = 0;
   int strip_size             = 0;
-  size_t strip_ct            = 0;
-  cjose_jws_t *jws           = nullptr;
 
-  auto check_cookies = [&](bool more) -> bool {
-    if (!more) {
-      /* There is no valid token in the url */
-      strncpy(strip_uri, url, url_ct);
-      strip_ct = url_ct;
-      ++checked_cookies;
-
-      TSMLoc field;
-      TSMBuffer buffer;
-      TSMLoc hdr;
-
-      if (TSHttpTxnClientReqGet(txnp, &buffer, &hdr) == TS_ERROR) {
-        return false;
-      }
-
-      field = TSMimeHdrFieldFind(buffer, hdr, "Cookie", 6);
-      if (field == TS_NULL_MLOC) {
-        TSHandleMLocRelease(buffer, TS_NULL_MLOC, hdr);
-        if (!checked_auth) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-
-      client_cookie = TSMimeHdrFieldValueStringGet(buffer, hdr, field, 0, &client_cookie_ct);
-
-      TSHandleMLocRelease(buffer, hdr, field);
-      TSHandleMLocRelease(buffer, TS_NULL_MLOC, hdr);
-
-      if (!client_cookie || !client_cookie_ct) {
-        if (!checked_auth) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-      client_cookie_sz_ct = client_cookie_ct;
-    }
-    if (cpi < max_cpi) {
-      checkpoints[cpi++] = mark_timer(&t);
-    }
-    jws = get_jws_from_cookie(&client_cookie, &client_cookie_sz_ct, package);
-    return true;
-  };
+  static char const *const package = "URISigningPackage";
 
   TSMBuffer mbuf;
   TSMLoc ul;
@@ -238,13 +192,58 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
   strip_uri  = (char *)TSmalloc(strip_size);
   memset(strip_uri, 0, strip_size);
 
+  size_t strip_ct;
   jws = get_jws_from_uri(url, url_ct, package, strip_uri, strip_size, &strip_ct);
 
   checkpoints[cpi++] = mark_timer(&t);
+
+  checked_cookies     = 0;
+  client_cookie_sz_ct = 0;
   if (!jws) {
-    if (!check_cookies(false)) {
+  check_cookies:
+    /* There is no valid token in the url */
+    strncpy(strip_uri, url, url_ct);
+    strip_ct = url_ct;
+    ++checked_cookies;
+
+    TSMLoc field;
+    TSMBuffer buffer;
+    TSMLoc hdr;
+
+    if (TSHttpTxnClientReqGet(txnp, &buffer, &hdr) == TS_ERROR) {
       goto fail;
     }
+
+    field = TSMimeHdrFieldFind(buffer, hdr, "Cookie", 6);
+    if (field == TS_NULL_MLOC) {
+      TSHandleMLocRelease(buffer, TS_NULL_MLOC, hdr);
+      if (!checked_auth) {
+        goto check_auth;
+      } else {
+        goto fail;
+      }
+    }
+
+    const char *client_cookie;
+    int client_cookie_ct;
+    client_cookie = TSMimeHdrFieldValueStringGet(buffer, hdr, field, 0, &client_cookie_ct);
+
+    TSHandleMLocRelease(buffer, hdr, field);
+    TSHandleMLocRelease(buffer, TS_NULL_MLOC, hdr);
+
+    if (!client_cookie || !client_cookie_ct) {
+      if (!checked_auth) {
+        goto check_auth;
+      } else {
+        goto fail;
+      }
+    }
+    client_cookie_sz_ct = client_cookie_ct;
+  check_more_cookies:
+    if (cpi < max_cpi) {
+      checkpoints[cpi++] = mark_timer(&t);
+    }
+    jws = get_jws_from_cookie(&client_cookie, &client_cookie_sz_ct, package);
   } else {
     /* There has been a JWS found in the url */
     /* Strip the token from the URL for upstream if configured to do so */
@@ -289,6 +288,7 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
       }
     }
   }
+check_auth:
   /* Check auth_dir and pass through if configured */
   if (uri_matches_auth_directive((struct config *)ih, url, url_ct)) {
     PluginDebug("Auth directive matched for %.*s", url_ct, url);
@@ -316,37 +316,43 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
   if (cpi < max_cpi) {
     checkpoints[cpi++] = mark_timer(&t);
   }
-  if (jwt || check_cookies(checked_cookies)) {
-    /* There has been a validated JWT found in either the cookie or url */
-
-    struct signer *signer = config_signer((struct config *)ih);
-    char *cookie          = renew(jwt, signer->issuer, signer->jwk, signer->alg, package, strip_uri, strip_ct);
-    jwt_delete(jwt);
-
-    if (cpi < max_cpi) {
-      checkpoints[cpi++] = mark_timer(&t);
-    }
-    if (cookie) {
-      PluginDebug("Scheduling cookie callback for %.*s", url_ct, url);
-      TSCont cont = cont_new(cookie);
-      TSHttpTxnHookAdd(txnp, TS_HTTP_SEND_RESPONSE_HDR_HOOK, cont);
+  if (!jwt) {
+    if (!checked_cookies) {
+      goto check_cookies;
     } else {
-      PluginDebug("No cookie scheduled for %.*s", url_ct, url);
+      goto check_more_cookies;
     }
-
-    int64_t last_mark = 0;
-    for (int i = 0; i < cpi; ++i) {
-      PluginDebug("Spent %" PRId64 " ns in checkpoint %d.", checkpoints[i] - last_mark, i);
-      last_mark = checkpoints[i];
-    }
-    PluginDebug("Spent %" PRId64 " ns uri_signing verification of %.*s.", mark_timer(&t), url_ct, url);
-
-    TSfree((void *)url);
-    if (strip_uri != nullptr) {
-      TSfree(strip_uri);
-    }
-    return status;
   }
+
+  /* There has been a validated JWT found in either the cookie or url */
+
+  signer = config_signer((struct config *)ih);
+  cookie = renew(jwt, signer->issuer, signer->jwk, signer->alg, package, strip_uri, strip_ct);
+  jwt_delete(jwt);
+
+  if (cpi < max_cpi) {
+    checkpoints[cpi++] = mark_timer(&t);
+  }
+  if (cookie) {
+    PluginDebug("Scheduling cookie callback for %.*s", url_ct, url);
+    TSCont cont = cont_new(cookie);
+    TSHttpTxnHookAdd(txnp, TS_HTTP_SEND_RESPONSE_HDR_HOOK, cont);
+  } else {
+    PluginDebug("No cookie scheduled for %.*s", url_ct, url);
+  }
+
+  last_mark = 0;
+  for (int i = 0; i < cpi; ++i) {
+    PluginDebug("Spent %" PRId64 " ns in checkpoint %d.", checkpoints[i] - last_mark, i);
+    last_mark = checkpoints[i];
+  }
+  PluginDebug("Spent %" PRId64 " ns uri_signing verification of %.*s.", mark_timer(&t), url_ct, url);
+
+  TSfree((void *)url);
+  if (strip_uri != nullptr) {
+    TSfree(strip_uri);
+  }
+  return status;
 fail:
   TSHttpTxnStatusSet(txnp, TS_HTTP_STATUS_FORBIDDEN);
   if (url != nullptr) {
