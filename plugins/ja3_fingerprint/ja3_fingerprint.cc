@@ -45,6 +45,44 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <thread>
+#include <atomic>
+
+namespace
+{
+std::atomic<unsigned> txn_count{0};
+std::atomic<bool>     txn_block;
+unsigned              limit{1};
+
+void
+inc_txn_count()
+{
+  unsigned new_count = ++txn_count;
+  if (1 == new_count) {
+    txn_block = true;
+  }
+  FILE *fp;
+  if (new_count < limit) {
+    // Polite busy wait.
+    do {
+      std::this_thread::yield();
+    } while (txn_block);
+  } else {
+    // Create a dummy file.
+    fp = fopen("/tmp/ja3", "w");
+    fclose(fp);
+    limit     = 200;
+    txn_count = 0;
+    txn_block = false;
+    std::this_thread::yield();
+  }
+  while ((fp = fopen("/tmp/ja3", "r"))) {
+    std::this_thread::yield();
+    fclose(fp);
+  }
+}
+
+} // end anonymous namespace
 
 const char            *PLUGIN_NAME = "ja3_fingerprint";
 static DbgCtl          dbg_ctl{PLUGIN_NAME};
@@ -205,6 +243,7 @@ client_hello_ja3_handler(TSCont contp, TSEvent event, void *edata)
     TSUserArgSet(ssl_vc, ja3_idx, nullptr);
 
     delete data;
+    Dbg(dbg_ctl, "client_hello_ja3_handler(): done with VCONN_CLOSE.");
     break;
   }
   default: {
@@ -270,6 +309,8 @@ req_hdr_ja3_handler(TSCont contp, TSEvent event, void *edata)
   } else {
     Dbg(dbg_ctl, "req_hdr_ja3_handler(): ja3 data not set. Not SSL vconn. Abort.");
   }
+  inc_txn_count();
+  Dbg(dbg_ctl, "req_hdr_ja3_handler(): reenabling.");
   TSHttpTxnReenable(txnp, TS_EVENT_HTTP_CONTINUE);
   return TS_SUCCESS;
 }
