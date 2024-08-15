@@ -1054,6 +1054,11 @@ TSReturnCode TSMimeHdrFieldValueDateInsert(TSMBuffer bufp, TSMLoc hdr, TSMLoc fi
 TSReturnCode TSMimeHdrFieldValueDelete(TSMBuffer bufp, TSMLoc hdr, TSMLoc field, int idx);
 const char  *TSMimeHdrStringToWKS(const char *str, int length);
 
+// Returns pointer to counter that is incremented whenever later API calls referencing the header invalidate the
+// MIME header field mlocs.  If result is null, one or both parameters are invalid.  This will always return the
+// same value for the same header object.
+const volatile unsigned *TSMimeHdrFieldMLocInvalidationNotify(TSMBuffer bufp, TSMLoc hdr);
+
 /*
  * Print as a MIME header date string.
  */

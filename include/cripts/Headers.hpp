@@ -183,9 +183,9 @@ public:
   public:
     ~String()
     {
-      if (_field_loc) {
-        TSHandleMLocRelease(_owner->_bufp, _owner->_hdr_loc, _field_loc);
-        _field_loc = nullptr;
+      if (_field_loc_val) {
+        TSHandleMLocRelease(_owner->_bufp, _owner->_hdr_loc, _field_loc());
+        _field_loc_val = nullptr;
       }
     }
 
@@ -228,13 +228,26 @@ public:
     _initialize(Cript::string_view name, Cript::string_view value, Header *owner, TSMLoc field_loc)
     {
       _setSV(value);
-      _name      = name;
-      _owner     = owner;
-      _field_loc = field_loc;
+      _name          = name;
+      _owner         = owner;
+      _field_loc_val = field_loc;
     }
 
-    Header            *_owner     = nullptr;
-    TSMLoc             _field_loc = nullptr;
+    TSMLoc
+    _field_loc()
+    {
+      unsigned ic = _owner->_mime_field_invalidation_count();
+      if (ic != _mime_field_invalidation_count) {
+        _field_loc_val = TSMimeHdrFieldFind(_owner->_bufp, _owner->_hdr_loc, _name.data(), _name.size());
+        TSAssert(_field_loc_val != TS_NULL_MLOC);
+        _mime_field_invalidation_count = ic;
+      }
+      return __field_loc_val;
+    }
+
+    Header            *_owner                         = nullptr;
+    TSMLoc             _field_loc_val                 = nullptr; // Do not read directly, call _field_loc().
+    unsigned           _mime_field_invalidation_count = 0;
     Cript::string_view _name;
 
   }; // Class Header::String
@@ -392,11 +405,21 @@ protected:
     _state = state;
   }
 
-  TSMBuffer           _bufp         = nullptr;
-  TSMLoc              _hdr_loc      = nullptr;
-  Cript::Transaction *_state        = nullptr; // Pointer into the owning Context's State
-  TSMLoc              _iterator_loc = nullptr;
-  uint32_t            _iterator_tag = 0; // This is used to assure that we don't have more than one active iterator on a header
+  unsigned
+  _mime_field_invalidation_count()
+  {
+    if (nullptr == _mime_field_invalidation_counter_ptr) {
+      _mime_field_invalidation_counter_ptr = TSMimeHdrFieldMLocInvalidationNotify(_owner->_bufp, _owner->_hdr_loc);
+    }
+    return *_mime_field_invalidation_counter_ptr;
+  }
+
+  TSMBuffer                _bufp         = nullptr;
+  TSMLoc                   _hdr_loc      = nullptr;
+  Cript::Transaction      *_state        = nullptr; // Pointer into the owning Context's State
+  TSMLoc                   _iterator_loc = nullptr;
+  uint32_t                 _iterator_tag = 0; // This is used to assure that we don't have more than one active iterator on a header
+  const volatile unsigned *_mime_field_invalidation_counter_ptr = nullptr;
 
 }; // End class Header
 
